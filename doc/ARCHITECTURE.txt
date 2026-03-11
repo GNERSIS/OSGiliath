@@ -1,0 +1,590 @@
+===============================================================================
+     OSGiliath — Technical Architecture Document
+     OpenSceneGraph Modernized for OpenGL 4.6 Core Profile
+===============================================================================
+
+This document explains the fundamental architectural changes made to
+OpenSceneGraph to support a pure OpenGL 4.6 Core Profile. It covers the
+design decisions, the problems solved, and the runtime behavior of the
+modified shader pipeline, state management, and vertex data systems.
+
+
+===============================================================================
+  1. THE CORE PROFILE CONSTRAINT
+===============================================================================
+
+OpenGL Core Profile removes ALL fixed-function pipeline functionality:
+
+  REMOVED from Core Profile:
+  - glEnable(GL_LIGHTING), glLightfv(), glMaterialfv()
+  - glMatrixMode(), glPushMatrix(), glLoadMatrixf()
+  - glVertexPointer(), glNormalPointer(), glColorPointer()
+  - glEnableClientState(GL_VERTEX_ARRAY), etc.
+  - glGenLists(), glCallList() (display lists)
+  - glTexEnvf(), glTexGenfv()
+  - GL_LUMINANCE, GL_ALPHA as texture formats
+  - GL_QUADS, GL_QUAD_STRIP, GL_POLYGON as primitives
+  - Built-in GLSL variables: gl_Vertex, gl_Normal, gl_Color,
+    gl_MultiTexCoord0, gl_ModelViewProjectionMatrix, gl_NormalMatrix,
+    gl_LightSource[], gl_FrontMaterial, gl_FrontLightProduct,
+    gl_TexCoord[], gl_TextureMatrix[], gl_FragColor
+
+  REQUIRED in Core Profile:
+  - GLSL shaders for all rendering (no fixed-function fallback)
+  - Vertex Array Objects (VAOs) always bound
+  - Vertex Buffer Objects (VBOs) for all vertex data
+  - Explicit vertex attribute locations via glVertexAttribPointer
+  - User-defined uniforms for all transform matrices, lighting, materials
+  - User-defined in/out variables between shader stages
+
+Stock OpenSceneGraph (3.6.5) was designed around compatibility profile
+and used fixed-function extensively as its default rendering path. The
+shader pipeline existed but was optional and incomplete. This project
+makes the shader pipeline the ONLY path and removes all fixed-function
+code.
+
+
+===============================================================================
+  2. VERTEX DATA PIPELINE
+===============================================================================
+
+2.1 VBO/VAO Enforcement
+-----------------------
+
+In stock OSG, vertex data could be rendered via:
+  a) Immediate mode (glBegin/glEnd) — deleted
+  b) Client-side vertex arrays (glVertexPointer) — deleted
+  c) Display lists — deleted
+  d) VBOs with VAOs — the ONLY remaining path
+
+Changes:
+  - Geometry constructor defaults _useVertexBufferObjects = true
+  - State forces VBO and VAO: _forceVertexBufferObject = true,
+    _forceVertexArrayObject = true
+  - addVertexBufferObjectIfRequired() assigns VBOs to ALL arrays
+    (vertex, normal, color, texcoord), not just BIND_PER_VERTEX
+
+2.2 Vertex Attribute Aliasing (Non-Compact)
+--------------------------------------------
+
+OpenGL has "conventional" attribute indices from the compatibility
+profile that NVIDIA drivers honor even in Core Profile:
+
+  Location 0  = Vertex position
+  Location 2  = Normal
+  Location 3  = Color
+  Location 8  = TexCoord0
+  Location 9  = TexCoord1
+  ...
+
+Stock OSG had two aliasing modes:
+  - Compact: Vertex=0, Normal=1, Color=2, TexCoord0=3, ...
+  - Non-compact: Vertex=0, Normal=2, Color=3, TexCoord0=8, ...
+
+The shader pipeline hardcodes layout(location = N) in GLSL matching
+the non-compact (conventional) indices:
+
+  layout(location = 0)  in vec4 osg_Vertex;
+  layout(location = 2)  in vec3 osg_Normal;
+  layout(location = 3)  in vec4 osg_Color;
+  layout(location = 8)  in vec4 osg_MultiTexCoord0;
+  layout(location = 9)  in vec4 osg_MultiTexCoord1;
+
+State.cpp was changed from resetVertexAttributeAlias(true) [compact] to
+resetVertexAttributeAlias(false) [non-compact] so that the C++ side
+sends vertex data to the same attribute slots the shaders expect.
+
+CRITICAL: If compact aliasing were used, the C++ side would send
+TexCoord0 to location 3, but the shader expects it at location 8.
+The result would be invisible textures (texcoords all zero).
+
+2.3 DSA (Direct State Access) Buffer Binding
+---------------------------------------------
+
+OpenGL 4.5 introduced Direct State Access functions like
+glNamedBufferData() that operate on buffer objects by name without
+binding them. OSG uses DSA in compileBuffer() for initial buffer
+allocation.
+
+THE PROBLEM: glNamedBufferData() does NOT bind the buffer to any
+target (GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, etc.). But
+subsequent draw calls expect the buffer to be bound.
+
+Additionally, GL_ARRAY_BUFFER binding is NOT part of VAO state.
+GL_ELEMENT_ARRAY_BUFFER IS part of VAO state, but only at the time
+of the glVertexAttribPointer call.
+
+THE FIX: Every buffer type's bind function now calls bindBuffer()
+after compileBuffer():
+
+  // VBO (vertex buffer)
+  if (vbo->isDirty()) {
+      vbo->compileBuffer();  // DSA: allocates but doesn't bind
+      vbo->bindBuffer();     // Explicitly bind to GL_ARRAY_BUFFER
+  }
+
+  // EBO (element/index buffer) — same pattern
+  // DIBO (draw indirect buffer) — same pattern
+  // PBO (pixel buffer) — same pattern
+
+Without this fix, glDrawElements would read from a null element
+buffer, glMultiDrawElementsIndirect would have no command buffer,
+and pixel uploads would fail.
+
+2.4 VAS (VertexArrayState) Stale Cache
+---------------------------------------
+
+VertexArrayState caches _currentVBO to avoid redundant binds. After
+compileGLObjects() sets up a VAO with one geometry's buffers, the
+cache thinks those buffers are still bound. But when a different
+geometry draws, the VAO may have changed, and _currentVBO is stale.
+
+FIX: After compileGLObjects, resetBufferObjectPointers() is called
+to invalidate the cache, forcing the next draw to re-bind.
+
+2.5 Default Vertex Attribute Values
+-------------------------------------
+
+In compatibility OpenGL, disabled vertex attributes have these defaults:
+  - Color: (1, 1, 1, 1) — white
+  - Normal: (0, 0, 1) — pointing up
+
+In Core Profile, disabled attributes default to (0, 0, 0, 1) — black.
+
+Fixes:
+  - Geometry::draw calls state.Color(1,1,1,1) when no _colorArray
+  - VAS::disableColorArray() calls glVertexAttrib4f(loc, 1,1,1,1)
+  - VAS::disableNormalArray() calls glVertexAttrib4f(loc, 0,0,0,0)
+    (zero-length normal signals "no normals" to the shader)
+
+
+===============================================================================
+  3. SHADER PIPELINE ARCHITECTURE
+===============================================================================
+
+3.1 Overview
+------------
+
+The shader pipeline auto-generates shaders based on the current
+OpenGL state. It uses #pragma import_defines and #pragma import_modes
+directives in shader source to receive configuration from the C++ side.
+
+When a StateSet is applied, State.cpp examines the active texture modes,
+material properties, lighting state, etc. and generates a set of
+#define strings. The shader's #pragma import_defines declares which
+defines it can receive. At link time, the shader compiler prepends the
+active defines to the shader source.
+
+3.2 Shader Sources
+------------------
+
+There are TWO parallel shader sets:
+
+  a) Shader Pipeline (shaderpipeline_vert.cpp / shaderpipeline_frag.cpp):
+     Used for programmatic geometry created by examples and applications.
+     Uses #pragma import_modes for OSG_LIGHTING, OSG_LIGHT0.
+     Uses #pragma import_defines for texture macros.
+
+  b) ShaderGen (shadergen_vert.cpp / shadergen_frag.cpp):
+     Used for loaded models (.osgt, .osg files) that don't have their
+     own shaders. Uses #pragma import_defines for OSG_LIGHTING,
+     OSG_TEXTURE_2D, OSG_TEXGEN_SPHERE_MAP.
+
+Both shader sets exist in two forms:
+  - Compiled-in C++ char arrays (src/osg/shaders/, src/osgUtil/shaders/)
+  - External .glsl files (data/shaders/)
+
+The compiled-in versions are the authoritative source. The external
+files must match and are used when OSG_FILE_PATH is set.
+
+3.3 Texture Mode Defines
+-------------------------
+
+When a texture is applied via setTextureAttributeAndModes(), the
+texture mode (GL_TEXTURE_2D, GL_TEXTURE_3D, etc.) is tracked in
+_textureModeMapList. State.cpp maps these modes to shader defines:
+
+  GL_TEXTURE_2D on unit 0 →
+    #define TEXTURE_FUNCTION0 texture2D_FUNCTION
+    #define TEXTURE_ENV_FUNCTION0 texenv_MODULATE
+    #define OSG_TEXTURE_2D  (for ShaderGen path)
+
+  GL_TEXTURE_GEN_S on unit 0 →
+    #define TEXTURE_FUNCTION0 texgen_SPHERE_MAP
+    #define OSG_TEXGEN_SPHERE_MAP  (for ShaderGen path)
+    (overrides GL_TEXTURE_2D defines for that unit)
+
+The fragment shader uses these to select sampling and blending:
+
+  #ifdef TEXTURE_FUNCTION0
+      vec4 texel = texture(sampler0, texCoord_0.st);
+      #if TEXTURE_ENV_FUNCTION0 == texenv_MODULATE
+          color *= texel;
+      #elif TEXTURE_ENV_FUNCTION0 == texenv_ADD
+          color.rgb += texel.rgb;
+      #endif
+  #endif
+
+TIMING FIX: applyModeOnTexUnit now sets _defineMap.changed = true
+when a texture mode changes, forcing the shader Program to be
+re-applied with updated defines. getDefineString() reads
+last_applied_value (not valueVec.back()) because the apply(StateSet*)
+path updates last_applied_value directly.
+
+3.4 applyModeOnTexUnit: Track-Only
+------------------------------------
+
+In stock OSG, applyModeOnTexUnit called glEnable(GL_TEXTURE_2D) etc.
+These calls are INVALID in Core Profile (they generate GL errors and
+do nothing).
+
+FIX: applyModeOnTexUnit now ONLY updates the last_applied_value
+tracking variable. It never calls glEnable/glDisable. The tracked
+value is used solely for generating shader defines.
+
+3.5 applyMode: Core Profile Whitelist
+--------------------------------------
+
+Not all GL modes are invalid in Core Profile. These are still valid
+and must be applied via glEnable/glDisable:
+
+  GL_BLEND, GL_DEPTH_TEST, GL_CULL_FACE, GL_STENCIL_TEST,
+  GL_SCISSOR_TEST, GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE,
+  GL_POLYGON_OFFSET_POINT, GL_SAMPLE_ALPHA_TO_COVERAGE,
+  GL_SAMPLE_COVERAGE, GL_MULTISAMPLE, GL_CLIP_DISTANCE0..7,
+  GL_PROGRAM_POINT_SIZE, GL_RASTERIZER_DISCARD,
+  GL_PRIMITIVE_RESTART_FIXED_INDEX, GL_DEBUG_OUTPUT,
+  GL_DEBUG_OUTPUT_SYNCHRONOUS, GL_FRAMEBUFFER_SRGB,
+  GL_DEPTH_CLAMP, GL_TEXTURE_CUBE_MAP_SEAMLESS
+
+isModeApplicable() whitelists these. All other modes (GL_LIGHTING,
+GL_FOG, GL_TEXTURE_2D, GL_COLOR_MATERIAL, etc.) are tracked for
+shader define generation but never passed to glEnable/glDisable.
+
+
+===============================================================================
+  4. LIGHTING SYSTEM
+===============================================================================
+
+4.1 Uniform-Based Lighting
+---------------------------
+
+Stock OSG called glLightfv() and glMaterialfv() to set fixed-function
+lighting state. The built-in GLSL variables gl_LightSource[N] and
+gl_FrontMaterial reflected this state.
+
+In Core Profile, these built-in variables don't exist. OSG now uses
+custom uniform structs:
+
+  struct osg_LightSourceParameters {
+      vec4 ambient;
+      vec4 diffuse;
+      vec4 specular;
+      vec4 position;          // eye-space; w=0 directional, w=1 positional
+      vec3 spotDirection;
+      float spotExponent;
+      float spotCutoff;
+      float spotCosCutoff;
+      float constantAttenuation;
+      float linearAttenuation;
+      float quadraticAttenuation;
+  };
+  uniform osg_LightSourceParameters osg_LightSource;
+
+  struct osg_MaterialParameters {
+      vec4 ambient;
+      vec4 diffuse;
+      vec4 specular;
+      vec4 emission;
+      float shininess;
+  };
+  uniform osg_MaterialParameters osg_FrontMaterial;
+
+State.cpp creates 16 Uniform objects (one per field) and applies them
+in applyModelViewAndProjectionUniformsIfRequired(). Light::apply() and
+Material::apply() push their values to State's uniforms.
+
+4.2 Light Delivery via StateAttribute
+--------------------------------------
+
+In stock OSG, LightSource used setAssociatedModes() to register
+GL_LIGHT0 mode. This toggled glEnable(GL_LIGHT0) but never called
+Light::apply().
+
+FIX: Changed to setAttributeAndModes() so that Light is a full
+StateAttribute. When the StateSet is applied, Light::apply(State&) is
+called, which sets the uniform values for position, colors, attenuation,
+and spot parameters.
+
+Same fix applied in SceneView::setDefaults() for the headlight.
+
+4.3 Blinn-Phong Lighting Model
+--------------------------------
+
+The vertex shaders implement Blinn-Phong lighting with support for
+three light types:
+
+  DIRECTIONAL (position.w == 0.0):
+    L = normalize(position.xyz)
+    attenuation = 1.0
+    halfVector = normalize(L + vec3(0,0,1))  // infinite viewer
+
+  POINT (position.w == 1.0, spotCutoff == 180.0):
+    L = normalize(position.xyz - eyeVertex)
+    d = distance(position.xyz, eyeVertex)
+    attenuation = 1.0 / (constant + linear*d + quadratic*d*d)
+    V = normalize(-eyeVertex)   // local viewer
+    halfVector = normalize(L + V)
+
+  SPOT (position.w == 1.0, spotCutoff < 180.0):
+    Same as point, plus:
+    spotDot = dot(-L, normalize(spotDirection))
+    if (spotDot >= spotCosCutoff)
+        attenuation *= pow(spotDot, spotExponent)
+    else
+        attenuation = 0.0
+
+  LIGHTING EQUATION:
+    color = emission
+          + matAmbient * (globalAmbient + lightAmbient)
+          + attenuation * lightDiffuse * matDiffuse * NdotL
+    if (NdotL > 0 && shininess > 0)
+        color += attenuation * lightSpecular * matSpecular
+                 * pow(NdotHV, shininess)
+
+4.4 GL_COLOR_MATERIAL Emulation
+---------------------------------
+
+In compatibility OpenGL, GL_COLOR_MATERIAL makes vertex colors REPLACE
+material ambient and diffuse properties in the lighting equation.
+Without it, the Material's own properties are used directly.
+
+This is emulated via the osg_ColorMaterial float uniform:
+
+  uniform float osg_ColorMaterial;  // 0.0 = use material, 1.0 = use vertex color
+
+  vec4 matDiffuse = mix(osg_FrontMaterial.diffuse, osg_Color, osg_ColorMaterial);
+  vec4 matAmbient = mix(osg_FrontMaterial.ambient, osg_Color, osg_ColorMaterial);
+
+Geometry::draw() sets osg_ColorMaterial to 1.0 when a color array is
+present, 0.0 otherwise. This matches the common compatibility-profile
+behavior where vertex colors override material properties.
+
+WHY mix() INSTEAD OF multiply():
+  An earlier approach used matDiffuse = material.diffuse * osg_Color.
+  This MODULATES rather than REPLACES. For a cyan vertex color (0,1,1)
+  with default material diffuse (0.8, 0.8, 0.8): multiply gives
+  (0, 0.8, 0.8) but the correct result is (0, 1.0, 1.0). The mix()
+  approach with osg_ColorMaterial=1.0 gives the vertex color directly.
+
+4.5 LightModel Global Ambient
+-------------------------------
+
+The OpenGL default global ambient is (0.2, 0.2, 0.2, 1.0), but
+osg36's SceneView::setDefaults() creates a LightModel with ambient
+(0.1, 0.1, 0.1, 1.0). To match osg36 output:
+
+  uniform vec4 osg_LightModel_ambient;  // default: (0.1, 0.1, 0.1, 1.0)
+
+This ambient adds to the per-light ambient in the lighting equation:
+
+  matAmbient * (osg_LightModel_ambient + osg_LightSource.ambient)
+
+4.6 Zero-Normal Detection
+---------------------------
+
+When a geometry has no normal array, the disabled normal attribute
+defaults to (0,0,0,0). The shader detects this:
+
+  vec3 rawNormal = osg_NormalMatrix * osg_Normal;
+  float normalLen = length(rawNormal);
+  float NdotL = (normalLen > 0.001)
+      ? max(0.0, dot(rawNormal / normalLen, L))
+      : 1.0;  // full illumination when no normals
+
+This matches legacy behavior where flat surfaces without normals
+received full lighting. The specular term is also skipped (no
+meaningful reflection direction without normals).
+
+
+===============================================================================
+  5. TEXTURE FORMAT TRANSLATION
+===============================================================================
+
+Several texture formats were removed from Core Profile:
+
+  GL_LUMINANCE        → GL_RED  + swizzle mask {R, R, R, 1}
+  GL_LUMINANCE_ALPHA  → GL_RG   + swizzle mask {R, R, R, G}
+  GL_INTENSITY        → GL_RED  + swizzle mask {R, R, R, R}
+  GL_ALPHA            → GL_RED  + swizzle mask {0, 0, 0, R}
+
+The swizzle mask is applied in Texture::applyTexParameters() using
+glTexParameteriv(GL_TEXTURE_SWIZZLE_RGBA, mask). This is a zero-cost
+operation (no extra shader logic, no format conversion) that makes
+the shader see the same RGBA values as it would have seen with the
+legacy format.
+
+All sized internal format variants are also translated:
+  GL_LUMINANCE8   → GL_R8
+  GL_LUMINANCE16F → GL_R16F
+  GL_LUMINANCE32F → GL_R32F
+  etc.
+
+
+===============================================================================
+  6. PRIMITIVE TYPE TRANSLATION
+===============================================================================
+
+Core Profile removes GL_QUADS, GL_QUAD_STRIP, and GL_POLYGON.
+
+  GL_QUADS → GL_TRIANGLES with index decomposition:
+    Each quad (v0, v1, v2, v3) becomes two triangles:
+    (v0, v1, v3) and (v1, v2, v3)
+
+  GL_QUAD_STRIP → GL_TRIANGLE_STRIP:
+    Direct replacement — same vertex order produces the same geometry.
+
+  GL_POLYGON → GL_TRIANGLE_FAN:
+    For convex polygons, triangle fan from first vertex.
+
+These conversions were applied to all rendering code in the core
+libraries (osgSim, osgParticle, osgTerrain, osgText) and all examples.
+
+Non-rendering uses of GL_QUADS (serialization tables, CPU-side
+tessellation, export plugins) were left unchanged since they don't
+generate GL calls.
+
+
+===============================================================================
+  7. TexGen SPHERE-MAP REIMPLEMENTATION
+===============================================================================
+
+osg::TexGen was originally deleted as fixed-function. But many models
+(especially cow.osgt) use TexGen for sphere-map environment mapping.
+
+SOLUTION: TexGen was re-added as a minimal class with NO GL calls:
+  - apply() is empty (no glTexGenfv)
+  - Only stores the mode (SPHERE_MAP, OBJECT_LINEAR, etc.)
+  - Serializer enables loading .osgt files with TexGen attributes
+  - GL_TEXTURE_GEN_S/T/R/Q registered in TextureGLModeSet and
+    _stringModeMap for mode tracking
+
+When GL_TEXTURE_GEN_S is active, the shader pipeline generates
+sphere-map texture coordinates in the vertex shader:
+
+  vec3 u = normalize((osg_ModelViewMatrix * osg_Vertex).xyz);
+  vec3 n = normalize(osg_NormalMatrix * osg_Normal);
+  vec3 r = reflect(u, n);
+  float m = 2.0 * sqrt(r.x*r.x + r.y*r.y + (r.z+1.0)*(r.z+1.0));
+  texCoord_0 = vec4(r.x/m + 0.5, r.y/m + 0.5, 0.0, 1.0);
+
+
+===============================================================================
+  8. NORMAL MATRIX CONVENTION
+===============================================================================
+
+  DO NOT CHANGE THIS. The convention is correct but non-obvious.
+
+State.cpp computes the NormalMatrix as transpose(inverse(MV_rotation))
+and stores it in an OSG Matrix3 (row-major C++ memory layout).
+
+When uploaded to GLSL via glUniformMatrix3fv with transpose=GL_FALSE,
+OpenGL interprets the data as column-major. This adds an implicit
+transpose, so the shader receives inverse(MV_rotation).
+
+For GLSL's column-vector convention (n_eye = NormalMatrix * n_object),
+the correct matrix IS inverse(MV_rotation) — because:
+  n_eye = transpose(inverse(MV)) * n_object  (the math)
+  But GLSL uses column-major, and our upload is row-major without
+  transposing, so GLSL interprets our rows as columns, effectively
+  doing the transpose for us.
+
+The original code that extracts matrix elements as
+matrix(column, row) IS CORRECT — it extracts columns of the inverse
+as rows of Matrix3, which after the implicit transpose during upload,
+become columns in the shader — matching the mathematical definition.
+
+Changing to matrix(row, col) would give the WRONG matrix.
+
+
+===============================================================================
+  9. STATE MANAGEMENT FLOW
+===============================================================================
+
+The rendering flow for each drawable:
+
+  1. StateSet applied: State::apply(StateSet*)
+     - Modes applied via applyMode() (whitelisted) or tracked only
+     - Texture modes via applyModeOnTexUnit() (track-only)
+     - Attributes applied (Light, Material push to uniforms)
+     - If defines changed (_defineMap.changed), re-apply Program
+
+  2. Program applied: generates final shader source
+     - Collects active #defines from getDefineString()
+     - Prepends defines to shader source before compilation
+     - Links program with defines matching current state
+
+  3. Uniforms applied: applyModelViewAndProjectionUniformsIfRequired()
+     - osg_ModelViewProjectionMatrix
+     - osg_ModelViewMatrix
+     - osg_NormalMatrix
+     - osg_LightSource.* (11 fields)
+     - osg_FrontMaterial.* (5 fields)
+     - osg_ColorMaterial
+     - osg_LightModel_ambient
+
+  4. Geometry draw:
+     - Set osg_ColorMaterial based on color array presence
+     - Set default Color(1,1,1,1) if no color array
+     - Bind VAO, bind VBO/EBO (with DSA fix)
+     - glDrawElements / glDrawArrays / glMultiDrawElementsIndirect
+
+The key insight is that modes like GL_TEXTURE_2D and GL_LIGHTING no
+longer produce glEnable/glDisable calls. They are ONLY tracked for
+the purpose of generating shader #defines. The shader pipeline is
+what actually implements the behavior that these modes used to control.
+
+
+===============================================================================
+  10. FILES MODIFIED (SUMMARY)
+===============================================================================
+
+  Core headers:
+    include/osg/State ........... Mode whitelist, applyMode changes,
+                                  buffer binding DSA fixes, new uniforms
+    include/osg/Texture ......... getModeUsage unconditional
+    include/osg/VertexArrayState  Default attribute values
+    include/osg/GLExtensions .... ARB program extensions removed
+    include/osgUtil/SceneView ... Light as attribute
+
+  Core sources:
+    src/osg/State.cpp ........... Vertex aliasing, lighting uniforms,
+                                  texture mode defines, define timing
+    src/osg/Geometry.cpp ........ VBO defaults, color material flag
+    src/osg/StateSet.cpp ........ TextureGLModeSet entries
+    src/osg/BufferObject.cpp .... DSA buffer patterns
+    src/osg/Image.cpp ........... Format translation
+    src/osg/TextBase.cpp ........ Compile path fix
+    src/osg/TexGen.cpp .......... Re-added (mode tracking only)
+    src/osgUtil/SceneView.cpp ... Light as attribute, headlight fix
+    src/osgUtil/ShaderGen.cpp ... TexGen sphere-map support
+
+  Shader sources (compiled-in):
+    src/osg/shaders/shaderpipeline_vert.cpp
+    src/osg/shaders/shaderpipeline_frag.cpp
+    src/osgUtil/shaders/shadergen_vert.cpp
+    src/osgUtil/shaders/shadergen_frag.cpp
+
+  Shader sources (external):
+    data/shaders/shaderpipeline.vert
+    data/shaders/shaderpipeline.frag
+    data/shaders/shadergen.vert
+    data/shaders/shadergen.frag
+
+  Particle system:
+    src/osgParticle/ParticleSystem.cpp .... QUAD path restored
+    src/osgParticle/PrecipitationEffect.cpp  QUADS→TRIANGLES
+
+  Examples:
+    ~65 example files with shader/state fixes
+    ~90 data shader files modernized to GLSL 460 core

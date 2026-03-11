@@ -1,0 +1,125 @@
+/* -*-c++-*- OpenSceneGraph - Copyright (C) 1998-2009 Robert Osfield
+ *
+ * This library is open source and may be redistributed and/or modified under
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * OpenSceneGraph Public License for more details.
+*/
+
+#ifndef OSG_OPENGL
+#define OSG_OPENGL 1
+
+#include <osg/Config>
+#include <osg/Export>
+#include <osg/Types>
+
+#define OSG_GL3_FEATURES 1
+#define OSG_GL_CONTEXT_VERSION "@OSG_GL_CONTEXT_VERSION@"
+
+#ifndef _WIN32
+    #ifndef APIENTRY
+        #define APIENTRY
+    #endif
+#else // _WIN32
+    #if defined(__CYGWIN__) || defined(__MINGW32__)
+        #ifndef APIENTRY
+                #define GLUT_APIENTRY_DEFINED
+                #define APIENTRY __stdcall
+        #endif
+        #ifndef CALLBACK
+            #define CALLBACK __stdcall
+        #endif
+    #else // ! __CYGWIN__
+        #ifndef APIENTRY
+            #define GLUT_APIENTRY_DEFINED
+            #if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED)
+                #define WINAPI __stdcall
+                #define APIENTRY WINAPI
+            #else
+                #define APIENTRY
+            #endif
+        #endif
+        #ifndef CALLBACK
+            #if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED)
+                #define CALLBACK __stdcall
+            #else
+                #define CALLBACK
+            #endif
+        #endif
+    #endif // __CYGWIN__
+    #ifndef WINGDIAPI
+        #define GLUT_WINGDIAPI_DEFINED
+        #define DECLSPEC_IMPORT __declspec(dllimport)
+        #define WINGDIAPI DECLSPEC_IMPORT
+    #endif
+    #if !defined(_WCHAR_T_DEFINED) && !(defined(__GNUC__)&&(__GNUC__ > 2))
+        typedef unsigned short wchar_t;
+        #define _WCHAR_T_DEFINED
+    #endif
+#endif // _WIN32
+
+#define GL3_PROTOTYPES 1
+#define GL_GLEXT_PROTOTYPES 1
+
+// Prevent GLEW from including <GL/glu.h> -- OSG provides its own GLU
+// implementation in the osg namespace, and the system GLU types
+// (e.g. GLUtesselator) would conflict with osg::GLUtesselator.
+#define GLEW_NO_GLU
+
+@OPENGL_HEADER1@
+@OPENGL_HEADER2@
+
+// GLEW undefs APIENTRY at the bottom of glew.h (when it defined it).
+// Re-establish it so GL_APIENTRY works in all downstream headers.
+#ifndef APIENTRY
+    #ifdef _WIN32
+        #define APIENTRY __stdcall
+    #else
+        #define APIENTRY
+    #endif
+#endif
+
+#ifndef GL_APIENTRY
+    #define GL_APIENTRY APIENTRY
+#endif // GL_APIENTRY
+
+#ifndef GL_HEADER_HAS_GLINT64
+    typedef int64_t GLint64;
+#endif
+
+#ifndef GL_HEADER_HAS_GLUINT64
+    typedef uint64_t GLuint64;
+#endif
+
+#ifndef GL_DOUBLE
+    #define GL_DOUBLE 0x140A
+    typedef double GLdouble;
+#endif
+
+#ifndef GL_INT
+    #define GL_INT 0x1404
+#endif
+
+#ifndef GL_UNSIGNED_INT
+    #define GL_UNSIGNED_INT 0x1405
+#endif
+
+#ifndef GL_NONE
+    #define GL_NONE 0x0
+#endif
+
+// Compatibility defines for primitive types removed in core profile
+#define GL_POLYGON                         0x0009
+#define GL_QUADS                           0x0007
+#define GL_QUAD_STRIP                      0x0008
+
+// Compatibility defines for formats
+#define GL_LUMINANCE                      0x1909
+#define GL_LUMINANCE_ALPHA                0x190A
+
+#endif
