@@ -1,0 +1,30 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Python scripting integration for osgWidget.
+ * Binds widget events to Python callback functions.
+ */
+// Code by: Jeremy Moles (cubicool) 2007-2008
+
+#pragma once
+
+#include <osgWidget/WindowManager>
+
+namespace osgWidget {
+
+struct PythonEngineData;
+
+class OSGWIDGET_EXPORT PythonEngine: public ScriptEngine {
+    public:
+        PythonEngine(WindowManager* = 0);
+
+        bool initialize ();
+        bool close      ();
+        bool eval       (const std::string&);
+        bool runFile    (const std::string&);
+
+    protected:
+
+        PythonEngineData* _data;
+        WindowManager*    _wm;
+};
+
+}

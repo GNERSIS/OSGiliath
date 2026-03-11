@@ -1,0 +1,128 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * GPU displacement mapping terrain technique. Uses vertex
+ * texture fetch to displace terrain mesh on the GPU.
+ */
+#include <osgTerrain/DisplacementMappingTechnique>
+
+#include <osgTerrain/Terrain>
+
+using namespace osgTerrain;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  DisplacementMappingTechnique
+//
+DisplacementMappingTechnique::DisplacementMappingTechnique()
+{
+    // OSG_NOTICE<<"DisplacementMappingTechnique::DisplacementMappingTechnique()"<<std::endl;
+}
+
+DisplacementMappingTechnique::DisplacementMappingTechnique(
+    const DisplacementMappingTechnique& st,
+    const osg::CopyOp&                  copyop
+) :
+    Inherit( st,
+             copyop )
+{
+}
+
+DisplacementMappingTechnique::~DisplacementMappingTechnique()
+{
+}
+
+void
+DisplacementMappingTechnique::init( int /*dirtyMask*/,
+                                    bool /*assumeMultiThreaded*/ )
+{
+    if( !_terrainTile )
+    {
+        return;
+    }
+    if( !_terrainTile->getTerrain() )
+    {
+        return;
+    }
+
+    GeometryPool* geometryPool = _terrainTile->getTerrain()->getGeometryPool();
+    _transform                 = geometryPool->getTileSubgraph( _terrainTile );
+
+    // set tile as no longer dirty.
+    _terrainTile->setDirtyMask( 0 );
+}
+
+void
+DisplacementMappingTechnique::update( osgUtil::UpdateVisitor* uv )
+{
+    if( _terrainTile )
+    {
+        _terrainTile->osg::Group::traverse( *uv );
+    }
+
+    if( _transform.valid() )
+    {
+        _transform->accept( *uv );
+    }
+}
+
+void
+DisplacementMappingTechnique::cull( osgUtil::CullVisitor* cv )
+{
+    if( _transform.valid() )
+    {
+        _transform->accept( *cv );
+    }
+}
+
+void
+DisplacementMappingTechnique::traverse( osg::NodeVisitor& nv )
+{
+    if( !_terrainTile )
+    {
+        return;
+    }
+
+    // if app traversal update the frame count.
+    if( nv.getVisitorType() == osg::NodeVisitor::UPDATE_VISITOR )
+    {
+        // if (_terrainTile->getDirty()) _terrainTile->init(_terrainTile->getDirtyMask(),
+        // false);
+
+        osgUtil::UpdateVisitor* uv = nv.asUpdateVisitor();
+        if( uv )
+        {
+            update( uv );
+            return;
+        }
+    }
+    else if( nv.getVisitorType() == osg::NodeVisitor::CULL_VISITOR )
+    {
+        osgUtil::CullVisitor* cv = nv.asCullVisitor();
+        if( cv )
+        {
+            cull( cv );
+            return;
+        }
+    }
+
+    {
+        if( _transform.valid() )
+        {
+            _transform->accept( nv );
+        }
+    }
+}
+
+void
+DisplacementMappingTechnique::cleanSceneGraph()
+{
+}
+
+void
+DisplacementMappingTechnique::releaseGLObjects( osg::State* state ) const
+{
+    if( _transform.valid() )
+    {
+        // OSG_NOTICE<<"DisplacementMappingTechnique::releaseGLObjects()"<<std::endl;
+        _transform->releaseGLObjects( state );
+    }
+}

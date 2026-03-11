@@ -1,0 +1,382 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * PCF soft shadow mapping. Extends ShadowMap with percentage-closer
+ * filtering for smooth shadow edges.
+ */
+#include <osgShadow/SoftShadowMap>
+
+#include <osg/core/io_utils.hpp>
+#include <osg/core/Notify.hpp>
+#include <osg/state/CullFace.hpp>
+#include <osg/state/PolygonOffset.hpp>
+#include <osg/traversal/ComputeBoundsVisitor.hpp>
+#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowMap>
+#include <stdlib.h>
+
+using namespace osgShadow;
+
+#include <iostream>
+// for debug
+#include <osg/geometry/Geometry.hpp>
+#include <osg/lighting/LightSource.hpp>
+#include <osg/maths/compat.hpp>
+#include <osg/maths/Math.hpp>
+#include <osg/state/PolygonMode.hpp>
+#include <osg/textures/Texture3D.hpp>
+#include <osgDB/io/ReadFile.hpp>
+#include <osgText/Text>
+
+//////////////////////////////////////////////////////////////////
+// fragment shader
+//
+// Implementation from Chapter 17, Efficient Soft-Edged Shadows Using Pixel Shader
+// Branching, Yury Uralsky. GPU Gems 2, Matt Pharr ed. Addison-Wesley.
+//
+static const char fragmentSoftShaderSource_noBaseTexture[] =
+    "#version 460 core\n"
+    "#define SAMPLECOUNT 64 \n"
+    "#define SAMPLECOUNT_FLOAT 64.0 \n"
+    "#define SAMPLECOUNT_D2 32 \n"
+    "#define SAMPLECOUNT_D2_FLOAT 32.0 \n"
+    "#define INV_SAMPLECOUNT (1.0 / SAMPLECOUNT_FLOAT) \n"
+
+    "in vec4 vertexColor; \n"
+    "in vec4 texCoord_1; \n"
+    "out vec4 fragColor; \n"
+
+    "uniform sampler2DShadow osgShadow_shadowTexture; \n"
+    "uniform sampler3D osgShadow_jitterTexture; \n"
+
+    "uniform vec2 osgShadow_ambientBias; \n"
+    "uniform float osgShadow_softnessWidth; \n"
+    "uniform float osgShadow_jitteringScale; \n"
+
+    "void main(void) \n"
+    "{ \n"
+    "  vec4 sceneShadowProj  = texCoord_1; \n"
+    "  float softFactor = osgShadow_softnessWidth * sceneShadowProj.w; \n"
+    "  vec4 smCoord  = sceneShadowProj; \n"
+    "  vec3 jitterCoord = vec3( gl_FragCoord.xy / osgShadow_jitteringScale, 0.0 ); \n"
+    "  float shadow = 0.0; \n"
+    // First "cheap" sample test
+    "  const float pass_div = 1.0 / (2.0 * 4.0); \n"
+    "  for ( int i = 0; i < 4; ++i ) \n"
+    "  { \n"
+    // Get jitter values in [0,1]; adjust to have values in [-1,1]
+    "    vec4 offset = 2.0 * texture( osgShadow_jitterTexture, jitterCoord ) -1.0; \n"
+    "    jitterCoord.z += 1.0 / SAMPLECOUNT_D2_FLOAT; \n"
+
+    "    smCoord.xy = sceneShadowProj.xy  + (offset.xy) * softFactor; \n"
+    "    shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * pass_div; \n"
+
+    "    smCoord.xy = sceneShadowProj.xy  + (offset.zw) * softFactor; \n"
+    "    shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x *pass_div; \n"
+    "  } \n"
+    // skip all the expensive shadow sampling if not needed
+    "  if ( shadow * (shadow -1.0) != 0.0 ) \n"
+    "  { \n"
+    "    shadow *= pass_div; \n"
+    "    for (int i=0; i<SAMPLECOUNT_D2 - 4; ++i){ \n"
+    "      vec4 offset = 2.0 * texture( osgShadow_jitterTexture, jitterCoord ) - 1.0; \n"
+    "      jitterCoord.z += 1.0 / SAMPLECOUNT_D2_FLOAT; \n"
+
+    "      smCoord.xy = sceneShadowProj.xy  + offset.xy * softFactor; \n"
+    "      shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * "
+    "INV_SAMPLECOUNT; \n"
+
+    "      smCoord.xy = sceneShadowProj.xy  + offset.zw * softFactor; \n"
+    "      shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * "
+    "INV_SAMPLECOUNT; \n"
+    "    } \n"
+    "  } \n"
+    // apply shadow, modulo the ambient bias
+    "  fragColor = vertexColor * (osgShadow_ambientBias.x + shadow * "
+    "osgShadow_ambientBias.y); \n"
+    "} \n";
+
+//////////////////////////////////////////////////////////////////
+// fragment shader
+//
+static const char fragmentSoftShaderSource_withBaseTexture[] =
+    "#version 460 core\n"
+    "#define SAMPLECOUNT 64 \n"
+    "#define SAMPLECOUNT_FLOAT 64.0 \n"
+    "#define SAMPLECOUNT_D2 32 \n"
+    "#define SAMPLECOUNT_D2_FLOAT 32.0 \n"
+    "#define INV_SAMPLECOUNT (1.0 / SAMPLECOUNT_FLOAT) \n"
+
+    "in vec4 vertexColor; \n"
+    "in vec4 texCoord_0; \n"
+    "in vec4 texCoord_1; \n"
+    "out vec4 fragColor; \n"
+
+    "uniform sampler2D osgShadow_baseTexture; \n"
+    "uniform sampler2DShadow osgShadow_shadowTexture; \n"
+    "uniform sampler3D osgShadow_jitterTexture; \n"
+
+    "uniform vec2 osgShadow_ambientBias; \n"
+    "uniform float osgShadow_softnessWidth; \n"
+    "uniform float osgShadow_jitteringScale; \n"
+
+    "void main(void) \n"
+    "{ \n"
+    "  vec4 sceneShadowProj  = texCoord_1; \n"
+    "  float softFactor = osgShadow_softnessWidth * sceneShadowProj.w; \n"
+    "  vec4 smCoord  = sceneShadowProj; \n"
+    "  vec3 jitterCoord = vec3( gl_FragCoord.xy / osgShadow_jitteringScale, 0.0 ); \n"
+    "  float shadow = 0.0; \n"
+    // First "cheap" sample test
+    "  const float pass_div = 1.0 / (2.0 * 4.0); \n"
+    "  for ( int i = 0; i < 4; ++i ) \n"
+    "  { \n"
+    // Get jitter values in [0,1]; adjust to have values in [-1,1]
+    "    vec4 offset = 2.0 * texture( osgShadow_jitterTexture, jitterCoord ) -1.0; \n"
+    "    jitterCoord.z += 1.0 / SAMPLECOUNT_D2_FLOAT; \n"
+
+    "    smCoord.xy = sceneShadowProj.xy  + (offset.xy) * softFactor; \n"
+    "    shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * pass_div; \n"
+
+    "    smCoord.xy = sceneShadowProj.xy  + (offset.zw) * softFactor; \n"
+    "    shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x *pass_div; \n"
+    "  } \n"
+    // skip all the expensive shadow sampling if not needed
+    "  if ( shadow * (shadow -1.0) != 0.0 ) \n"
+    "  { \n"
+    "    shadow *= pass_div; \n"
+    "    for (int i=0; i<SAMPLECOUNT_D2 -4; ++i){ \n"
+    "      vec4 offset = 2.0 * texture( osgShadow_jitterTexture, jitterCoord ) - 1.0; \n"
+    "      jitterCoord.z += 1.0 / SAMPLECOUNT_D2_FLOAT; \n"
+
+    "      smCoord.xy = sceneShadowProj.xy  + offset.xy * softFactor; \n"
+    "      shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * "
+    "INV_SAMPLECOUNT; \n"
+
+    "      smCoord.xy = sceneShadowProj.xy  + offset.zw * softFactor; \n"
+    "      shadow +=  textureProj( osgShadow_shadowTexture, smCoord ).x * "
+    "INV_SAMPLECOUNT; \n"
+    "    } \n"
+    "  } \n"
+    // apply color and object base texture
+    "  vec4 color = vertexColor * texture( osgShadow_baseTexture, texCoord_0.xy ); \n"
+    // apply shadow, modulo the ambient bias
+    "  fragColor = color * (osgShadow_ambientBias.x + shadow * "
+    "osgShadow_ambientBias.y); \n"
+    "} \n";
+
+SoftShadowMap::SoftShadowMap() :
+    _softnessWidth( 0.005F ),
+    _jitteringScale( 32.F ),
+    _jitterTextureUnit( _shadowTextureUnit + 1 )
+{
+}
+
+SoftShadowMap::SoftShadowMap( const SoftShadowMap& copy,
+                              const osg::CopyOp&   copyop ) :
+    Inherit( copy,
+             copyop ),
+    _softnessWidth( copy._softnessWidth ),
+    _jitteringScale( copy._jitteringScale ),
+    _jitterTextureUnit( copy._shadowTextureUnit )
+{
+}
+
+void
+SoftShadowMap::setJitteringScale( float jitteringScale )
+{
+    _jitteringScale = jitteringScale;
+    if( _jitteringScaleUniform.valid() )
+    {
+        _jitteringScaleUniform->set( _jitteringScale );
+    }
+}
+
+void
+SoftShadowMap::setSoftnessWidth( float softnessWidth )
+{
+    _softnessWidth = softnessWidth;
+    if( _softnessWidthUniform.valid() )
+    {
+        _softnessWidthUniform->set( _softnessWidth );
+    }
+}
+
+void
+SoftShadowMap::setJitterTextureUnit( unsigned int jitterTextureUnit )
+{
+    _jitterTextureUnit = jitterTextureUnit;
+}
+
+void
+SoftShadowMap::createUniforms()
+{
+    _uniformList.clear();
+
+    osg::Uniform* baseTextureSampler =
+        new osg::Uniform( "osgShadow_baseTexture", ( int )_baseTextureUnit );
+    _uniformList.push_back( baseTextureSampler );
+
+    osg::Uniform* shadowTextureSampler =
+        new osg::Uniform( "osgShadow_shadowTexture", ( int )_shadowTextureUnit );
+    _uniformList.push_back( shadowTextureSampler );
+
+    _ambientBiasUniform = new osg::Uniform( "osgShadow_ambientBias", _ambientBias );
+    _uniformList.push_back( _ambientBiasUniform.get() );
+
+    _softnessWidthUniform =
+        new osg::Uniform( "osgShadow_softnessWidth", _softnessWidth );
+    _uniformList.push_back( _softnessWidthUniform.get() );
+
+    _jitteringScaleUniform =
+        new osg::Uniform( "osgShadow_jitteringScale", _jitteringScale );
+    _uniformList.push_back( _jitteringScaleUniform.get() );
+
+    _jitterTextureUnit = _shadowTextureUnit + 1;
+    initJittering( _stateset.get() );
+
+    osg::Uniform* jitterTextureSampler =
+        new osg::Uniform( "osgShadow_jitterTexture", ( int )_jitterTextureUnit );
+    _uniformList.push_back( jitterTextureSampler );
+
+    _shadowTextureMatrixUniform =
+        new osg::Uniform( osg::Uniform::FLOAT_MAT4, "osgShadow_shadowTextureMatrix" );
+    _shadowTextureMatrixUniform->set( osg::mat4() );
+    _uniformList.push_back( _shadowTextureMatrixUniform.get() );
+}
+
+void
+SoftShadowMap::createShaders()
+{
+    // if we are not given shaders, use the default
+    if( _shaderList.empty() )
+    {
+        if( _shadowTextureUnit == 0 )
+        {
+            osg::Shader* fragment_shader =
+                new osg::Shader( osg::Shader::FRAGMENT,
+                                 fragmentSoftShaderSource_noBaseTexture );
+            _shaderList.push_back( fragment_shader );
+        }
+        else
+        {
+            osg::Shader* fragment_shader =
+                new osg::Shader( osg::Shader::FRAGMENT,
+                                 fragmentSoftShaderSource_withBaseTexture );
+            _shaderList.push_back( fragment_shader );
+        }
+    }
+}
+
+// Implementation from Chapter 17, Efficient Soft-Edged Shadows Using Pixel Shader
+// Branching, Yury Uralsky. GPU Gems 2, Matt Pharr ed. Addison-Wesley.
+//
+// Creates a 3D texture containing jittering data used in the shader to take samples of
+// the shadow map.
+void
+SoftShadowMap::initJittering( osg::StateSet* ss )
+{
+    // create a 3D texture with hw mipmapping
+    osg::Texture3D* texture3D = new osg::Texture3D;
+    texture3D->setFilter( osg::Texture3D::MIN_FILTER, osg::Texture3D::NEAREST );
+    texture3D->setFilter( osg::Texture3D::MAG_FILTER, osg::Texture3D::NEAREST );
+    texture3D->setWrap( osg::Texture3D::WRAP_S, osg::Texture3D::REPEAT );
+    texture3D->setWrap( osg::Texture3D::WRAP_T, osg::Texture3D::REPEAT );
+    texture3D->setWrap( osg::Texture3D::WRAP_R, osg::Texture3D::REPEAT );
+    texture3D->setUseHardwareMipMapGeneration( true );
+
+    const unsigned int size  = 16;
+    const unsigned int gridW = 8;
+    const unsigned int gridH = 8;
+    unsigned int       R     = ( gridW * gridH / 2 );
+    texture3D->setTextureSize( static_cast<int>( size ),
+                               static_cast<int>( size ),
+                               static_cast<int>( R ) );
+
+    // then create the 3d image to fill with jittering data
+    osg::Image*    image3D = new osg::Image;
+    unsigned char* data3D  = new unsigned char[size * size * R * 4];
+
+    for( unsigned int s = 0; s < size; ++s )
+    {
+        for( unsigned int t = 0; t < size; ++t )
+        {
+            float v[4], d[4];
+
+            for( unsigned int r = 0; r < R; ++r )
+            {
+                const int x = r % ( gridW / 2 );
+                const int y = ( gridH - 1 ) - ( r / ( gridW / 2 ) );
+
+                // Generate points on a  regular gridW x gridH rectangular
+                // grid.   We  multiply  x   by  2  because,  we  treat  2
+                // consecutive x  each loop iteration.  Add 0.5f  to be in
+                // the center of the pixel. x, y belongs to [ 0.0, 1.0 ].
+                v[0] =
+                    ( static_cast<float>( x ) * 2 + 0.5F ) / static_cast<float>( gridW );
+                v[1] = ( static_cast<float>( y ) + 0.5F ) / static_cast<float>( gridH );
+                v[2] = ( static_cast<float>( x ) * 2 + 1 + 0.5F ) /
+                       static_cast<float>( gridW );
+                v[3] = v[1];
+
+                // Jitter positions. ( 0.5f / w ) == ( 1.0f / 2*w )
+                v[0] += ( static_cast<float>( rand() ) *
+                          2.F /
+                          static_cast<float>( RAND_MAX ) -
+                          1.F ) *
+                        ( 0.5F / static_cast<float>( gridW ) );
+                v[1] += ( static_cast<float>( rand() ) *
+                          2.F /
+                          static_cast<float>( RAND_MAX ) -
+                          1.F ) *
+                        ( 0.5F / static_cast<float>( gridH ) );
+                v[2] += ( static_cast<float>( rand() ) *
+                          2.F /
+                          static_cast<float>( RAND_MAX ) -
+                          1.F ) *
+                        ( 0.5F / static_cast<float>( gridW ) );
+                v[3] += ( static_cast<float>( rand() ) *
+                          2.F /
+                          static_cast<float>( RAND_MAX ) -
+                          1.F ) *
+                        ( 0.5F / static_cast<float>( gridH ) );
+
+                // Warp to disk; values in [-1,1]
+                d[0] = sqrtf( v[1] ) * cosf( 2.F * 3.1415926F * v[0] );
+                d[1] = sqrtf( v[1] ) * sinf( 2.F * 3.1415926F * v[0] );
+                d[2] = sqrtf( v[3] ) * cosf( 2.F * 3.1415926F * v[2] );
+                d[3] = sqrtf( v[3] ) * sinf( 2.F * 3.1415926F * v[2] );
+
+                // store d into unsigned values [0,255]
+                const unsigned int tmp = ( ( r * size * size ) + ( t * size ) + s ) * 4;
+                data3D[tmp + 0]        = ( unsigned char )( ( 1.F + d[0] ) * 127 );
+                data3D[tmp + 1]        = ( unsigned char )( ( 1.F + d[1] ) * 127 );
+                data3D[tmp + 2]        = ( unsigned char )( ( 1.F + d[2] ) * 127 );
+                data3D[tmp + 3]        = ( unsigned char )( ( 1.F + d[3] ) * 127 );
+            }
+        }
+    }
+
+// the GPU Gem implementation uses a NV specific internal texture format
+// (GL_SIGNED_RGBA_NV) In order to make it more generic, we use GL_RGBA4 which should be
+// cross platform.
+#ifdef GL_RGBA4
+    GLenum internalTextureFormat = GL_RGBA4;
+#else
+    // OpenGLES 1.1 doesn't define GL_RGBA4, so we'll just assume RGBA
+    GLenum internalTextureFormat = GL_RGBA;
+#endif
+    image3D->setImage( static_cast<int>( size ),
+                       static_cast<int>( size ),
+                       static_cast<int>( R ),
+                       static_cast<GLint>( internalTextureFormat ),
+                       GL_RGBA,
+                       GL_UNSIGNED_BYTE,
+                       data3D,
+                       osg::Image::USE_NEW_DELETE );
+
+    texture3D->setImage( image3D );
+
+    ss->setTextureAttributeAndModes( _jitterTextureUnit,
+                                     texture3D,
+                                     osg::StateAttribute::ON |
+                                         osg::StateAttribute::OVERRIDE );
+}

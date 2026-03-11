@@ -1,0 +1,32 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang",
+                "BUILD_OSG_EXAMPLES": "ON"
+            }
+        },
+        {
+            "name": "iwyu",
+            "inherits": "default",
+            "cacheVariables": {
+                "WITH_IWYU": "ON"
+            }
+        },
+        {
+            "name": "gcc",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc",
+                "BUILD_OSG_EXAMPLES": "ON"
+            }
+        }
+    ]
+}

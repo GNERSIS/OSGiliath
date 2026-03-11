@@ -1,0 +1,346 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Utility functions for osgViewer: disparity.
+ */
+#include <osgViewer/config/WoWVxDisplay>
+
+#include <osg/core/io_utils.hpp>
+#include <osg/core/ValueObject.hpp>
+#include <osg/maths/compat.hpp>
+#include <osg/maths/Math.hpp>
+#include <osg/state/Stencil.hpp>
+#include <osg/textures/Texture1D.hpp>
+#include <osg/textures/Texture2D.hpp>
+#include <osg/textures/TextureRectangle.hpp>
+#include <osgViewer/core/Renderer.hpp>
+#include <osgViewer/core/View.hpp>
+#include <osgViewer/platform/GraphicsWindow.hpp>
+
+using namespace osgViewer;
+
+void
+WoWVxDisplay::configure( osgViewer::View& view ) const
+{
+    OSG_INFO << "WoWVxDisplay::configure(...)" << std::endl;
+
+    osg::GraphicsContext::WindowingSystemInterface* wsi =
+        osg::GraphicsContext::getWindowingSystemInterface();
+    if( !wsi )
+    {
+        OSG_NOTICE << "Error, no WindowSystemInterface available, cannot create windows."
+                   << std::endl;
+        return;
+    }
+
+    osg::GraphicsContext::ScreenIdentifier si;
+    si.readDISPLAY();
+
+    // displayNum has not been set so reset it to 0.
+    if( si.displayNum < 0 )
+    {
+        si.displayNum = 0;
+    }
+
+    si.screenNum = static_cast<int>( _screenNum );
+
+    unsigned int width, height;
+    wsi->getScreenResolution( si, width, height );
+
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+    traits->hostName                                  = si.hostName;
+    traits->displayNum                                = si.displayNum;
+    traits->screenNum                                 = si.screenNum;
+    traits->x                                         = 0;
+    traits->y                                         = 0;
+    traits->width                                     = static_cast<int>( width );
+    traits->height                                    = static_cast<int>( height );
+    traits->windowDecoration                          = false;
+    traits->doubleBuffer                              = true;
+    traits->sharedContext                             = 0;
+
+    osg::ref_ptr<osg::GraphicsContext> gc =
+        osg::GraphicsContext::createGraphicsContext( traits.get() );
+    if( !gc )
+    {
+        OSG_NOTICE << "GraphicsWindow has not been created successfully." << std::endl;
+        return;
+    }
+
+    int             tex_width     = static_cast<int>( width );
+    int             tex_height    = static_cast<int>( height );
+
+    int             camera_width  = tex_width;
+    int             camera_height = tex_height;
+
+    osg::Texture2D* texture       = new osg::Texture2D;
+    texture->setTextureSize( tex_width, tex_height );
+    texture->setInternalFormat( GL_RGB );
+    texture->setFilter( osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR );
+    texture->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
+
+    osg::Texture2D* textureD = new osg::Texture2D;
+    textureD->setTextureSize( tex_width, tex_height );
+    textureD->setInternalFormat( GL_DEPTH_COMPONENT );
+    textureD->setFilter( osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR );
+    textureD->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
+
+    // front face
+    {
+#if 0
+            osg::Camera::RenderTargetImplementation renderTargetImplementation = osg::Camera::SEPERATE_WINDOW;
+            GLenum buffer = GL_FRONT;
+#else
+        osg::Camera::RenderTargetImplementation renderTargetImplementation =
+            osg::Camera::FRAME_BUFFER_OBJECT;
+        GLenum buffer = GL_FRONT;
+#endif
+
+        osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+        camera->setName( "Front face camera" );
+        camera->setGraphicsContext( gc.get() );
+        camera->setViewport( new osg::Viewport( 0, 0, camera_width, camera_height ) );
+        camera->setDrawBuffer( buffer );
+        camera->setReadBuffer( buffer );
+        camera->setAllowEventFocus( false );
+        // tell the camera to use OpenGL frame buffer object where supported.
+        camera->setRenderTargetImplementation( renderTargetImplementation );
+
+        // attach the texture and use it as the color buffer.
+        camera->attach( osg::Camera::COLOR_BUFFER, texture );
+        camera->attach( osg::Camera::DEPTH_BUFFER, textureD );
+
+        view.addSlave( camera.get(), osg::dmat4(), osg::dmat4() );
+    }
+
+    // WoW display set up.
+    {
+        osg::Texture1D* textureHeader = new osg::Texture1D();
+        // Set up the header
+        {
+            unsigned char header[] = {
+                0XF1,
+                _wow_content,
+                _wow_factor,
+                _wow_offset,
+                0X00,
+                0X00,
+                0X00,
+                0X00,
+                0X00,
+                0X00
+            };
+            // Calc the CRC32
+            {
+                unsigned long _register = 0;
+                for( int i = 0; i < 10; ++i )
+                {
+                    unsigned char mask = 0X80;
+                    unsigned char byte = header[i];
+                    for( int j = 0; j < 8; ++j )
+                    {
+                        bool topBit   = ( _register & 0X80'00'00'00 ) != 0;
+                        _register   <<= 1;
+                        _register    ^= ( ( byte & mask ) != 0 ? 0X1 : 0X0 );
+                        if( topBit )
+                        {
+                            _register ^= 0X04'C1'1D'B7;
+                        }
+                        mask >>= 1;
+                    }
+                }
+                unsigned char* p = ( unsigned char* )&_register;
+                for( size_t i = 0; i < 4; ++i )
+                {
+                    header[i + 6] = p[3 - i];
+                }
+            }
+
+            osg::ref_ptr<osg::Image> imageheader = new osg::Image();
+            imageheader->allocateImage( 256, 1, 1, GL_RED, GL_UNSIGNED_BYTE );
+            {
+                unsigned char* cheader = imageheader->data();
+                for( int x = 0; x < 256; ++x )
+                {
+                    cheader[x] = 0;
+                }
+                for( int x = 0; x <= 9; ++x )
+                {
+                    for( int y = 7; y >= 0; --y )
+                    {
+                        int i      = 2 * ( 7 - y ) + 16 * x;
+                        cheader[i] = static_cast<unsigned char>(
+                            ( ( 1 << ( y ) ) & ( header[x] ) ) << ( 7 - ( y ) )
+                        );
+                    }
+                }
+            }
+            textureHeader->setImage( imageheader.get() );
+        }
+
+        // Create the Screen Aligned Quad
+        osg::Geode* geode = new osg::Geode();
+        {
+            osg::Geometry*  geom     = new osg::Geometry;
+
+            osg::Vec3Array* vertices = new osg::Vec3Array;
+            vertices->push_back( osg::vec3( 0, static_cast<float>( height ), 0 ) );
+            vertices->push_back( osg::vec3( 0, 0, 0 ) );
+            vertices->push_back(
+                osg::vec3( static_cast<float>( width ), static_cast<float>( height ), 0 )
+            );
+            vertices->push_back( osg::vec3( static_cast<float>( width ), 0, 0 ) );
+            geom->setVertexArray( vertices );
+
+            osg::Vec2Array* tex = new osg::Vec2Array;
+            tex->push_back( osg::vec2( 0, 1 ) );
+            tex->push_back( osg::vec2( 0, 0 ) );
+            tex->push_back( osg::vec2( 1, 1 ) );
+            tex->push_back( osg::vec2( 1, 0 ) );
+            geom->setTexCoordArray( 0, tex );
+
+            geom->addPrimitiveSet( new osg::DrawArrays( GL_TRIANGLE_STRIP, 0, 4 ) );
+            geode->addDrawable( geom );
+
+            // new we need to add the textures to the quad, and setting up the shader.
+            osg::StateSet* stateset = geode->getOrCreateStateSet();
+            stateset->setTextureAttributeAndModes( 0,
+                                                   textureHeader,
+                                                   osg::StateAttribute::ON );
+            stateset->setTextureAttributeAndModes( 1, texture, osg::StateAttribute::ON );
+            stateset->setTextureAttributeAndModes( 2,
+                                                   textureD,
+                                                   osg::StateAttribute::ON );
+            stateset->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+
+            osg::ref_ptr<osg::Program> programShader = new osg::Program();
+            stateset->setAttribute( programShader.get(), osg::StateAttribute::ON );
+            stateset->addUniform( new osg::Uniform( "wow_width", ( int )width ) );
+            stateset->addUniform( new osg::Uniform( "wow_height", ( int )height ) );
+            stateset->addUniform( new osg::Uniform( "wow_disparity_M",
+                                                    _wow_disparity_M ) );
+            stateset->addUniform( new osg::Uniform( "wow_disparity_Zd",
+                                                    _wow_disparity_Zd ) );
+            stateset->addUniform( new osg::Uniform( "wow_disparity_vz",
+                                                    _wow_disparity_vz ) );
+            stateset->addUniform( new osg::Uniform( "wow_disparity_C",
+                                                    _wow_disparity_C ) );
+
+            stateset->addUniform( new osg::Uniform( "wow_header", 0 ) );
+            stateset->addUniform( new osg::Uniform( "wow_tcolor", 1 ) );
+            stateset->addUniform( new osg::Uniform( "wow_tdepth", 2 ) );
+
+            osg::Shader* frag = new osg::Shader( osg::Shader::FRAGMENT );
+            frag->setShaderSource(
+                "#version 460 core\n"
+                " uniform sampler1D wow_header;                                         "
+                "                                          \n"
+                " uniform sampler2D wow_tcolor;                                         "
+                "                                          \n"
+                " uniform sampler2D wow_tdepth;                                         "
+                "                                          \n"
+                "                                                                       "
+                "                                          \n"
+                " uniform int wow_width;                                                "
+                "                                          \n"
+                " uniform int wow_height;                                               "
+                "                                          \n"
+                " uniform float wow_disparity_M;                                        "
+                "                                          \n"
+                " uniform float wow_disparity_Zd;                                       "
+                "                                          \n"
+                " uniform float wow_disparity_vz;                                       "
+                "                                          \n"
+                " uniform float wow_disparity_C;                                        "
+                "                                          \n"
+                "                                                                       "
+                "                                          \n"
+                " out vec4 osg_FragColor;                                               "
+                "                                          \n"
+                "                                                                       "
+                "                                          \n"
+                " float disparity(float Z)                                              "
+                "                                          \n"
+                " {                                                                     "
+                "                                          \n"
+                "     return "
+                "(wow_disparity_M*(1.0-(wow_disparity_vz/"
+                "(Z-wow_disparity_Zd+wow_disparity_vz)))                        \n"
+                "                   + wow_disparity_C) / 255.0;                         "
+                "                                          \n"
+                " }                                                                     "
+                "                                          \n"
+                "                                                                       "
+                "                                          \n"
+                " void main()                                                           "
+                "                                          \n"
+                " {                                                                     "
+                "                                          \n"
+                "       vec2 pos = (gl_FragCoord.xy / vec2(wow_width/2,wow_height) );   "
+                "                                          \n"
+                "         if (gl_FragCoord.x > float(wow_width/2))                      "
+                "                                            \n"
+                "         {                                                             "
+                "                                            \n"
+                "             osg_FragColor = vec4(disparity(( texture(wow_tdepth, pos "
+                "- vec2(1,0))).z));                           \n"
+                "         }                                                             "
+                "                                            \n"
+                "         else{                                                         "
+                "                                            \n"
+                "             osg_FragColor = texture(wow_tcolor, pos);                 "
+                "                                            \n"
+                "         }                                                             "
+                "                                            \n"
+                "     if ( (gl_FragCoord.y >= float(wow_height-1)) && (gl_FragCoord.x < "
+                "256.0) )                                    \n"
+                "     {                                                                 "
+                "                                            \n"
+                "         float pos = gl_FragCoord.x/256.0;                             "
+                "                                            \n"
+                "         float blue = texture(wow_header, pos).b;                      "
+                "                                            \n"
+                "         if ( blue < 0.5)                                              "
+                "                                            \n"
+                "             osg_FragColor.b = 0.0;                                    "
+                "                                            \n"
+                "         else                                                          "
+                "                                            \n"
+                "             osg_FragColor.b = 1.0;                                    "
+                "                                            \n"
+                "     }                                                                 "
+                "                                            \n"
+                " }                                                                     "
+                "                                          \n"
+            );
+
+            programShader->addShader( frag );
+        }
+
+        // Create the Camera
+        {
+            osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+            camera->setGraphicsContext( gc.get() );
+            camera->setClearMask( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+            camera->setClearColor( osg::vec4( 0.0, 0.0, 0.0, 1.0 ) );
+            camera->setViewport( new osg::Viewport( 0, 0, width, height ) );
+            GLenum buffer = traits->doubleBuffer ? GL_BACK : GL_FRONT;
+            camera->setDrawBuffer( buffer );
+            camera->setReadBuffer( buffer );
+            camera->setReferenceFrame( osg::Camera::ABSOLUTE_RF );
+            camera->setAllowEventFocus( false );
+            camera->setInheritanceMask( camera->getInheritanceMask() &
+                                        ~osg::CullSettings::CLEAR_COLOR &
+                                        ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE );
+            // camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+
+            camera->setProjectionMatrixAsOrtho2D( 0, width, 0, height );
+            camera->setViewMatrix( osg::dmat4() );
+
+            // add subgraph to render
+            camera->addChild( geode );
+
+            camera->setName( "WoWCamera" );
+
+            view.addSlave( camera.get(), osg::dmat4(), osg::dmat4(), false );
+        }
+    }
+}

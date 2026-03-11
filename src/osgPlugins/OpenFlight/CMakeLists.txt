@@ -1,0 +1,59 @@
+SET(TARGET_SRC
+    AncillaryRecords.cpp
+    AttrData.cpp
+    ControlRecords.cpp
+    DataInputStream.cpp
+    DataOutputStream.cpp
+    Document.cpp
+    expAncillaryRecords.cpp
+    expControlRecords.cpp
+    expGeometryRecords.cpp
+    expPrimaryRecords.cpp
+    ExportOptions.cpp
+    FltExportVisitor.cpp
+    GeometryRecords.cpp
+    LightPointRecords.cpp
+    LightSourcePaletteManager.cpp
+    MaterialPaletteManager.cpp
+    PaletteRecords.cpp
+    Pools.cpp
+    PrimaryRecords.cpp
+    ReaderWriterATTR.cpp
+    ReaderWriterFLT.cpp
+    Record.cpp
+    RecordInputStream.cpp
+    Registry.cpp
+    ReservedRecords.cpp
+    RoadRecords.cpp
+    TexturePaletteManager.cpp
+    Vertex.cpp
+    VertexPaletteManager.cpp
+    VertexRecords.cpp
+)
+
+SET(TARGET_H
+    AttrData.hpp
+    DataInputStream.hpp
+    DataOutputStream.hpp
+    ExportOptions.hpp
+    FltExportVisitor.hpp
+    FltWriteResult.hpp
+    Document.hpp
+    LightSourcePaletteManager.hpp
+    MaterialPaletteManager.hpp
+    Pools.hpp
+    Record.hpp
+    RecordInputStream.hpp
+    Registry.hpp
+    TexturePaletteManager.hpp
+    Vertex.hpp
+    VertexPaletteManager.hpp
+    Opcodes.hpp
+    Types.hpp
+    Utils.hpp
+)
+
+SET(TARGET_ADDED_LIBRARIES osgSim )
+
+#### end var setup  ###
+SETUP_PLUGIN(openflight)

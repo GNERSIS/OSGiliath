@@ -1,0 +1,126 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Utility functions for osgSim: drawLightPoints.
+ */
+#include "LightPointSpriteDrawable.hpp"
+
+#include <osg/state/Point.hpp>
+
+using namespace osgSim;
+
+LightPointSpriteDrawable::LightPointSpriteDrawable() :
+    osgSim::LightPointDrawable()
+{
+}
+
+LightPointSpriteDrawable::LightPointSpriteDrawable( const LightPointSpriteDrawable& lpsd,
+                                                    const osg::CopyOp& copyop ) :
+    osgSim::LightPointDrawable( lpsd,
+                                copyop )
+{
+}
+
+void
+LightPointSpriteDrawable::drawImplementation( osg::RenderInfo& renderInfo ) const
+{
+    osg::State& state = *renderInfo.getState();
+
+    state.applyMode( GL_BLEND, true );
+
+    state.applyAttribute( _depthOn.get() );
+
+    state.applyAttribute( _blendOneMinusSrcAlpha.get() );
+
+    const GLuint       vertexAttribLocation = state.getVertexAlias()._location;
+    const GLuint       colorAttribLocation  = state.getColorAlias()._location;
+    osg::GLExtensions* ext                  = state.get<osg::GLExtensions>();
+
+    // Core Profile requires VAO and VBO — no client-side vertex arrays.
+    GLuint             savedVAO = state.getCurrentVertexArrayObject();
+
+    GLuint             vao      = 0;
+    ext->glGenVertexArrays( 1, &vao );
+    state.bindVertexArrayObject( vao );
+
+    GLuint vbo = 0;
+    ext->glGenBuffers( 1, &vbo );
+    ext->glBindBuffer( GL_ARRAY_BUFFER, vbo );
+
+    auto drawLightPoints = [&]( const SizedLightPointList& list )
+    {
+        unsigned int pointsize = 1;
+        for( auto sitr = list.begin(); sitr != list.end(); ++sitr, ++pointsize )
+        {
+            const LightPointList& lpl = *sitr;
+            if( !lpl.empty() )
+            {
+                glPointSize( static_cast<GLfloat>( pointsize ) );
+
+                const GLsizei    stride = sizeof( ColorPosition );
+                const GLsizeiptr dataSize =
+                    static_cast<GLsizeiptr>( lpl.size() ) * stride;
+                ext->glBufferData( GL_ARRAY_BUFFER,
+                                   dataSize,
+                                   &lpl.front(),
+                                   GL_STREAM_DRAW );
+
+                ext->glEnableVertexAttribArray( colorAttribLocation );
+                ext->glVertexAttribPointer( colorAttribLocation,
+                                            4,
+                                            GL_UNSIGNED_BYTE,
+                                            GL_TRUE,
+                                            stride,
+                                            ( const GLvoid* )0 );
+
+                ext->glEnableVertexAttribArray( vertexAttribLocation );
+                ext->glVertexAttribPointer( vertexAttribLocation,
+                                            3,
+                                            GL_FLOAT,
+                                            GL_FALSE,
+                                            stride,
+                                            ( const GLvoid* )4 );
+
+                glDrawArrays( GL_POINTS, 0, static_cast<GLsizei>( lpl.size() ) );
+            }
+        }
+    };
+
+    // Opaque light points
+    drawLightPoints( _sizedOpaqueLightPointList );
+
+    state.applyMode( GL_BLEND, true );
+    state.applyAttribute( _depthOff.get() );
+
+    // Blended light points
+    state.applyAttribute( _blendOneMinusSrcAlpha.get() );
+    drawLightPoints( _sizedBlendedLightPointList );
+
+    // Additive light points
+    state.applyAttribute( _blendOne.get() );
+    drawLightPoints( _sizedAdditiveLightPointList );
+
+    ext->glDisableVertexAttribArray( vertexAttribLocation );
+    ext->glDisableVertexAttribArray( colorAttribLocation );
+
+    ext->glBindBuffer( GL_ARRAY_BUFFER, 0 );
+    ext->glDeleteBuffers( 1, &vbo );
+    ext->glDeleteVertexArrays( 1, &vao );
+
+    if( savedVAO )
+    {
+        state.bindVertexArrayObject( savedVAO );
+    }
+    else
+    {
+        state.unbindVertexArrayObject();
+    }
+
+    glPointSize( 1 );
+
+    state.haveAppliedAttribute( osg::StateAttribute::Type::POINT );
+
+    state.dirtyAllVertexArrays();
+    state.disableAllVertexArrays();
+
+    // restore the state afterwards.
+    state.apply();
+}

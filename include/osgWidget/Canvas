@@ -1,0 +1,33 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Free-positioning window layout. Children are placed at
+ * explicit pixel coordinates without automatic layout.
+ */
+// Code by: Jeremy Moles (cubicool) 2007-2008
+
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osgWidget/Window>
+
+namespace osgWidget {
+
+class OSGWIDGET_EXPORT Canvas: public osg::Inherit<Window, Canvas>
+{
+    public:
+
+        OSG_REGISTER_TYPE(osgWidget, Canvas)
+
+        Canvas (const std::string& = "");
+        Canvas (const Canvas&, const osg::CopyOp&);
+
+        using Window::addWidget;
+
+        //! Adds a Widget at the given XY coordinate.
+        virtual bool addWidget(Widget*, point_type, point_type);
+
+    protected:
+        virtual void _resizeImplementation(point_type, point_type);
+
+};
+
+}

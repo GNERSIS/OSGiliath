@@ -1,0 +1,183 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Template animation sampler pairing a Keyframe container with
+ * an Interpolator. Evaluates values at arbitrary times.
+ */
+#pragma once
+
+#include <iostream>
+#include <osg/core/ref_ptr.hpp>
+#include <osg/core/Referenced.hpp>
+#include <osgAnimation/core/Interpolator.hpp>
+#include <osgAnimation/core/Keyframe.hpp>
+#include <vector>
+
+namespace osgAnimation
+{
+
+    class Sampler : public osg::Referenced
+    {
+        public:
+
+            virtual KeyframeContainer*
+            getKeyframeContainer() = 0;
+            virtual const KeyframeContainer*
+            getKeyframeContainer() const = 0;
+
+        protected:
+    };
+
+    // Sampler generic
+    template<class F>
+    class TemplateSampler : public Sampler
+    {
+        public:
+
+            typedef typename F::KeyframeType                KeyframeType;
+            typedef TemplateKeyframeContainer<KeyframeType> KeyframeContainerType;
+            typedef typename F::UsingType                   UsingType;
+            typedef F                                       FunctorType;
+
+            TemplateSampler()
+            {
+            }
+
+            ~TemplateSampler()
+            {
+            }
+
+            void
+            getValueAt( double     time,
+                        UsingType& result ) const
+            {
+                _functor.getValue( *_keyframes, time, result );
+            }
+
+            void
+            setKeyframeContainer( KeyframeContainerType* kf )
+            {
+                _keyframes = kf;
+            }
+
+            virtual KeyframeContainer*
+            getKeyframeContainer()
+            {
+                return _keyframes.get();
+            }
+
+            virtual const KeyframeContainer*
+            getKeyframeContainer() const
+            {
+                return _keyframes.get();
+            }
+
+            KeyframeContainerType*
+            getKeyframeContainerTyped()
+            {
+                return _keyframes.get();
+            }
+
+            const KeyframeContainerType*
+            getKeyframeContainerTyped() const
+            {
+                return _keyframes.get();
+            }
+
+            KeyframeContainerType*
+            getOrCreateKeyframeContainer()
+            {
+                if( _keyframes != 0 )
+                {
+                    return _keyframes.get();
+                }
+                _keyframes = new KeyframeContainerType;
+                return _keyframes.get();
+            }
+
+            double
+            getStartTime() const
+            {
+                if( !_keyframes || _keyframes->empty() )
+                {
+                    return 0.0;
+                }
+                return _keyframes->front().getTime();
+            }
+
+            double
+            getEndTime() const
+            {
+                if( !_keyframes || _keyframes->empty() )
+                {
+                    return 0.0;
+                }
+                return _keyframes->back().getTime();
+            }
+
+        protected:
+
+            FunctorType                         _functor;
+            osg::ref_ptr<KeyframeContainerType> _keyframes;
+    };
+
+    template<typename VALUESAMPLERTYPE, typename TIMESAMPLERTYPE>
+    class TemplateCompositeSampler : public osg::Referenced
+    {
+            VALUESAMPLERTYPE& _value;
+            TIMESAMPLERTYPE&  _time;
+
+        public:
+
+            typedef typename VALUESAMPLERTYPE::FunctorType::UsingType    UsingType;
+            typedef typename VALUESAMPLERTYPE::FunctorType::KeyframeType KeyframeType;
+
+            TemplateCompositeSampler( VALUESAMPLERTYPE& value,
+                                      TIMESAMPLERTYPE&  time ) :
+                _value( value ),
+                _time( time )
+            {
+            }
+
+            void
+            getValueAt( double                                             time,
+                        typename VALUESAMPLERTYPE::FunctorType::UsingType& result )
+            {
+                double newtime;
+                _time.getValueAt( time, newtime );
+                _value.getValueAt( newtime, result );
+            }
+
+            float
+            getStartTime() const
+            {
+                return _time.getStartTime();
+            }
+
+            float
+            getEndTime() const
+            {
+                return _time.getEndTime();
+            }
+    };
+
+    typedef TemplateSampler<DoubleStepInterpolator>          DoubleStepSampler;
+    typedef TemplateSampler<FloatStepInterpolator>           FloatStepSampler;
+    typedef TemplateSampler<Vec2StepInterpolator>            Vec2StepSampler;
+    typedef TemplateSampler<Vec3StepInterpolator>            Vec3StepSampler;
+    typedef TemplateSampler<Vec4StepInterpolator>            Vec4StepSampler;
+    typedef TemplateSampler<QuatStepInterpolator>            QuatStepSampler;
+
+    typedef TemplateSampler<DoubleLinearInterpolator>        DoubleLinearSampler;
+    typedef TemplateSampler<FloatLinearInterpolator>         FloatLinearSampler;
+    typedef TemplateSampler<Vec2LinearInterpolator>          Vec2LinearSampler;
+    typedef TemplateSampler<Vec3LinearInterpolator>          Vec3LinearSampler;
+    typedef TemplateSampler<Vec4LinearInterpolator>          Vec4LinearSampler;
+    typedef TemplateSampler<QuatSphericalLinearInterpolator> QuatSphericalLinearSampler;
+    typedef TemplateSampler<MatrixLinearInterpolator>        MatrixLinearSampler;
+
+    typedef TemplateSampler<FloatCubicBezierInterpolator>    FloatCubicBezierSampler;
+    typedef TemplateSampler<DoubleCubicBezierInterpolator>   DoubleCubicBezierSampler;
+    typedef TemplateSampler<Vec2CubicBezierInterpolator>     Vec2CubicBezierSampler;
+    typedef TemplateSampler<Vec3CubicBezierInterpolator>     Vec3CubicBezierSampler;
+    typedef TemplateSampler<Vec4CubicBezierInterpolator>     Vec4CubicBezierSampler;
+
+}

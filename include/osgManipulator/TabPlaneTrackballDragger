@@ -1,0 +1,39 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Combined TabPlane and Trackball dragger. Provides 2D scale,
+ * translate, and 3D rotation in one composite manipulator.
+ */
+//osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
+
+#pragma once
+
+#include <osgManipulator/TrackballDragger>
+#include <osgManipulator/TabPlaneDragger>
+
+namespace osgManipulator {
+
+/**
+ * Dragger for performing rotation in all axes.
+ */
+class OSGMANIPULATOR_EXPORT TabPlaneTrackballDragger : public CompositeDragger
+{
+    public:
+
+        TabPlaneTrackballDragger();
+
+        META_OSGMANIPULATOR_Object(osgManipulator,TabPlaneTrackballDragger)
+
+        /** Setup default geometry for dragger. */
+        void setupDefaultGeometry();
+
+        void setPlaneColor(const osg::vec4& color) { _tabPlaneDragger->setPlaneColor(color); }
+
+    protected:
+
+        virtual ~TabPlaneTrackballDragger();
+
+        osg::ref_ptr<TrackballDragger> _trackballDragger;
+        osg::ref_ptr<TabPlaneDragger>  _tabPlaneDragger;
+};
+
+
+}

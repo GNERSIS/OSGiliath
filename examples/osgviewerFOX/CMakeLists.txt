@@ -1,0 +1,9 @@
+SET(TARGET_SRC FOX_OSG.cpp  FOX_OSG_MDIView.cpp  osgviewerFOX.cpp )
+
+SET(TARGET_H FOX_OSG.hpp  FOX_OSG_MDIView.hpp  osgviewerFOX.hpp)
+
+INCLUDE_DIRECTORIES( ${FOX_INCLUDE_DIR} )
+SET(TARGET_EXTERNAL_LIBRARIES ${FOX_LIBRARY} )
+
+#### end var setup  ###
+SETUP_EXAMPLE(osgviewerFOX)

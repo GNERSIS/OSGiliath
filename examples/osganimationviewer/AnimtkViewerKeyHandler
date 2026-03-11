@@ -1,0 +1,33 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * AnimtkViewerKeyHandler example application
+ */
+#ifndef ANIMTKVIEWER_KEYHANDLER_H
+#define ANIMTKVIEWER_KEYHANDLER_H
+
+#include "AnimtkViewer"
+
+#include <osgGA/events/GUIEventHandler.hpp>
+
+class AnimtkKeyEventHandler : public osgGA::GUIEventHandler
+{
+public:
+    AnimtkKeyEventHandler();
+    bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa,
+                osg::Object*, osg::NodeVisitor*);
+    void printUsage() const;
+
+protected:
+
+    enum Binding 
+    {
+        List,
+        Help,
+        Play,
+        Next,
+        Prev
+    };
+
+    std::map<Binding, int> _actionKeys;
+};
+
+#endif

@@ -1,0 +1,151 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Shadow map technique that minimizes the shadow frustum.
+ * Tightens the light projection to the visible scene.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osgShadow/StandardShadowMap>
+
+namespace osgShadow {
+
+class OSGSHADOW_EXPORT MinimalShadowMap : public osg::Inherit<StandardShadowMap, MinimalShadowMap>
+{
+    public :
+        /** Convenient typedef used in definition of ViewData struct and methods */
+        typedef MinimalShadowMap  ThisClass;
+        /** Convenient typedef used in definition of ViewData struct and methods */
+        typedef StandardShadowMap BaseClass;
+
+        /** Classic OSG constructor */
+        MinimalShadowMap();
+
+        /** Classic OSG cloning constructor */
+        MinimalShadowMap(
+            const MinimalShadowMap& msm,
+            const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
+
+        /** Declaration of standard OSG object methods */
+        OSG_REGISTER_TYPE(osgShadow, MinimalShadowMap)
+
+        void setModellingSpaceToWorldTransform( const osg::dmat4 & modellingSpaceToWorld )
+            { _modellingSpaceToWorld = modellingSpaceToWorld; }
+
+        const osg::dmat4 & getModellingSpaceToWorldTransform( void ) const
+            { return _modellingSpaceToWorld; }
+
+        float getMaxFarPlane( ) const
+            { return _maxFarPlane; }
+
+        void setMaxFarPlane( float maxFarPlane )
+            { _maxFarPlane = maxFarPlane; }
+
+        float getMinLightMargin( ) const
+            { return _minLightMargin; }
+
+        void setMinLightMargin( float minLightMargin )
+            { _minLightMargin = minLightMargin; }
+
+        enum ShadowReceivingCoarseBoundAccuracy {
+            EMPTY_BOX,
+            BOUNDING_SPHERE,
+            BOUNDING_BOX,
+            DEFAULT_ACCURACY = BOUNDING_BOX
+        };
+
+        void  setShadowReceivingCoarseBoundAccuracy
+                ( ShadowReceivingCoarseBoundAccuracy accuracy )
+                    { _shadowReceivingCoarseBoundAccuracy = accuracy; }
+
+        ShadowReceivingCoarseBoundAccuracy
+                getShadowReceivingCoarseBoundAccuracy() const
+                    { return _shadowReceivingCoarseBoundAccuracy; }
+
+    protected:
+        /** Classic protected OSG destructor */
+        virtual ~MinimalShadowMap(void);
+
+    protected:
+        // dmat4 modellingSpaceToWorld and its inverse
+        // are used to define Modelling Space where shadowed scene drawables
+        // have minimal (smallest possible extent) bounding boxes.
+
+        // Computing visible shadow range in this space
+        // allows for optimal use of ShadowMap resolution.
+
+        // By default it is set to identity ie computations are in world space.
+        // But it should be set to ElipsoidModel::localToWorld
+        // when scene objects are put on earth ellipsoid surface.
+
+        // Other scenarios are also possible for example when models are
+        // built in XZY space which would require identity matrix with swapped columns
+
+        osg::dmat4                        _modellingSpaceToWorld;
+        float                              _maxFarPlane;
+        float                              _minLightMargin;
+        ShadowReceivingCoarseBoundAccuracy _shadowReceivingCoarseBoundAccuracy;
+
+        struct OSGSHADOW_EXPORT ViewData: public BaseClass::ViewData
+        {
+            osg::dmat4                      *_modellingSpaceToWorldPtr;
+            float                            *_maxFarPlanePtr;
+            float                            *_minLightMarginPtr;
+            int                               _frameShadowCastingCameraPasses;
+
+            ConvexPolyhedron                 _sceneReceivingShadowPolytope;
+            std::vector< osg::dvec3 >        _sceneReceivingShadowPolytopePoints;
+
+            osg::dmat4                     _clampedProjection;
+
+            using BaseClass::ViewData::init;
+            virtual void init( ThisClass * st, osgUtil::CullVisitor * cv );
+
+            virtual osg::box computeShadowReceivingCoarseBounds( );
+
+            virtual void cullShadowReceivingScene( );
+
+            virtual void aimShadowCastingCamera(
+                const osg::sphere &bounds,
+                const osg::Light *light,
+                const osg::vec4 &worldLightPos,
+                const osg::vec3 &worldLightDir,
+                const osg::vec3 &worldLightUp = osg::vec3(0,1,0) );
+
+            virtual void aimShadowCastingCamera( const osg::Light *light,
+                const osg::vec4 &worldLightPos,
+                const osg::vec3 &worldLightDir,
+                const osg::vec3 &worldLightUp
+                = osg::vec3(0,1,0) );
+
+            virtual void frameShadowCastingCamera
+                ( const osg::Camera* cameraMain, osg::Camera* cameraShadow, int pass = 1 );
+
+            void cutScenePolytope( const osg::dmat4 & matrix,
+                const osg::dmat4 & inverse,
+                const osg::box &bb =
+                osg::box(-1,-1,-1,1,1,1) );
+
+            osg::box computeScenePolytopeBounds();
+            osg::box computeScenePolytopeBounds(const osg::dmat4& m);
+
+            // Utility methods for adjusting projection matrices
+
+            // Modify projection matrix so that some output subrange
+            // is remapped to whole clip space (-1..1,-1..1,-1..1).
+            // Bit mask can be used to limit remaping to selected bounds only.
+            static void trimProjection
+                ( osg::dmat4 & projection, osg::box subrange,
+                unsigned int trimMask = (1|2|4|8|16|32)
+                /*1=left|2=right|4=bottom|8=top|16=near|32=far*/);
+
+            static void clampProjection
+                ( osg::dmat4 & projection, float n = 0, float f = FLT_MAX );
+
+            static void extendProjection
+                ( osg::dmat4 & projection, osg::Viewport * viewport, const osg::vec2& margin );
+        };
+
+        META_ViewDependentShadowTechniqueData( ThisClass, ThisClass::ViewData )
+};
+
+} // namespace osgShadow

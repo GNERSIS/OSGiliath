@@ -1,0 +1,57 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Abstract placer defining initial particle positions.
+ * Subclasses: PointPlacer, SectorPlacer, MultiSegmentPlacer.
+ */
+//osgParticle - Copyright (C) 2002 Marco Jez
+
+#pragma once
+
+#include <osg/core/CopyOp.hpp>
+#include <osg/core/Object.hpp>
+#include <osg/maths/vec3.hpp>
+
+namespace osgParticle
+{
+
+    class Particle;
+
+    /**    An abstract base class for implementing <I>particle placers</I>. A placer is an object which take
+        a particle as input, and places it somewhere by setting its position vector. Placer objects are
+        used by the <CODE>ModularEmitter</CODE> class as part of the particle emission process.
+    */
+    class Placer: public osg::Object {
+    public:
+        inline Placer();
+        inline Placer(const Placer& copy, const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY);
+
+        virtual const char* libraryName() const { return "osgParticle"; }
+        virtual const char* className() const { return "Placer"; }
+        virtual bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const Placer *>(obj) != 0; }
+
+        /// Place a particle. Must be implemented in descendant classes.
+        virtual void place(Particle* P) const = 0;
+
+        /// Volume of the placer. Can be implemented in descendant classes.
+        virtual float volume() const { return 1.0f; }
+
+        /// Return the control position of particles that placer will generate. Must be implemented in descendant classes.
+        virtual osg::vec3 getControlPosition() const = 0;
+
+    protected:
+        ~Placer() {}
+        Placer& operator=(const Placer& ) { return *this; }
+    };
+
+    // INLINE FUNCTIONS
+
+    inline Placer::Placer()
+    : osg::Object()
+    {
+    }
+
+    inline Placer::Placer(const Placer& copy, const osg::CopyOp& copyop)
+    : osg::Object(copy, copyop)
+    {
+    }
+
+}

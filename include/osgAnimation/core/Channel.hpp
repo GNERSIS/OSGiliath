@@ -1,0 +1,300 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Abstract animation channel binding a sampler to a named target.
+ * Evaluates interpolated values at a given time.
+ */
+#pragma once
+
+#include <osg/core/Object.hpp>
+#include <osgAnimation/core/Export.hpp>
+#include <osgAnimation/core/Sampler.hpp>
+#include <osgAnimation/core/Target.hpp>
+#include <string>
+
+namespace osgAnimation
+{
+
+    class OSGANIMATION_EXPORT Channel : public osg::Object
+    {
+        public:
+
+            Channel();
+            Channel( const Channel& channel );
+            virtual ~Channel();
+
+            using osg::Object::clone;
+            virtual Channel*
+            clone() const = 0;
+
+            virtual bool
+            isSameKindAs( const Object* obj ) const
+            {
+                return dynamic_cast<const Channel*>( obj ) != NULL;
+            }
+
+            virtual const char*
+            libraryName() const
+            {
+                return "osgAnimation";
+            }
+
+            virtual const char*
+            className() const
+            {
+                return "Channel";
+            }
+
+            virtual void
+            update( double time,
+                    float  weight,
+                    int    priority ) = 0;
+            virtual void
+            reset() = 0;
+            virtual Target*
+            getTarget() = 0;
+            virtual bool
+            setTarget( Target* ) = 0;
+
+            const std::string&
+            getName() const;
+            void
+            setName( const std::string& name );
+
+            virtual double
+            getStartTime() const = 0;
+            virtual double
+            getEndTime() const = 0;
+
+            const std::string&
+            getTargetName() const;
+            void
+            setTargetName( const std::string& name );
+
+            virtual Sampler*
+            getSampler() = 0;
+            virtual const Sampler*
+            getSampler() const = 0;
+
+            // create a keyframe container from current target value
+            // with one key only, can be used for debug or to create
+            // easily a default channel from an existing one
+            virtual bool
+            createKeyframeContainerFromTargetValue() = 0;
+
+        protected:
+
+            std::string _targetName;
+            std::string _name;
+    };
+
+    template<typename SamplerType>
+    class TemplateChannel : public Channel
+    {
+        public:
+
+            typedef typename SamplerType::UsingType UsingType;
+            typedef TemplateTarget<UsingType>       TargetType;
+            typedef TemplateKeyframeContainer<typename SamplerType::KeyframeType>
+                KeyframeContainerType;
+
+            Object*
+            cloneType() const
+            {
+                return new TemplateChannel();
+            }
+
+            Object*
+            clone( const osg::CopyOp& ) const
+            {
+                return new TemplateChannel<SamplerType>( *this );
+            }
+
+            Channel*
+            clone() const
+            {
+                return new TemplateChannel<SamplerType>( *this );
+            }
+
+            TemplateChannel( const TemplateChannel& channel ) :
+                Channel( channel )
+            {
+                if( channel.getTargetTyped() )
+                {
+                    _target = new TargetType( *channel.getTargetTyped() );
+                }
+
+                if( channel.getSamplerTyped() )
+                {
+                    _sampler = new SamplerType( *channel.getSamplerTyped() );
+                }
+            }
+
+            TemplateChannel( SamplerType* s      = 0,
+                             TargetType*  target = 0 )
+            {
+                if( target )
+                {
+                    _target = target;
+                }
+                else
+                {
+                    _target = new TargetType;
+                }
+                _sampler = s;
+            }
+
+            virtual bool
+            createKeyframeContainerFromTargetValue()
+            {
+                if( !_target.valid() )    // no target it does not make sense to do it
+                {
+                    return false;
+                }
+
+                // create a key from current target value
+                typename KeyframeContainerType::KeyType key( 0, _target->getValue() );
+                // recreate the keyframe container
+                getOrCreateSampler()->setKeyframeContainer( 0 );
+                getOrCreateSampler()->getOrCreateKeyframeContainer();
+                // add the key
+                _sampler->getKeyframeContainerTyped()->push_back( key );
+                return true;
+            }
+
+            virtual ~TemplateChannel()
+            {
+            }
+
+            virtual void
+            update( double time,
+                    float  weight,
+                    int    priority )
+            {
+                // skip if weight == 0
+                if( weight < 1E-4 )
+                {
+                    return;
+                }
+                typename SamplerType::UsingType value;
+                _sampler->getValueAt( time, value );
+                _target->update( weight, value, priority );
+            }
+
+            virtual void
+            reset()
+            {
+                _target->reset();
+            }
+
+            virtual Target*
+            getTarget()
+            {
+                return _target.get();
+            }
+
+            virtual bool
+            setTarget( Target* target )
+            {
+                _target = dynamic_cast<TargetType*>( target );
+                return _target.get() == target;
+            }
+
+            SamplerType*
+            getOrCreateSampler()
+            {
+                if( !_sampler.valid() )
+                {
+                    _sampler = new SamplerType;
+                }
+                return _sampler.get();
+            }
+
+            Sampler*
+            getSampler()
+            {
+                return _sampler.get();
+            }
+
+            const Sampler*
+            getSampler() const
+            {
+                return _sampler.get();
+            }
+
+            SamplerType*
+            getSamplerTyped()
+            {
+                return _sampler.get();
+            }
+
+            const SamplerType*
+            getSamplerTyped() const
+            {
+                return _sampler.get();
+            }
+
+            void
+            setSampler( SamplerType* sampler )
+            {
+                _sampler = sampler;
+            }
+
+            TargetType*
+            getTargetTyped()
+            {
+                return _target.get();
+            }
+
+            const TargetType*
+            getTargetTyped() const
+            {
+                return _target.get();
+            }
+
+            void
+            setTarget( TargetType* target )
+            {
+                _target = target;
+            }
+
+            virtual double
+            getStartTime() const
+            {
+                return _sampler->getStartTime();
+            }
+
+            virtual double
+            getEndTime() const
+            {
+                return _sampler->getEndTime();
+            }
+
+        protected:
+
+            osg::ref_ptr<TargetType>  _target;
+            osg::ref_ptr<SamplerType> _sampler;
+    };
+
+    typedef std::vector<osg::ref_ptr<osgAnimation::Channel>> ChannelList;
+
+    typedef TemplateChannel<DoubleStepSampler>               DoubleStepChannel;
+    typedef TemplateChannel<FloatStepSampler>                FloatStepChannel;
+    typedef TemplateChannel<Vec2StepSampler>                 Vec2StepChannel;
+    typedef TemplateChannel<Vec3StepSampler>                 Vec3StepChannel;
+    typedef TemplateChannel<Vec4StepSampler>                 Vec4StepChannel;
+    typedef TemplateChannel<QuatStepSampler>                 QuatStepChannel;
+
+    typedef TemplateChannel<DoubleLinearSampler>             DoubleLinearChannel;
+    typedef TemplateChannel<FloatLinearSampler>              FloatLinearChannel;
+    typedef TemplateChannel<Vec2LinearSampler>               Vec2LinearChannel;
+    typedef TemplateChannel<Vec3LinearSampler>               Vec3LinearChannel;
+    typedef TemplateChannel<Vec4LinearSampler>               Vec4LinearChannel;
+    typedef TemplateChannel<QuatSphericalLinearSampler>      QuatSphericalLinearChannel;
+    typedef TemplateChannel<MatrixLinearSampler>             MatrixLinearChannel;
+
+    typedef TemplateChannel<FloatCubicBezierSampler>         FloatCubicBezierChannel;
+    typedef TemplateChannel<DoubleCubicBezierSampler>        DoubleCubicBezierChannel;
+    typedef TemplateChannel<Vec2CubicBezierSampler>          Vec2CubicBezierChannel;
+    typedef TemplateChannel<Vec3CubicBezierSampler>          Vec3CubicBezierChannel;
+    typedef TemplateChannel<Vec4CubicBezierSampler>          Vec4CubicBezierChannel;
+
+}

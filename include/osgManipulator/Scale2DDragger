@@ -1,0 +1,106 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Planar scaling dragger. Constrains scale to two
+ * axes via a rectangular handle.
+ */
+//osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
+
+#pragma once
+
+#include <osgManipulator/Dragger>
+#include <osgManipulator/Projector>
+
+namespace osgManipulator {
+
+/**
+ * Dragger for performing 2D scaling.
+ */
+class OSGMANIPULATOR_EXPORT Scale2DDragger : public Dragger
+{
+    public:
+
+        enum ScaleMode
+        {
+            SCALE_WITH_ORIGIN_AS_PIVOT = 0,
+            SCALE_WITH_OPPOSITE_HANDLE_AS_PIVOT
+        };
+
+        Scale2DDragger(ScaleMode scaleMode=SCALE_WITH_ORIGIN_AS_PIVOT);
+
+        META_OSGMANIPULATOR_Object(osgManipulator,Scale2DDragger)
+
+        /**
+         * Handle pick events on dragger and generate TranslateInLine commands.
+         */
+        virtual bool handle(const PointerInfo& pi, const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us);
+
+        /** Setup default geometry for dragger. */
+        void setupDefaultGeometry();
+
+        /** Set/Get min scale for dragger. */
+        inline void             setMinScale(const osg::dvec2& min) { _minScale = min; }
+        inline const osg::dvec2& getMinScale() const               { return _minScale; }
+
+        /** Set/Get color for dragger. */
+        inline void setColor(const osg::vec4& color) { _color = color; setMaterialColor(_color,*this); }
+        inline const osg::vec4& getColor() const { return _color; }
+
+        /**
+         * Set/Get pick color for dragger. Pick color is color of the dragger
+         * when picked. It gives a visual feedback to show that the dragger has
+         * been picked.
+         */
+        inline void setPickColor(const osg::vec4& color) { _pickColor = color; }
+        inline const osg::vec4& getPickColor() const { return _pickColor; }
+
+        /** Set/Get the handle nodes for dragger. */
+        inline void setTopLeftHandleNode (osg::Node& node) { _topLeftHandleNode = &node; }
+        inline osg::Node* getTopLeftHandleNode() { return _topLeftHandleNode.get(); }
+        inline const osg::Node* getTopLeftHandleNode() const { return _topLeftHandleNode.get(); }
+        inline void setBottomLeftHandleNode (osg::Node& node) { _bottomLeftHandleNode = &node; }
+        inline osg::Node* getBottomLeftHandleNode() { return _bottomLeftHandleNode.get(); }
+        inline const osg::Node* getBottomLeftHandleNode() const { return _bottomLeftHandleNode.get(); }
+        inline void setTopRightHandleNode(osg::Node& node) { _topRightHandleNode = &node; }
+        inline osg::Node* getTopRightHandleNode() { return _topRightHandleNode.get(); }
+        inline const osg::Node* getTopRightHandleNode() const { return _topRightHandleNode.get(); }
+        inline void setBottomRightHandleNode(osg::Node& node) { _bottomRightHandleNode = &node; }
+        inline osg::Node* getBottomRightHandleNode() { return _bottomRightHandleNode.get(); }
+        inline const osg::Node* getBottomRightHandleNode() const { return _bottomRightHandleNode.get(); }
+
+        /** Set/Get the handle nodes position for dragger. */
+        inline void setTopLeftHandlePosition(const osg::dvec2& pos) { _topLeftHandlePosition = pos; }
+        const osg::dvec2& getTopLeftHandlePosition() const { return _topLeftHandlePosition; }
+        inline void setBottomLeftHandlePosition(const osg::dvec2& pos) { _bottomLeftHandlePosition = pos; }
+        const osg::dvec2& getBottomLeftHandlePosition() const { return _bottomLeftHandlePosition; }
+        inline void setTopRightHandlePosition(const osg::dvec2& pos) { _topRightHandlePosition = pos; }
+        const osg::dvec2& getTopRightHandlePosition() const { return _topRightHandlePosition; }
+        inline void setBottomRightHandlePosition(const osg::dvec2& pos){ _bottomRightHandlePosition = pos; }
+        const osg::dvec2& getBottomRightHandlePosition() const { return _bottomRightHandlePosition; }
+
+    protected:
+
+        virtual ~Scale2DDragger();
+
+        osg::ref_ptr< PlaneProjector >  _projector;
+        osg::dvec3                      _startProjectedPoint;
+        osg::dvec2                      _scaleCenter;
+        osg::dvec2                      _referencePoint;
+        osg::dvec2                      _minScale;
+
+        osg::ref_ptr< osg::Node >       _topLeftHandleNode;
+        osg::ref_ptr< osg::Node >       _bottomLeftHandleNode;
+        osg::ref_ptr< osg::Node >       _topRightHandleNode;
+        osg::ref_ptr< osg::Node >       _bottomRightHandleNode;
+
+        osg::dvec2                      _topLeftHandlePosition;
+        osg::dvec2                      _bottomLeftHandlePosition;
+        osg::dvec2                      _topRightHandlePosition;
+        osg::dvec2                      _bottomRightHandlePosition;
+
+        osg::vec4                       _color;
+        osg::vec4                       _pickColor;
+
+        ScaleMode                       _scaleMode;
+};
+
+
+}

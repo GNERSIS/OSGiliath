@@ -1,0 +1,93 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Platform-independent shared library loader. Wraps dlopen/LoadLibrary
+ * for loading OSG plugins at runtime.
+ */
+#pragma once
+
+#include <osg/core/Referenced.hpp>
+#include <osgDB/Export>
+#include <string>
+
+namespace osgDB
+{
+
+    /** DynamicLibrary - encapsulates the loading and unloading of dynamic libraries,
+        typically used for loading ReaderWriter plug-ins.
+    */
+    class OSGDB_EXPORT DynamicLibrary : public osg::Referenced
+    {
+        public:
+
+            typedef void* HANDLE;
+            typedef void* PROC_ADDRESS;
+
+            /** returns a pointer to a DynamicLibrary object on successfully
+             * opening of library returns NULL on failure.
+             */
+            static DynamicLibrary*
+            loadLibrary( const std::string& libraryName );
+
+            /** return name of library stripped of path.*/
+            const std::string&
+            getName() const
+            {
+                return _name;
+            }
+
+            /** return name of library including full path to it.*/
+            const std::string&
+            getFullName() const
+            {
+                return _fullName;
+            }
+
+            /** return handle to .dso/.dll dynamic library itself.*/
+            HANDLE
+            getHandle() const
+            {
+                return _handle;
+            }
+
+            /** return address of function located in library.*/
+            PROC_ADDRESS
+            getProcAddress( const std::string& procName );
+
+        protected:
+
+            /** get handle to library file */
+            static HANDLE
+            getLibraryHandle( const std::string& libraryName );
+
+            /** disallow default constructor.*/
+            DynamicLibrary() :
+                osg::Referenced()
+            {
+            }
+
+            /** disallow copy constructor.*/
+            DynamicLibrary( const DynamicLibrary& ) :
+                osg::Referenced()
+            {
+            }
+
+            /** disallow copy operator.*/
+            DynamicLibrary&
+            operator=( const DynamicLibrary& )
+            {
+                return *this;
+            }
+
+            /** Disallow public construction so that users have to go
+             * through loadLibrary() above which returns NULL on
+             * failure, a valid DynamicLibrary object on success.
+             */
+            DynamicLibrary( const std::string& name,
+                            HANDLE             handle );
+            ~DynamicLibrary();
+
+            HANDLE      _handle;
+            std::string _name;
+            std::string _fullName;
+    };
+
+}
