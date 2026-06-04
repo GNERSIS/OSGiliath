@@ -22,6 +22,8 @@ file(GLOB_RECURSE FORMAT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/applications/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/applications/*.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.hpp
 )
 
 if(FORMAT_SOURCES)

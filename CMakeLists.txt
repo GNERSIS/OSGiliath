@@ -88,6 +88,12 @@ if(BUILD_OSG_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
+option(BUILD_TESTING "Build the GTest test suite" OFF)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # ── Uninstall target ─────────────────────────────────────────
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
