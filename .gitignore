@@ -116,7 +116,10 @@ cmake-build-*/
 **build/
 **data/
 **screenshots/
-**thirdparty/
+**/thirdparty/
+!/thirdparty/
+/thirdparty/*
+!/thirdparty/CMakeLists.txt
 
 # Reference OSG 3.6 build
 osg36/
@@ -130,8 +133,7 @@ gltf/
 glTF/
 new_data/
 
-# Tests (separate from main build)
-tests/
+# (tests/ now lives in-repo — see tests/CMakeLists.txt)
 
 # Scripts, caches, prompts
 scripts/
@@ -148,3 +150,10 @@ CLAUDE.md
 *.osgx
 *.osg
 test_glext.*
+
+# CI byproducts (ci-run.sh)
+build-iwyu/
+build-iwyu-build.log
+build.log
+format.log
+format-files.txt

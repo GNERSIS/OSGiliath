@@ -510,25 +510,25 @@ GraphicsWindowX11::checkAndSendEventFullScreenIfNeeded( Display* display,
             {
                 if( xi[i].x_org < minx )
                 {
-                    span[LeftMost] = xi[i].screen_number;
+                    span[LeftMost] = static_cast<uint32_t>( xi[i].screen_number );
                     minx           = xi[i].x_org;
                 }
 
                 if( xi[i].x_org > maxx )
                 {
-                    span[RightMost] = xi[i].screen_number;
+                    span[RightMost] = static_cast<uint32_t>( xi[i].screen_number );
                     maxx            = xi[i].x_org;
                 }
 
                 if( xi[i].y_org < miny )
                 {
-                    span[TopMost] = xi[i].screen_number;
+                    span[TopMost] = static_cast<uint32_t>( xi[i].screen_number );
                     miny          = xi[i].y_org;
                 }
 
                 if( xi[i].y_org > maxy )
                 {
-                    span[BottomMost] = xi[i].screen_number;
+                    span[BottomMost] = static_cast<uint32_t>( xi[i].screen_number );
                     maxy             = xi[i].y_org;
                 }
             }

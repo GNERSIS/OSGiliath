@@ -17,6 +17,7 @@
 static int   inited = 0;
 
 static float dbcenter[3];
+[[maybe_unused]]
 static float dbradius;
 
 static void

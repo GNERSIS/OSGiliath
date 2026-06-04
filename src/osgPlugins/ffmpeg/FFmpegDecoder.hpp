@@ -3,7 +3,7 @@
 #include "FFmpegDecoderAudio.hpp"
 #include "FFmpegDecoderVideo.hpp"
 
-#include <osg/Notify>
+#include <osg/core/Notify.hpp>
 
 namespace osgFFmpeg
 {

@@ -1,7 +1,7 @@
 #include "FFmpegDecoderVideo.hpp"
 
-#include <osg/Notify>
-#include <osg/Timer>
+#include <osg/core/Notify.hpp>
+#include <osg/core/Timer.hpp>
 #include <stdexcept>
 #include <string.h>
 
