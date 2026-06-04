@@ -1,0 +1,109 @@
+# OSGiliath GitLab CI — adapted from l0's pipeline for a single-lib repo.
+#
+# Three gates, all hard (l0-faithful):
+#   format → clang-format --dry-run --Werror (file set = cmake/Format.cmake's)
+#   build  → full build (lib+plugins+apps+examples+tests) under -Werror with
+#            ASan+UBSan always-on, 0-warning clang-tidy gate, ctest
+#   iwyu   → include-what-you-use as compiler proxy; any actionable
+#            add/remove recommendation fails
+#
+# All logic lives in .gitlab/scripts/ci-run.sh — the YAML is a thin
+# wrapper, so local runs (`./.gitlab/scripts/ci-run.sh build`) and CI are
+# structurally identical.
+#
+# Image: built LOCALLY on the runner host (legion) from
+# .gitlab/ci-image.Dockerfile; the runner's pull_policy=if-not-present
+# means it is never pulled from a registry:
+#   docker build -f .gitlab/ci-image.Dockerfile \
+#                -t registry.gitlab.com/a1z3n/osgiliath/ci:clang-23 .
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never                       # avoid duplicate runs when MR is open
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+default:
+  image: "registry.gitlab.com/a1z3n/osgiliath/ci:clang-23"
+  before_script:
+    - mkdir -p "${CCACHE_DIR}"
+    - ccache --max-size="${CCACHE_MAXSIZE}" >/dev/null
+    - ccache --zero-stats >/dev/null
+  after_script:
+    - ccache --show-stats || true
+  retry:
+    max: 1
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+variables:
+  # /ccache is a persistent host bind-mount (see register-runner.sh);
+  # keyed per kind so build and iwyu object caches don't evict each other.
+  CCACHE_DIR: "/ccache/default"
+  CCACHE_MAXSIZE: "10G"
+  CCACHE_COMPRESS: "true"
+  CCACHE_COMPRESSLEVEL: "6"
+  CCACHE_COMPILERCHECK: "content"
+  GIT_DEPTH: "10"
+
+# Stage ordering gates execution: `check` jobs only start when `format`
+# is green (fast-fail on style). Within `check`, build and iwyu run in
+# parallel when the runner has concurrent > 1. No `needs:` anywhere —
+# needs would switch GitLab to DAG mode and bypass the stage gate.
+stages:
+  - format
+  - check
+
+format:
+  stage: format
+  dependencies: []
+  script:
+    - .gitlab/scripts/ci-run.sh format
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+      - format.log
+      - format-files.txt
+
+build:
+  stage: check
+  dependencies: []
+  variables:
+    CCACHE_DIR: "/ccache/build"
+  timeout: 3h
+  script:
+    - .gitlab/scripts/ci-run.sh build
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      # build.log is multi-GB (tidy notes per TU) — deliberately NOT shipped.
+      - build/build-tail.log
+      - build/ctest-results.xml
+      - build/tidy-warning-summary.txt
+      - build/tidy-warnings-unique.log
+    reports:
+      junit: build/ctest-results.xml
+
+iwyu:
+  stage: check
+  dependencies: []
+  variables:
+    CCACHE_DIR: "/ccache/iwyu"
+  timeout: 3h
+  script:
+    - .gitlab/scripts/ci-run.sh iwyu
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      # build-iwyu-build.log is multi-GB (tidy noise per TU) — NOT shipped.
+      - build-iwyu/build-tail.log
+      - build-iwyu/iwyu-recommendations.txt
+      - build-iwyu/iwyu-results.xml
+    reports:
+      junit: build-iwyu/iwyu-results.xml

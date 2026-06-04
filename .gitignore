@@ -17,8 +17,8 @@ include/osg/Version
 include/osgQt/Version
 src/osgQt/__
 
-lib/
-bin/
+/lib/
+/bin/
 
 *.pc
 *.conf
@@ -136,7 +136,7 @@ new_data/
 # (tests/ now lives in-repo — see tests/CMakeLists.txt)
 
 # Scripts, caches, prompts
-scripts/
+/scripts/
 .cache/
 system_prompt.md
 good_words.txt
