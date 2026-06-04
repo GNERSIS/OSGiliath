@@ -267,19 +267,20 @@ namespace osg
                 VIEW_FRUSTUM_SIDES_CULLING = 0X1,
                 NEAR_PLANE_CULLING         = 0X2,
                 FAR_PLANE_CULLING          = 0X4,
-                VIEW_FRUSTUM_CULLING =
-                    VIEW_FRUSTUM_SIDES_CULLING | NEAR_PLANE_CULLING | FAR_PLANE_CULLING,
+                VIEW_FRUSTUM_CULLING       = VIEW_FRUSTUM_SIDES_CULLING |
+                    NEAR_PLANE_CULLING |
+                    FAR_PLANE_CULLING,
                 SMALL_FEATURE_CULLING    = 0X8,
                 SHADOW_OCCLUSION_CULLING = 0X10,
                 CLUSTER_CULLING          = 0X20,
                 DEFAULT_CULLING          = VIEW_FRUSTUM_SIDES_CULLING |
-                                           SMALL_FEATURE_CULLING |
-                                           SHADOW_OCCLUSION_CULLING |
-                                           CLUSTER_CULLING,
-                ENABLE_ALL_CULLING       = VIEW_FRUSTUM_CULLING |
-                                           SMALL_FEATURE_CULLING |
-                                           SHADOW_OCCLUSION_CULLING |
-                                           CLUSTER_CULLING,
+                    SMALL_FEATURE_CULLING |
+                    SHADOW_OCCLUSION_CULLING |
+                    CLUSTER_CULLING,
+                ENABLE_ALL_CULLING = VIEW_FRUSTUM_CULLING |
+                    SMALL_FEATURE_CULLING |
+                    SHADOW_OCCLUSION_CULLING |
+                    CLUSTER_CULLING,
             };
 
             typedef int CullingMode;

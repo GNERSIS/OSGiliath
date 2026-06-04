@@ -47,9 +47,9 @@ namespace osgUtil
                 APPLY_GLOBAL_DEFAULTS     = 0X8,
                 CLEAR_GLOBAL_STATESET     = 0X10,
                 STANDARD_SETTINGS         = HEADLIGHT |
-                                            COMPILE_GLOBJECTS_AT_INIT |
-                                            APPLY_GLOBAL_DEFAULTS |
-                                            CLEAR_GLOBAL_STATESET,
+                    COMPILE_GLOBJECTS_AT_INIT |
+                    APPLY_GLOBAL_DEFAULTS |
+                    CLEAR_GLOBAL_STATESET,
             };
 
             /* Set defaults. */
@@ -266,13 +266,13 @@ namespace osgUtil
                 VIEW_MATRIX_UNIFORM           = 32,
                 VIEW_MATRIX_INVERSE_UNIFORM   = 64,
                 DEFAULT_UNIFORMS              = FRAME_NUMBER_UNIFORM |
-                                                FRAME_TIME_UNIFORM |
-                                                DELTA_FRAME_TIME_UNIFORM |
-                                                SIMULATION_TIME_UNIFORM |
-                                                DELTA_SIMULATION_TIME_UNIFORM |
-                                                VIEW_MATRIX_UNIFORM |
-                                                VIEW_MATRIX_INVERSE_UNIFORM,
-                ALL_UNIFORMS                  = 0X7F'FF'FF'FF,
+                    FRAME_TIME_UNIFORM |
+                    DELTA_FRAME_TIME_UNIFORM |
+                    SIMULATION_TIME_UNIFORM |
+                    DELTA_SIMULATION_TIME_UNIFORM |
+                    VIEW_MATRIX_UNIFORM |
+                    VIEW_MATRIX_INVERSE_UNIFORM,
+                ALL_UNIFORMS = 0X7F'FF'FF'FF,
             };
 
             /** Set the uniforms that SceneView should set set up on each frame.*/

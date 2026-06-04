@@ -62,8 +62,8 @@ namespace osg
                 ENVIRONMENTAL_VARIABLE = 0X2,
                 KEYBOARD_MOUSE_BINDING = 0X4,
                 HELP_ALL               = KEYBOARD_MOUSE_BINDING |
-                                         ENVIRONMENTAL_VARIABLE |
-                                         COMMAND_LINE_OPTION,
+                    ENVIRONMENTAL_VARIABLE |
+                    COMMAND_LINE_OPTION,
             };
 
             void

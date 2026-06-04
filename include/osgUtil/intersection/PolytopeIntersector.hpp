@@ -137,12 +137,12 @@ namespace osgUtil
             /// dimension enum to specify primitive types to check.
             enum
             {
-                POINT_PRIMITIVES = ( 1 << 0 ),    /// check for points
-                LINE_PRIMITIVES  = ( 1 << 1 ),    /// check for lines
-                TRIANGLE_PRIMITIVES =
-                    ( 1
-                      << 2 ),    /// check for triangles and other primitives like quad,
-                                 /// polygons that can be decomposed into triangles
+                POINT_PRIMITIVES    = ( 1 << 0 ),    /// check for points
+                LINE_PRIMITIVES     = ( 1 << 1 ),    /// check for lines
+                TRIANGLE_PRIMITIVES = (
+                    1 << 2
+                ),    /// check for triangles and other primitives like quad,
+                      /// polygons that can be decomposed into triangles
                 ALL_PRIMITIVES =
                     ( POINT_PRIMITIVES | LINE_PRIMITIVES | TRIANGLE_PRIMITIVES ),
             };

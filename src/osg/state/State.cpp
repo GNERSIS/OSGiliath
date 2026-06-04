@@ -53,7 +53,7 @@ State::State() :
                                       // first call to State::glReadBuffer() to make sure
                                       // it's always passed to OpenGL
 
-    _identity = new osg::RefMatrix();    // default RefMatrix constructs to identity.
+    _identity   = new osg::RefMatrix();    // default RefMatrix constructs to identity.
     _initialViewMatrix                 = _identity;
     _projection                        = _identity;
     _modelView                         = _identity;

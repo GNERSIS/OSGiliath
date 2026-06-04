@@ -47,11 +47,11 @@ namespace osgDB
 
                 /// cache on all read*(filename) calls
                 CACHE_ALL = CACHE_NODES |
-                            CACHE_IMAGES |
-                            CACHE_HEIGHTFIELDS |
-                            CACHE_ARCHIVES |
-                            CACHE_OBJECTS |
-                            CACHE_SHADERS,
+                    CACHE_IMAGES |
+                    CACHE_HEIGHTFIELDS |
+                    CACHE_ARCHIVES |
+                    CACHE_OBJECTS |
+                    CACHE_SHADERS,
             };
 
             /// Bit mask for which geometry attributes should be imported with double
@@ -72,12 +72,12 @@ namespace osgDB
                 DOUBLE_PRECISION_VERTEX_ATTRIB   = 1 << 6,
 
                 DOUBLE_PRECISION_ALL             = DOUBLE_PRECISION_VERTEX |
-                                                   DOUBLE_PRECISION_NORMAL |
-                                                   DOUBLE_PRECISION_COLOR |
-                                                   DOUBLE_PRECISION_SECONDARY_COLOR |
-                                                   DOUBLE_PRECISION_FOG_COORD |
-                                                   DOUBLE_PRECISION_TEX_COORD |
-                                                   DOUBLE_PRECISION_VERTEX_ATTRIB,
+                    DOUBLE_PRECISION_NORMAL |
+                    DOUBLE_PRECISION_COLOR |
+                    DOUBLE_PRECISION_SECONDARY_COLOR |
+                    DOUBLE_PRECISION_FOG_COORD |
+                    DOUBLE_PRECISION_TEX_COORD |
+                    DOUBLE_PRECISION_VERTEX_ATTRIB,
             };
 
             /// range of options of whether to build kdtrees automatically on loading

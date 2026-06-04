@@ -104,17 +104,17 @@ namespace osgDB
                 FEATURE_READ_SCRIPT        = 1 << 10,
                 FEATURE_WRITE_SCRIPT       = 1 << 11,
                 FEATURE_ALL                = FEATURE_READ_OBJECT |
-                                             FEATURE_READ_IMAGE |
-                                             FEATURE_READ_HEIGHT_FIELD |
-                                             FEATURE_READ_NODE |
-                                             FEATURE_READ_SHADER |
-                                             FEATURE_READ_SCRIPT |
-                                             FEATURE_WRITE_OBJECT |
-                                             FEATURE_WRITE_IMAGE |
-                                             FEATURE_WRITE_HEIGHT_FIELD |
-                                             FEATURE_WRITE_NODE |
-                                             FEATURE_WRITE_SHADER |
-                                             FEATURE_WRITE_SCRIPT,
+                    FEATURE_READ_IMAGE |
+                    FEATURE_READ_HEIGHT_FIELD |
+                    FEATURE_READ_NODE |
+                    FEATURE_READ_SHADER |
+                    FEATURE_READ_SCRIPT |
+                    FEATURE_WRITE_OBJECT |
+                    FEATURE_WRITE_IMAGE |
+                    FEATURE_WRITE_HEIGHT_FIELD |
+                    FEATURE_WRITE_NODE |
+                    FEATURE_WRITE_SHADER |
+                    FEATURE_WRITE_SCRIPT,
             };
 
             /** Return available features*/

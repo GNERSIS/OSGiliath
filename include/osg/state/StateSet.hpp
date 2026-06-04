@@ -716,12 +716,12 @@ namespace osg
 
             enum RenderBinMode
             {
-                INHERIT_RENDERBIN_DETAILS   = 0,
-                USE_RENDERBIN_DETAILS       = 1,
-                OVERRIDE_RENDERBIN_DETAILS  = 2,
-                PROTECTED_RENDERBIN_DETAILS = 4,
-                OVERRIDE_PROTECTED_RENDERBIN_DETAILS =
-                    OVERRIDE_RENDERBIN_DETAILS | PROTECTED_RENDERBIN_DETAILS,
+                INHERIT_RENDERBIN_DETAILS            = 0,
+                USE_RENDERBIN_DETAILS                = 1,
+                OVERRIDE_RENDERBIN_DETAILS           = 2,
+                PROTECTED_RENDERBIN_DETAILS          = 4,
+                OVERRIDE_PROTECTED_RENDERBIN_DETAILS = OVERRIDE_RENDERBIN_DETAILS |
+                    PROTECTED_RENDERBIN_DETAILS,
             };
 
             /** Set the render bin details.*/

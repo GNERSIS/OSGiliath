@@ -37,26 +37,26 @@ class LightPoint : public PrimaryRecord
             // bit 0 = reserved
             NO_BACK_COLOR = 0X80'00'00'00U >> 1,    // bit 1 = no back color
                                                     // bit 2 = reserved
-            CALLIGRAPHIC =
-                0X80'00'00'00U >> 3,    // bit 3 = calligraphic proximity occulting
-            REFLECTIVE = 0X80'00'00'00U >> 4,      // bit 4 = reflective, non-emissive
+            CALLIGRAPHIC  = 0X80'00'00'00U >>
+                3,    // bit 3 = calligraphic proximity occulting
+            REFLECTIVE   = 0X80'00'00'00U >> 4,    // bit 4 = reflective, non-emissive
                                                    // point bit 5-7 = randomize intensity
                                                    //   0 = never
                                                    //     1 = low
                                                    //   2 = medium
                                                    //   3 = high
-            PERSPECTIVE = 0X80'00'00'00U >> 8,     // bit 8 = perspective mode
-            FLASHING    = 0X80'00'00'00U >> 9,     // bit 9 = flashing
-            ROTATING    = 0X80'00'00'00U >> 10,    // bit 10 = rotating
-            ROTATE_CC   = 0X80'00'00'00U >> 11,    // bit 11 = rotate counter clockwise
-                                                   // bit 12 = reserved
-                                                   // bit 13-14 = quality
-                                                   //   0 = low
-                                                   //     1 = medium
-                                                   //   2 = high
-                                                   //   3 = undefined
-            VISIBLE_DAY   = 0X80'00'00'00U >> 15,    // bit 15 = visible during day
-            VISIBLE_DUSK  = 0X80'00'00'00U >> 16,    // bit 16 = visible during dusk
+            PERSPECTIVE  = 0X80'00'00'00U >> 8,    // bit 8 = perspective mode
+            FLASHING     = 0X80'00'00'00U >> 9,    // bit 9 = flashing
+            ROTATING     = 0X80'00'00'00U >> 10,     // bit 10 = rotating
+            ROTATE_CC    = 0X80'00'00'00U >> 11,     // bit 11 = rotate counter clockwise
+                                                     // bit 12 = reserved
+                                                     // bit 13-14 = quality
+                                                     //   0 = low
+                                                     //     1 = medium
+                                                     //   2 = high
+                                                     //   3 = undefined
+            VISIBLE_DAY  = 0X80'00'00'00U >> 15,     // bit 15 = visible during day
+            VISIBLE_DUSK = 0X80'00'00'00U >> 16,     // bit 16 = visible during dusk
             VISIBLE_NIGHT = 0X80'00'00'00U >> 17,    // bit 17 = visible during night
                                                      // bit 18-31 = spare
         };

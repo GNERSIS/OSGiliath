@@ -40,8 +40,8 @@ class SliceProcessor
             _sliceDelta = ( objectRadius * 2 ) / _sliceNumber;
             _nearPlane = objectRadius;    // note: distance from viewpoint is going to be
                                           // set 2x radius
-            _farPlane = _nearPlane + MIN_NEARFAROFFSET;
-            _image    = new osg::Image;
+            _farPlane  = _nearPlane + MIN_NEARFAROFFSET;
+            _image     = new osg::Image;
             if( _sliceDelta > MIN_NEARFAROFFSET )
             {
                 _nearFarOffset = MIN_NEARFAROFFSET;

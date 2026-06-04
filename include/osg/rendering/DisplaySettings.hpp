@@ -497,8 +497,8 @@ namespace osg
                 IMPLICIT_DEPTH_BUFFER_ATTACHMENT   = ( 1 << 0 ),
                 IMPLICIT_STENCIL_BUFFER_ATTACHMENT = ( 1 << 1 ),
                 IMPLICIT_COLOR_BUFFER_ATTACHMENT   = ( 1 << 2 ),
-                DEFAULT_IMPLICIT_BUFFER_ATTACHMENT =
-                    IMPLICIT_COLOR_BUFFER_ATTACHMENT | IMPLICIT_DEPTH_BUFFER_ATTACHMENT,
+                DEFAULT_IMPLICIT_BUFFER_ATTACHMENT = IMPLICIT_COLOR_BUFFER_ATTACHMENT |
+                    IMPLICIT_DEPTH_BUFFER_ATTACHMENT,
             };
 
             typedef int ImplicitBufferAttachmentMask;

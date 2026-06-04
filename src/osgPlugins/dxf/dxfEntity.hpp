@@ -588,13 +588,13 @@ class dxfInsert : public dxfBasicEntity
 
         std::string            _blockName;
         osg::ref_ptr<dxfBlock> _block;
-        bool                   _done;    // since we are on a SEQEND, we must
-                       // make sure not getting values addressed to other
-                       // entities (dxf garble things) in the sequence
-        double                 _rotation;
-        osg::dvec3             _scale;
-        osg::dvec3             _point;
-        osg::dvec3             _ocs;
+        bool       _done;    // since we are on a SEQEND, we must
+                             // make sure not getting values addressed to other
+                             // entities (dxf garble things) in the sequence
+        double     _rotation;
+        osg::dvec3 _scale;
+        osg::dvec3 _point;
+        osg::dvec3 _ocs;
 };
 
 class dxfText : public dxfBasicEntity

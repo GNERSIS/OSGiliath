@@ -1241,7 +1241,7 @@ main( int    argc,
     viewer.addEventHandler( new DepthHandler( appState.get(), depth ) );
     // add the help handler
     viewer.addEventHandler(
-        new osgViewer ::HelpHandler( arguments.getApplicationUsage() )
+        new osgViewer::HelpHandler( arguments.getApplicationUsage() )
     );
 
     viewer.setSceneData( sceneRoot );

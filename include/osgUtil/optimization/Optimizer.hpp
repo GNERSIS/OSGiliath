@@ -89,17 +89,17 @@ namespace osgUtil
                 VERTEX_PRETRANSFORM                                    = ( 1 << 20 ),
                 BUFFER_OBJECT_SETTINGS                                 = ( 1 << 21 ),
                 DEFAULT_OPTIMIZATIONS = FLATTEN_STATIC_TRANSFORMS |
-                                        REMOVE_REDUNDANT_NODES |
-                                        REMOVE_LOADED_PROXY_NODES |
-                                        COMBINE_ADJACENT_LODS |
-                                        SHARE_DUPLICATE_STATE |
-                                        MERGE_GEOMETRY |
-                                        MAKE_FAST_GEOMETRY |
-                                        CHECK_GEOMETRY |
-                                        OPTIMIZE_TEXTURE_SETTINGS |
-                                        STATIC_OBJECT_DETECTION,
+                    REMOVE_REDUNDANT_NODES |
+                    REMOVE_LOADED_PROXY_NODES |
+                    COMBINE_ADJACENT_LODS |
+                    SHARE_DUPLICATE_STATE |
+                    MERGE_GEOMETRY |
+                    MAKE_FAST_GEOMETRY |
+                    CHECK_GEOMETRY |
+                    OPTIMIZE_TEXTURE_SETTINGS |
+                    STATIC_OBJECT_DETECTION,
                 ALL_OPTIMIZATIONS =
-                    FLATTEN_STATIC_TRANSFORMS_DUPLICATING_SHARED_SUBGRAPHS |
+                        FLATTEN_STATIC_TRANSFORMS_DUPLICATING_SHARED_SUBGRAPHS |
                     REMOVE_REDUNDANT_NODES |
                     REMOVE_LOADED_PROXY_NODES |
                     COMBINE_ADJACENT_LODS |

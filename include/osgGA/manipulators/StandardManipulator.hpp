@@ -25,7 +25,7 @@ namespace osgGA
                 PROCESS_MOUSE_WHEEL                  = 0X04,
                 SET_CENTER_ON_WHEEL_FORWARD_MOVEMENT = 0X08,
                 DEFAULT_SETTINGS = UPDATE_MODEL_SIZE /*| COMPUTE_HOME_USING_BBOX*/ |
-                                   PROCESS_MOUSE_WHEEL,
+                    PROCESS_MOUSE_WHEEL,
             };
 
             StandardManipulator( int flags = DEFAULT_SETTINGS );

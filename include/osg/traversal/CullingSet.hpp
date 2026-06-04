@@ -126,16 +126,17 @@ namespace osg
                 VIEW_FRUSTUM_SIDES_CULLING = 0X1,
                 NEAR_PLANE_CULLING         = 0X2,
                 FAR_PLANE_CULLING          = 0X4,
-                VIEW_FRUSTUM_CULLING =
-                    VIEW_FRUSTUM_SIDES_CULLING | NEAR_PLANE_CULLING | FAR_PLANE_CULLING,
+                VIEW_FRUSTUM_CULLING       = VIEW_FRUSTUM_SIDES_CULLING |
+                    NEAR_PLANE_CULLING |
+                    FAR_PLANE_CULLING,
                 SMALL_FEATURE_CULLING    = 0X8,
                 SHADOW_OCCLUSION_CULLING = 0X10,
                 DEFAULT_CULLING          = VIEW_FRUSTUM_SIDES_CULLING |
-                                           SMALL_FEATURE_CULLING |
-                                           SHADOW_OCCLUSION_CULLING,
-                ENABLE_ALL_CULLING       = VIEW_FRUSTUM_CULLING |
-                                           SMALL_FEATURE_CULLING |
-                                           SHADOW_OCCLUSION_CULLING,
+                    SMALL_FEATURE_CULLING |
+                    SHADOW_OCCLUSION_CULLING,
+                ENABLE_ALL_CULLING = VIEW_FRUSTUM_CULLING |
+                    SMALL_FEATURE_CULLING |
+                    SHADOW_OCCLUSION_CULLING,
             };
 
             void

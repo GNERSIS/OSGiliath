@@ -82,10 +82,10 @@ typedef TOUCHINPUT const* PCTOUCHINPUT;
 // PointerInput enumeration
 enum tagPOINTER_INPUT_TYPE
 {
-    PT_POINTER = 0X00'00'00'01,     // Generic pointer
-    PT_TOUCH   = 0X00'00'00'02,     // Touch
-    PT_PEN     = 0X00'00'00'03,     // Pen
-    PT_MOUSE   = 0X00'00'00'04,     // Mouse
+    PT_POINTER  = 0X00'00'00'01,    // Generic pointer
+    PT_TOUCH    = 0X00'00'00'02,    // Touch
+    PT_PEN      = 0X00'00'00'03,    // Pen
+    PT_MOUSE    = 0X00'00'00'04,    // Mouse
                                     // #if(WINVER >= 0x0603)
     PT_TOUCHPAD = 0X00'00'00'05,    // Touchpad
     // #endif /* WINVER >= 0x0603 */
