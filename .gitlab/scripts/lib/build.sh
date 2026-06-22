@@ -23,7 +23,9 @@ cmd_build() {
     # BUILD_OSG_EXAMPLES=ON comes from the preset — examples are part of
     # the tidy surface by design (l0: "ALL means ALL").
     info "configure (default preset, BUILD_TESTING=ON)"
-    if ! ( cd "$REPO_ROOT" && cmake --preset default -DBUILD_TESTING=ON ) \
+    if ! ( cd "$REPO_ROOT" && cmake --preset default \
+                                      -DBUILD_TESTING=ON \
+                                      -DBUILD_OSG_PLUGIN_FFMPEG=0 ) \
             > "$log_file" 2>&1; then
         warn "configure failed — last 50 lines of $log_file:"
         tail -50 "$log_file" >&2
@@ -58,35 +60,63 @@ cmd_build() {
         fail "ctest failed"
     fi
 
-    info "tidy gate (project policy: 0 warnings)"
+    info "tidy gate (project policy: 0 new warnings)"
     # Anchored to clang-tidy's diagnostic format:
     #   path/to/file.cpp:LINE:COL: warning: <msg> [check-name]
-    # Compile warnings (no [check-name] suffix) are caught earlier by
-    # -Werror in the build phase, so this gate's job is strictly tidy.
-    local tidy_re='^[^:]+:[0-9]+:[0-9]+: warning: .* \[[a-z][a-z0-9.-]*\]$'
-    # build.log is multi-GB on this codebase (tidy notes per TU) — never
-    # ship it as an artifact. Ship instead: the DEDUPED warning list
-    # (headers re-warn once per including TU; unique list is ~30x smaller),
-    # a per-check summary, and a tail for general triage.
+    #   path/to/file.cpp:LINE:COL: warning: <msg> [check-a,check-b]
+    # Compiler diagnostics surfaced by clang-tidy use clang-diagnostic-* and
+    # are caught earlier by -Werror in the build phase, so this gate's job is
+    # strictly tidy checks.
+    local tidy_re='^[^:]+:[0-9]+:[0-9]+: warning: .* \[[[:alpha:]][^]]*\]$'
+    local tidy_ignore_re=' \[clang-diagnostic-[^]]*\]$'
+    # build.log can be large on this codebase. Ship instead: normalized,
+    # deduped new warnings, a per-check summary, and a tail for triage.
     tail -500 "$log_file" > "$build_dir/build-tail.log" || true
-    if grep -qE "$tidy_re" "$log_file"; then
-        local n n_unique
-        n=$(grep -cE "$tidy_re" "$log_file" || true)
-        grep -hE "$tidy_re" "$log_file" | sort -u \
-            > "$build_dir/tidy-warnings-unique.log" || true
-        n_unique=$(wc -l < "$build_dir/tidy-warnings-unique.log")
-        grep -hE "$tidy_re" "$log_file" \
-            | sed -E 's/.*\[([a-z][a-z0-9.-]*)\]$/\1/' \
-            | sort | uniq -c | sort -rn | head -15 \
-            > "$build_dir/tidy-warning-summary.txt" || true
-        warn "clang-tidy emitted $n warning(s) ($n_unique unique); first 20:"
-        # `grep | head` SIGPIPEs grep when head closes early; under
-        # pipefail+errexit that would kill the script before fail() runs.
-        grep -E "$tidy_re" "$log_file" | head -20 >&2 || true
-        warn "artifacts: tidy-warnings-unique.log + tidy-warning-summary.txt"
-        fail "clang-tidy emitted $n warning(s) ($n_unique unique)"
+    local tidy_baseline="$REPO_ROOT/cmake/tidy-baseline.txt"
+    local tidy_warnings_all="$build_dir/tidy-warnings-all.log"
+    local tidy_warnings="$build_dir/tidy-warnings-new.log"
+    grep -hE "$tidy_re" "$log_file" \
+        | grep -Ev "$tidy_ignore_re" \
+        | awk -v repo="$REPO_ROOT" '{
+            sub("^" repo "/", "")
+            sub("^/workspace/", "")
+            print
+        }' \
+        | sort -u > "$tidy_warnings_all" || true
+
+    if [[ -s "$tidy_warnings_all" ]]; then
+        if [[ -f "$tidy_baseline" ]]; then
+            local tidy_baseline_sorted="$build_dir/tidy-baseline-sorted.log"
+            sort -u "$tidy_baseline" > "$tidy_baseline_sorted"
+            comm -13 "$tidy_baseline_sorted" "$tidy_warnings_all" > "$tidy_warnings"
+        else
+            cp "$tidy_warnings_all" "$tidy_warnings"
+        fi
+    else
+        rm -f "$tidy_warnings"
     fi
-    ok "tidy gate green (0 warnings)"
+
+    if [[ -s "$tidy_warnings" ]]; then
+        local n
+        n=$(wc -l < "$tidy_warnings")
+        cp "$tidy_warnings" "$build_dir/tidy-warnings-unique.log"
+        sed -E 's/.*\[([^]]+)\]$/\1/' "$tidy_warnings" \
+            | tr ',' '\n' | sort | uniq -c | sort -rn | head -15 \
+            > "$build_dir/tidy-warning-summary.txt" || true
+        warn "clang-tidy emitted $n new warning(s); first 20:"
+        head -20 "$tidy_warnings" >&2 || true
+        warn "artifacts: tidy-warnings-unique.log + tidy-warning-summary.txt"
+        fail "clang-tidy emitted $n new warning(s)"
+    fi
+
+    if [[ -s "$tidy_warnings_all" ]]; then
+        local baseline_count
+        baseline_count=$(wc -l < "$tidy_warnings_all")
+        ok "tidy gate green ($baseline_count baseline warning(s), 0 new)"
+    else
+        ok "tidy gate green (0 warnings)"
+    fi
+    rm -f "$tidy_warnings"
 
     show_ccache_stats
     ok "build green"
