@@ -218,6 +218,7 @@ ADD examples/osganalysis/osganalysis.cpp #include "osgDB/registry/ImageProcessor
 ADD examples/osganalysis/osganalysis.cpp #include "osgDB/registry/Registry.hpp"
 ADD examples/osganalysis/osganalysis.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD examples/osganalysis/osganalysis.cpp #include "osgGA/events/GUIEventHandler.hpp"
+ADD examples/osganalysis/osganalysis.cpp #include <functional>
 ADD examples/osganalysis/osganalysis.cpp #include <map>
 ADD examples/osganalysis/osganalysis.cpp #include <ostream>
 ADD examples/osganalysis/osganalysis.cpp #include <set>
@@ -287,6 +288,7 @@ ADD examples/osganimationhardware/osganimationhardware.cpp #include "osgAnimatio
 ADD examples/osganimationhardware/osganimationhardware.cpp #include "osgAnimation/skeletal/Skeleton.hpp"
 ADD examples/osganimationhardware/osganimationhardware.cpp #include "osgViewer/core/Viewer.hpp"
 ADD examples/osganimationhardware/osganimationhardware.cpp #include <cstdlib>
+ADD examples/osganimationhardware/osganimationhardware.cpp #include <functional>
 ADD examples/osganimationhardware/osganimationhardware.cpp #include <string>
 ADD examples/osganimationhardware/osganimationhardware.cpp #include <vector>
 ADD examples/osganimationmakepath/osganimationmakepath.cpp #include "osg/core/ArgumentParser.hpp"
@@ -751,6 +753,7 @@ ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include "osgGA/events/GU
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include "osgViewer/core/View.hpp"
+ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include <functional>
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include <osg/GL>
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include <string>
 ADD examples/osgcompositeviewer/osgcompositeviewer.cpp #include <vector>
@@ -1183,6 +1186,7 @@ ADD examples/osgframerenderer/osgframerenderer.cpp #include "osgGA/events/EventQ
 ADD examples/osgframerenderer/osgframerenderer.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD examples/osgframerenderer/osgframerenderer.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
 ADD examples/osgframerenderer/osgframerenderer.cpp #include <cmath>
+ADD examples/osgframerenderer/osgframerenderer.cpp #include <functional>
 ADD examples/osgframerenderer/osgframerenderer.cpp #include <iostream>
 ADD examples/osgframerenderer/osgframerenderer.cpp #include <list>
 ADD examples/osgframerenderer/osgframerenderer.cpp #include <map>
@@ -1374,6 +1378,7 @@ ADD examples/osggpx/osggpx.cpp #include "osg/maths/vec3.hpp"
 ADD examples/osggpx/osggpx.cpp #include "osg/maths/vec4.hpp"
 ADD examples/osggpx/osggpx.cpp #include "osg/nodes/Group.hpp"
 ADD examples/osggpx/osggpx.cpp #include <fstream>
+ADD examples/osggpx/osggpx.cpp #include <functional>
 ADD examples/osggpx/osggpx.cpp #include <list>
 ADD examples/osggpx/osggpx.cpp #include <math.h>
 ADD examples/osggpx/osggpx.cpp #include <osg/GL>
@@ -1569,6 +1574,7 @@ ADD examples/osgkeyboard/osgkeyboard.cpp #include "osg/nodes/Node.hpp"
 ADD examples/osgkeyboard/osgkeyboard.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD examples/osgkeyboard/osgkeyboard.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osgkeyboard/osgkeyboard.cpp #include "osgText/String"
+ADD examples/osgkeyboard/osgkeyboard.cpp #include <functional>
 ADD examples/osgkeyboard/osgkeyboard.cpp #include <map>
 ADD examples/osgkeyboard/osgkeyboard.cpp #include <ostream>
 ADD examples/osgkeyboard/osgkeyboard.cpp #include <string>
@@ -1627,6 +1633,7 @@ ADD examples/osglauncher/osglauncher.cpp #include "osgGA/events/GUIEventAdapter.
 ADD examples/osglauncher/osglauncher.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osglauncher/osglauncher.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osglauncher/osglauncher.cpp #include <cmath>
+ADD examples/osglauncher/osglauncher.cpp #include <functional>
 ADD examples/osglauncher/osglauncher.cpp #include <map>
 ADD examples/osglauncher/osglauncher.cpp #include <osg/GL>
 ADD examples/osglauncher/osglauncher.cpp #include <stdlib.h>
@@ -1793,6 +1800,7 @@ ADD examples/osgmovie/osgmovie.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD examples/osgmovie/osgmovie.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osgmovie/osgmovie.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgmovie/osgmovie.cpp #include "osgViewer/core/View.hpp"
+ADD examples/osgmovie/osgmovie.cpp #include <functional>
 ADD examples/osgmovie/osgmovie.cpp #include <osg/GL>
 ADD examples/osgmovie/osgmovie.cpp #include <string>
 ADD examples/osgmovie/osgmovie.cpp #include <vector>
@@ -1826,6 +1834,7 @@ ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include "osgUtil/intersect
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include "osgViewer/core/View.hpp"
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <algorithm>
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <cmath>
+ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <functional>
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <osg/GL>
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <sstream>
 ADD examples/osgmultiplemovies/osgmultiplemovies.cpp #include <stdlib.h>
@@ -1943,6 +1952,7 @@ ADD examples/osgoccluder/osgoccluder.cpp #include "osgGA/events/GUIEventAdapter.
 ADD examples/osgoccluder/osgoccluder.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osgoccluder/osgoccluder.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgoccluder/osgoccluder.cpp #include "osgViewer/core/View.hpp"
+ADD examples/osgoccluder/osgoccluder.cpp #include <functional>
 ADD examples/osgoccluder/osgoccluder.cpp #include <osg/GL>
 ADD examples/osgoccluder/osgoccluder.cpp #include <stddef.h>
 ADD examples/osgoccluder/osgoccluder.cpp #include <string>
@@ -2061,6 +2071,7 @@ ADD examples/osgoscdevice/osgoscdevice.cpp #include "osgText/TextBase"
 ADD examples/osgoscdevice/osgoscdevice.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgoscdevice/osgoscdevice.cpp #include "osgViewer/core/View.hpp"
 ADD examples/osgoscdevice/osgoscdevice.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
+ADD examples/osgoscdevice/osgoscdevice.cpp #include <functional>
 ADD examples/osgoscdevice/osgoscdevice.cpp #include <map>
 ADD examples/osgoscdevice/osgoscdevice.cpp #include <osg/GL>
 ADD examples/osgoscdevice/osgoscdevice.cpp #include <sstream>
@@ -2163,6 +2174,7 @@ ADD examples/osgparticleeffects/osgparticleeffects.cpp #include "osgParticle/Par
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include "osgUtil/intersection/IntersectionVisitor.hpp"
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include <cmath>
+ADD examples/osgparticleeffects/osgparticleeffects.cpp #include <functional>
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include <ostream>
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include <stdlib.h>
 ADD examples/osgparticleeffects/osgparticleeffects.cpp #include <string>
@@ -2284,6 +2296,7 @@ ADD examples/osgpick/osgpick.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD examples/osgpick/osgpick.cpp #include "osgGA/events/GUIEventHandler.hpp"
 ADD examples/osgpick/osgpick.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgpick/osgpick.cpp #include "osgViewer/core/View.hpp"
+ADD examples/osgpick/osgpick.cpp #include <functional>
 ADD examples/osgpick/osgpick.cpp #include <map>
 ADD examples/osgpick/osgpick.cpp #include <osg/GL>
 ADD examples/osgpick/osgpick.cpp #include <string>
@@ -3196,6 +3209,7 @@ ADD examples/osgtext3D/osgtext3D.cpp #include "osgText/Text"
 ADD examples/osgtext3D/osgtext3D.cpp #include "osgText/TextBase"
 ADD examples/osgtext3D/osgtext3D.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD examples/osgtext3D/osgtext3D.cpp #include "osgViewer/core/View.hpp"
+ADD examples/osgtext3D/osgtext3D.cpp #include <functional>
 ADD examples/osgtext3D/osgtext3D.cpp #include <map>
 ADD examples/osgtext3D/osgtext3D.cpp #include <ostream>
 ADD examples/osgtext3D/osgtext3D.cpp #include <string>
@@ -3428,6 +3442,7 @@ ADD examples/osgtransferfunction/osgtransferfunction.cpp #include "osgDB/io/fstr
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include "osgVolume/Layer"
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include "osgVolume/Property"
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include <__float_float.h>
+ADD examples/osgtransferfunction/osgtransferfunction.cpp #include <functional>
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include <iostream>
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include <map>
 ADD examples/osgtransferfunction/osgtransferfunction.cpp #include <math.h>
@@ -3557,6 +3572,7 @@ ADD examples/osgvertexattributes/osgvertexattributes.cpp #include "osg/textures/
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include "osg/textures/Texture2D.hpp"
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include "osg/traversal/NodeVisitor.hpp"
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
+ADD examples/osgvertexattributes/osgvertexattributes.cpp #include <functional>
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include <osg/GL>
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include <ostream>
 ADD examples/osgvertexattributes/osgvertexattributes.cpp #include <set>
@@ -4516,6 +4532,7 @@ ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/Export.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/Inherit.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/Object.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/Referenced.hpp"
+ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/ValueObject.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/core/ref_ptr.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/images/Image.hpp"
 ADD include/osg/traversal/NodeVisitor.hpp #include "osg/maths/vec3.hpp"
@@ -4612,6 +4629,7 @@ ADD include/osgAnimation/skeletal/Bone.hpp #include "osg/maths/mat4.hpp"
 ADD include/osgAnimation/skeletal/Bone.hpp #include <map>
 ADD include/osgAnimation/skeletal/Bone.hpp #include <string>
 ADD include/osgAnimation/skeletal/Bone.hpp #include <vector>
+ADD include/osgAnimation/skeletal/BoneMapVisitor.hpp #include <functional>
 ADD include/osgAnimation/skeletal/BoneMapVisitor.hpp #include <string>
 ADD include/osgAnimation/skeletal/LinkVisitor.hpp #include "osgAnimation/core/Export.hpp"
 ADD include/osgAnimation/skeletal/RigGeometry.hpp #include "osg/core/Callback.hpp"
@@ -5273,6 +5291,7 @@ ADD include/osgParticle/PrecipitationEffect #include "osg/state/StateSet.hpp"
 ADD include/osgParticle/PrecipitationEffect #include "osg/state/Uniform.hpp"
 ADD include/osgParticle/PrecipitationEffect #include "osg/traversal/NodeVisitor.hpp"
 ADD include/osgParticle/PrecipitationEffect #include "osg/traversal/Polytope.hpp"
+ADD include/osgParticle/PrecipitationEffect #include <functional>
 ADD include/osgParticle/PrecipitationEffect #include <map>
 ADD include/osgParticle/PrecipitationEffect #include <mutex>
 ADD include/osgParticle/PrecipitationEffect #include <osg/GL>
@@ -5448,6 +5467,7 @@ ADD include/osgShadow/ParallelSplitShadowMap #include "osg/state/Uniform.hpp"
 ADD include/osgShadow/ParallelSplitShadowMap #include "osg/textures/Texture2D.hpp"
 ADD include/osgShadow/ParallelSplitShadowMap #include "osg/traversal/NodeVisitor.hpp"
 ADD include/osgShadow/ParallelSplitShadowMap #include "osgShadow/Export"
+ADD include/osgShadow/ParallelSplitShadowMap #include <functional>
 ADD include/osgShadow/ParallelSplitShadowMap #include <map>
 ADD include/osgShadow/ParallelSplitShadowMap #include <stddef.h>
 ADD include/osgShadow/ParallelSplitShadowMap #include <string>
@@ -5594,6 +5614,7 @@ ADD include/osgSim/OverlayNode #include "osg/state/StateSet.hpp"
 ADD include/osgSim/OverlayNode #include "osg/state/Uniform.hpp"
 ADD include/osgSim/OverlayNode #include "osg/traversal/NodeVisitor.hpp"
 ADD include/osgSim/OverlayNode #include "osg/traversal/Polytope.hpp"
+ADD include/osgSim/OverlayNode #include <functional>
 ADD include/osgSim/OverlayNode #include <map>
 ADD include/osgSim/OverlayNode #include <mutex>
 ADD include/osgSim/OverlayNode #include <vector>
@@ -5675,6 +5696,7 @@ ADD include/osgTerrain/Terrain #include <vector>
 ADD include/osgTerrain/TerrainTechnique #include "osg/core/CopyOp.hpp"
 ADD include/osgTerrain/TerrainTechnique #include "osg/core/Observer.hpp"
 ADD include/osgTerrain/TerrainTechnique #include "osg/traversal/NodeVisitor.hpp"
+ADD include/osgTerrain/TerrainTechnique #include <functional>
 ADD include/osgTerrain/TerrainTechnique #include <mutex>
 ADD include/osgTerrain/TerrainTechnique #include <set>
 ADD include/osgTerrain/TerrainTile #include "osg/core/CopyOp.hpp"
@@ -5683,6 +5705,7 @@ ADD include/osgTerrain/TerrainTile #include "osg/core/ref_ptr.hpp"
 ADD include/osgTerrain/TerrainTile #include "osg/maths/sphere.hpp"
 ADD include/osgTerrain/TerrainTile #include "osg/nodes/Node.hpp"
 ADD include/osgTerrain/TerrainTile #include "osgTerrain/Export"
+ADD include/osgTerrain/TerrainTile #include <functional>
 ADD include/osgTerrain/TerrainTile #include <set>
 ADD include/osgTerrain/TerrainTile #include <string>
 ADD include/osgTerrain/TerrainTile #include <vector>
@@ -5690,6 +5713,7 @@ ADD include/osgText/FadeText #include "osg/core/CopyOp.hpp"
 ADD include/osgText/FadeText #include "osg/maths/vec4.hpp"
 ADD include/osgText/FadeText #include "osg/nodes/View.hpp"
 ADD include/osgText/FadeText #include "osgText/Export"
+ADD include/osgText/FadeText #include <functional>
 ADD include/osgText/FadeText #include <map>
 ADD include/osgText/FadeText #include <vector>
 ADD include/osgText/Font #include "osg/Config"
@@ -6059,6 +6083,7 @@ ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include "osg/rendering/RenderInf
 ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include "osg/state/Program.hpp"
 ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include "osg/state/StateSet.hpp"
 ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include "osg/threading/GraphicsThread.hpp"
+ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include <functional>
 ADD include/osgUtil/utils/GLObjectsVisitor.hpp #include <set>
 ADD include/osgUtil/utils/HalfWayMapGenerator.hpp #include "osg/core/CopyOp.hpp"
 ADD include/osgUtil/utils/HalfWayMapGenerator.hpp #include "osg/maths/vec3.hpp"
@@ -6087,6 +6112,7 @@ ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include "osg/threadin
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include "osg/traversal/NodeVisitor.hpp"
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include "osgUtil/Export"
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include <atomic>
+ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include <functional>
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include <list>
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include <map>
 ADD include/osgUtil/utils/IncrementalCompileOperation.hpp #include <mutex>
@@ -6541,6 +6567,7 @@ ADD src/osg/geometry/Drawable.cpp #include "osg/nodes/Group.hpp"
 ADD src/osg/geometry/Drawable.cpp #include "osg/rendering/RenderInfo.hpp"
 ADD src/osg/geometry/Drawable.cpp #include "osg/state/StateSet.hpp"
 ADD src/osg/geometry/Drawable.cpp #include <ostream>
+ADD src/osg/geometry/Drawable.cpp #include <vector>
 ADD src/osg/geometry/Geometry.cpp #include "osg/core/Inherit.hpp"
 ADD src/osg/geometry/Geometry.cpp #include "osg/core/Object.hpp"
 ADD src/osg/geometry/Geometry.cpp #include "osg/core/Referenced.hpp"
@@ -6711,6 +6738,7 @@ ADD src/osg/nodes/OccluderNode.cpp #include "osg/geometry/ConvexPlanarPolygon.hp
 ADD src/osg/nodes/OccluderNode.cpp #include "osg/maths/box.hpp"
 ADD src/osg/nodes/OccluderNode.cpp #include "osg/nodes/Group.hpp"
 ADD src/osg/nodes/OccluderNode.cpp #include <cmath>
+ADD src/osg/nodes/OccluderNode.cpp #include <vector>
 ADD src/osg/nodes/PagedLOD.cpp #include "osg/core/FrameStamp.hpp"
 ADD src/osg/nodes/PagedLOD.cpp #include "osg/core/Inherit.hpp"
 ADD src/osg/nodes/PagedLOD.cpp #include "osg/nodes/LOD.hpp"
@@ -6746,6 +6774,7 @@ ADD src/osg/nodes/Transform.cpp #include "osg/maths/vec3.hpp"
 ADD src/osg/nodes/Transform.cpp #include "osg/nodes/Group.hpp"
 ADD src/osg/nodes/Transform.cpp #include <math.h>
 ADD src/osg/nodes/Transform.cpp #include <stddef.h>
+ADD src/osg/nodes/Transform.cpp #include <vector>
 ADD src/osg/nodes/View.cpp #include "osg/core/Stats.hpp"
 ADD src/osg/nodes/View.cpp #include "osg/lighting/Light.hpp"
 ADD src/osg/nodes/View.cpp #include "osg/maths/common.hpp"
@@ -6808,6 +6837,7 @@ ADD src/osg/rendering/GraphicsCostEstimator.cpp #include "osg/nodes/Node.hpp"
 ADD src/osg/rendering/GraphicsCostEstimator.cpp #include "osg/state/StateAttribute.hpp"
 ADD src/osg/rendering/GraphicsCostEstimator.cpp #include "osg/state/StateSet.hpp"
 ADD src/osg/rendering/GraphicsCostEstimator.cpp #include "osg/traversal/NodeVisitor.hpp"
+ADD src/osg/rendering/GraphicsCostEstimator.cpp #include <functional>
 ADD src/osg/rendering/GraphicsCostEstimator.cpp #include <ostream>
 ADD src/osg/rendering/GraphicsCostEstimator.cpp #include <set>
 ADD src/osg/rendering/OcclusionQueryNode.cpp #include "osg/core/InheritAcceptImpl.hpp"
@@ -7240,6 +7270,7 @@ ADD src/osgAnimation/skeletal/Bone.cpp #include "osg/core/Inherit.hpp"
 ADD src/osgAnimation/skeletal/Bone.cpp #include "osg/nodes/Group.hpp"
 ADD src/osgAnimation/skeletal/Bone.cpp #include "osg/nodes/MatrixTransform.hpp"
 ADD src/osgAnimation/skeletal/Bone.cpp #include "osg/nodes/Node.hpp"
+ADD src/osgAnimation/skeletal/Bone.cpp #include <vector>
 ADD src/osgAnimation/skeletal/BoneMapVisitor.cpp #include "osg/core/ref_ptr.hpp"
 ADD src/osgAnimation/skeletal/BoneMapVisitor.cpp #include "osg/nodes/Transform.hpp"
 ADD src/osgAnimation/skeletal/BoneMapVisitor.cpp #include "osg/traversal/NodeVisitor.hpp"
@@ -7281,6 +7312,7 @@ ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include "osgAnimation/sk
 ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include "osgAnimation/skeletal/VertexInfluence.hpp"
 ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include <algorithm>
 ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include <cstddef>
+ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include <functional>
 ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include <math.h>
 ADD src/osgAnimation/skeletal/RigTransformHardware.cpp #include <utility>
 ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include "osg/core/Inherit.hpp"
@@ -7292,6 +7324,7 @@ ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include "osg/geometry/Ge
 ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include "osgAnimation/skeletal/Bone.hpp"
 ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include "osgAnimation/skeletal/RigTransform.hpp"
 ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include "osgAnimation/skeletal/Skeleton.hpp"
+ADD src/osgAnimation/skeletal/RigTransformSoftware.cpp #include <functional>
 ADD src/osgAnimation/skeletal/Skeleton.cpp #include "osg/core/Callback.hpp"
 ADD src/osgAnimation/skeletal/Skeleton.cpp #include "osg/core/Inherit.hpp"
 ADD src/osgAnimation/skeletal/Skeleton.cpp #include "osg/nodes/MatrixTransform.hpp"
@@ -7520,6 +7553,7 @@ ADD src/osgDB/serialization/ClassInterface.cpp #include "osgDB/registry/Registry
 ADD src/osgDB/serialization/ClassInterface.cpp #include "osgDB/serialization/DataTypes.hpp"
 ADD src/osgDB/serialization/ClassInterface.cpp #include "osgDB/serialization/ObjectWrapper.hpp"
 ADD src/osgDB/serialization/ClassInterface.cpp #include "osgDB/serialization/StreamOperator.hpp"
+ADD src/osgDB/serialization/ClassInterface.cpp #include <functional>
 ADD src/osgDB/serialization/ClassInterface.cpp #include <list>
 ADD src/osgDB/serialization/ClassInterface.cpp #include <sstream>
 ADD src/osgDB/serialization/ClassInterface.cpp #include <string.h>
@@ -7648,6 +7682,7 @@ ADD src/osgFX/Cartoon.cpp #include <cstddef>
 ADD src/osgFX/Cartoon.cpp #include <math.h>
 ADD src/osgFX/Cartoon.cpp #include <osg/GL>
 ADD src/osgFX/Cartoon.cpp #include <string>
+ADD src/osgFX/Cartoon.cpp #include <vector>
 ADD src/osgFX/Effect.cpp #include "osg/core/InheritAcceptImpl.hpp"
 ADD src/osgFX/Effect.cpp #include "osg/core/buffered_value.hpp"
 ADD src/osgFX/Effect.cpp #include "osg/core/ref_ptr.hpp"
@@ -7753,6 +7788,7 @@ ADD src/osgGA/handlers/Widget.cpp #include "osgGA/events/Event.hpp"
 ADD src/osgGA/handlers/Widget.cpp #include "osgGA/events/EventQueue.hpp"
 ADD src/osgGA/handlers/Widget.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD src/osgGA/handlers/Widget.cpp #include <cmath>
+ADD src/osgGA/handlers/Widget.cpp #include <functional>
 ADD src/osgGA/handlers/Widget.cpp #include <list>
 ADD src/osgGA/handlers/Widget.cpp #include <ostream>
 ADD src/osgGA/handlers/Widget.cpp #include <string>
@@ -7931,6 +7967,7 @@ ADD src/osgManipulator/Dragger.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD src/osgManipulator/Dragger.cpp #include "osgManipulator/Constraint"
 ADD src/osgManipulator/Dragger.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD src/osgManipulator/Dragger.cpp #include <algorithm>
+ADD src/osgManipulator/Dragger.cpp #include <functional>
 ADD src/osgManipulator/Dragger.cpp #include <map>
 ADD src/osgManipulator/Dragger.cpp #include <ostream>
 ADD src/osgManipulator/Projector.cpp #include "osg/core/Notify.hpp"
@@ -8658,6 +8695,7 @@ ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include "osg/nodes/Node.hpp"
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include "osg/threading/Thread.hpp"
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <curl/curl.h>
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <fstream>
+ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <functional>
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <map>
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <mutex>
 ADD src/osgPlugins/curl/ReaderWriterCURL.hpp #include <stddef.h>
@@ -8913,6 +8951,7 @@ ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include "osgDB/registry/Registry.hpp
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include "osgDB/serialization/ClassInterface.hpp"
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include "osgDB/serialization/ObjectWrapper.hpp"
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include <deque>
+ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include <functional>
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include <sstream>
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include <utility>
 ADD src/osgPlugins/lua/LuaScriptEngine.cpp #include <vector>
@@ -9043,6 +9082,7 @@ ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include "osg/maths/vec4.hpp"
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include "osgGA/events/Device.hpp"
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include <cstdlib>
+ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include <functional>
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include <mutex>
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include <set>
 ADD src/osgPlugins/osc/OscReceivingDevice.cpp #include <sstream>
@@ -9349,6 +9389,7 @@ ADD src/osgPlugins/zip/ZipArchive.cpp #include "osgDB/cache/AuthenticationMap.hp
 ADD src/osgPlugins/zip/ZipArchive.cpp #include "osgDB/registry/Archive.hpp"
 ADD src/osgPlugins/zip/ZipArchive.cpp #include "osgDB/registry/Options.hpp"
 ADD src/osgPlugins/zip/ZipArchive.cpp #include "osgDB/registry/ReaderWriter.hpp"
+ADD src/osgPlugins/zip/ZipArchive.cpp #include <functional>
 ADD src/osgPlugins/zip/ZipArchive.cpp #include <new>
 ADD src/osgPlugins/zip/ZipArchive.hpp #include <iosfwd>
 ADD src/osgPlugins/zip/ZipArchive.hpp #include <map>
@@ -9418,6 +9459,7 @@ ADD src/osgPresentation/PickEventHandler.cpp #include "osg/traversal/NodeVisitor
 ADD src/osgPresentation/PickEventHandler.cpp #include "osgGA/events/GUIActionAdapter.hpp"
 ADD src/osgPresentation/PickEventHandler.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD src/osgPresentation/PickEventHandler.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
+ADD src/osgPresentation/PickEventHandler.cpp #include <functional>
 ADD src/osgPresentation/PickEventHandler.cpp #include <ostream>
 ADD src/osgPresentation/PickEventHandler.cpp #include <vector>
 ADD src/osgPresentation/PropertyManager.cpp #include "osg/core/FrameStamp.hpp"
@@ -9559,6 +9601,7 @@ ADD src/osgPresentation/Timeout.cpp #include <math.h>
 ADD src/osgPresentation/Timeout.cpp #include <osg/GL>
 ADD src/osgPresentation/Timeout.cpp #include <ostream>
 ADD src/osgPresentation/Timeout.cpp #include <string.h>
+ADD src/osgPresentation/Timeout.cpp #include <vector>
 ADD src/osgShadow/ConvexPolyhedron.cpp #include "osg/core/Notify.hpp"
 ADD src/osgShadow/ConvexPolyhedron.cpp #include "osg/geometry/Array.hpp"
 ADD src/osgShadow/ConvexPolyhedron.cpp #include "osg/geometry/Geometry.hpp"
@@ -9973,6 +10016,7 @@ ADD src/osgSim/OverlayNode.cpp #include <ostream>
 ADD src/osgSim/OverlayNode.cpp #include <set>
 ADD src/osgSim/OverlayNode.cpp #include <string>
 ADD src/osgSim/OverlayNode.cpp #include <utility>
+ADD src/osgSim/OverlayNode.cpp #include <vector>
 ADD src/osgSim/ScalarBar.cpp #include "osg/geometry/Array.hpp"
 ADD src/osgSim/ScalarBar.cpp #include "osg/geometry/PrimitiveSet.hpp"
 ADD src/osgSim/ScalarBar.cpp #include "osg/maths/common.hpp"
@@ -9985,6 +10029,7 @@ ADD src/osgSim/ScalarBar.cpp #include "osgText/Font"
 ADD src/osgSim/ScalarBar.cpp #include <cstddef>
 ADD src/osgSim/ScalarBar.cpp #include <math.h>
 ADD src/osgSim/ScalarBar.cpp #include <osg/GL>
+ADD src/osgSim/ScalarBar.cpp #include <vector>
 ADD src/osgSim/ScalarsToColors.cpp #include "osg/maths/vec4.hpp"
 ADD src/osgSim/Sector.cpp #include "osg/maths/Math.hpp"
 ADD src/osgSim/Sector.cpp #include "osg/maths/mat4.hpp"
@@ -10173,6 +10218,7 @@ ADD src/osgText/FadeText.cpp #include <list>
 ADD src/osgText/FadeText.cpp #include <ostream>
 ADD src/osgText/FadeText.cpp #include <set>
 ADD src/osgText/FadeText.cpp #include <utility>
+ADD src/osgText/FadeText.cpp #include <vector>
 ADD src/osgText/Font.cpp #include "osgDB/cache/ObjectCache.hpp"
 ADD src/osgText/Font.cpp #include "osgDB/registry/Callbacks.hpp"
 ADD src/osgText/Font.cpp #include "osgDB/registry/Options.hpp"
@@ -10407,6 +10453,7 @@ ADD src/osgUI/TabWidget.cpp #include "osgUI/AlignmentSettings"
 ADD src/osgUI/TabWidget.cpp #include "osgUI/Style"
 ADD src/osgUI/TabWidget.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD src/osgUI/TabWidget.cpp #include <algorithm>
+ADD src/osgUI/TabWidget.cpp #include <functional>
 ADD src/osgUI/TabWidget.cpp #include <osg/GL>
 ADD src/osgUI/TabWidget.cpp #include <ostream>
 ADD src/osgUI/TextSettings.cpp #include "osg/core/Inherit.hpp"
@@ -10435,6 +10482,7 @@ ADD src/osgUI/Widget.cpp #include "osgGA/events/EventQueue.hpp"
 ADD src/osgUI/Widget.cpp #include "osgGA/manipulators/CameraManipulator.hpp"
 ADD src/osgUI/Widget.cpp #include "osgUtil/culling/CullVisitor.hpp"
 ADD src/osgUI/Widget.cpp #include <cmath>
+ADD src/osgUI/Widget.cpp #include <functional>
 ADD src/osgUI/Widget.cpp #include <list>
 ADD src/osgUI/Widget.cpp #include <ostream>
 ADD src/osgUtil/culling/CullVisitor.cpp #include "osg/core/CopyOp.hpp"
@@ -10563,6 +10611,7 @@ ADD src/osgUtil/intersection/RayIntersector.cpp #include "osg/state/StateAttribu
 ADD src/osgUtil/intersection/RayIntersector.cpp #include "osg/state/StateSet.hpp"
 ADD src/osgUtil/intersection/RayIntersector.cpp #include "osgUtil/intersection/IntersectionVisitor.hpp"
 ADD src/osgUtil/intersection/RayIntersector.cpp #include <cstddef>
+ADD src/osgUtil/intersection/RayIntersector.cpp #include <functional>
 ADD src/osgUtil/mesh/DelaunayTriangulator.cpp #include "osg/core/CopyOp.hpp"
 ADD src/osgUtil/mesh/DelaunayTriangulator.cpp #include "osg/core/Referenced.hpp"
 ADD src/osgUtil/mesh/DelaunayTriangulator.cpp #include "osg/core/ref_ptr.hpp"
@@ -10866,6 +10915,7 @@ ADD src/osgViewer/core/CompositeViewer.cpp #include "osgViewer/core/Scene.hpp"
 ADD src/osgViewer/core/CompositeViewer.cpp #include "osgViewer/core/View.hpp"
 ADD src/osgViewer/core/CompositeViewer.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
 ADD src/osgViewer/core/CompositeViewer.cpp #include <algorithm>
+ADD src/osgViewer/core/CompositeViewer.cpp #include <functional>
 ADD src/osgViewer/core/CompositeViewer.cpp #include <list>
 ADD src/osgViewer/core/CompositeViewer.cpp #include <map>
 ADD src/osgViewer/core/CompositeViewer.cpp #include <ostream>
@@ -10931,6 +10981,7 @@ ADD src/osgViewer/core/View.cpp #include "osgViewer/core/Scene.hpp"
 ADD src/osgViewer/core/View.cpp #include "osgViewer/core/ViewerBase.hpp"
 ADD src/osgViewer/core/View.cpp #include "osgViewer/handlers/Keystone.hpp"
 ADD src/osgViewer/core/View.cpp #include <algorithm>
+ADD src/osgViewer/core/View.cpp #include <functional>
 ADD src/osgViewer/core/View.cpp #include <math.h>
 ADD src/osgViewer/core/View.cpp #include <ostream>
 ADD src/osgViewer/core/View.cpp #include <string>
@@ -10972,6 +11023,7 @@ ADD src/osgViewer/core/Viewer.cpp #include "osgViewer/core/Scene.hpp"
 ADD src/osgViewer/core/Viewer.cpp #include "osgViewer/core/View.hpp"
 ADD src/osgViewer/core/Viewer.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
 ADD src/osgViewer/core/Viewer.cpp #include <algorithm>
+ADD src/osgViewer/core/Viewer.cpp #include <functional>
 ADD src/osgViewer/core/Viewer.cpp #include <list>
 ADD src/osgViewer/core/Viewer.cpp #include <set>
 ADD src/osgViewer/core/Viewer.cpp #include <utility>
@@ -11128,6 +11180,7 @@ ADD src/osgViewer/handlers/ViewerEventHandlers.cpp #include "osgGA/manipulators/
 ADD src/osgViewer/handlers/ViewerEventHandlers.cpp #include "osgUtil/intersection/LineSegmentIntersector.hpp"
 ADD src/osgViewer/handlers/ViewerEventHandlers.cpp #include "osgViewer/platform/GraphicsWindow.hpp"
 ADD src/osgViewer/handlers/ViewerEventHandlers.cpp #include <cstdlib>
+ADD src/osgViewer/handlers/ViewerEventHandlers.cpp #include <functional>
 ADD src/osgViewer/platform/GraphicsWindow.cpp #include "osg/core/Notify.hpp"
 ADD src/osgViewer/platform/GraphicsWindow.cpp #include "osg/nodes/Camera.hpp"
 ADD src/osgViewer/platform/GraphicsWindow.cpp #include "osg/nodes/View.hpp"
@@ -11138,6 +11191,7 @@ ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include "osgGA/events/EventQue
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include "osgGA/events/GUIEventAdapter.hpp"
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include "osgViewer/api/X11/GraphicsHandleX11"
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include <X11/extensions/randr.h>
+ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include <functional>
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include <osg/GL>
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include <ostream>
 ADD src/osgViewer/platform/GraphicsWindowX11.cpp #include <stdint.h>
@@ -11268,6 +11322,7 @@ ADD src/osgVolume/VolumeScene.cpp #include <osg/GL>
 ADD src/osgVolume/VolumeScene.cpp #include <ostream>
 ADD src/osgVolume/VolumeScene.cpp #include <string>
 ADD src/osgVolume/VolumeScene.cpp #include <utility>
+ADD src/osgVolume/VolumeScene.cpp #include <vector>
 ADD src/osgVolume/VolumeSettings.cpp #include "osg/core/Inherit.hpp"
 ADD src/osgVolume/VolumeSettings.cpp #include "osg/core/Notify.hpp"
 ADD src/osgVolume/VolumeSettings.cpp #include "osg/core/Object.hpp"
@@ -11292,10 +11347,12 @@ ADD src/osgVolume/VolumeTile.cpp #include "osgVolume/Layer"
 ADD src/osgVolume/VolumeTile.cpp #include "osgVolume/VolumeTechnique"
 ADD src/osgVolume/VolumeTile.cpp #include <math.h>
 ADD src/osgVolume/VolumeTile.cpp #include <ostream>
+ADD src/osgVolume/VolumeTile.cpp #include <vector>
 ADD src/osgWidget/Box.cpp #include "osg/core/Inherit.hpp"
 ADD src/osgWidget/Box.cpp #include "osg/core/observer_ptr.hpp"
 ADD src/osgWidget/Box.cpp #include "osgWidget/Widget"
 ADD src/osgWidget/Box.cpp #include "osgWidget/Window"
+ADD src/osgWidget/Box.cpp #include <vector>
 ADD src/osgWidget/Browser.cpp #include "osg/geometry/Geometry.hpp"
 ADD src/osgWidget/Browser.cpp #include "osg/maths/vec3.hpp"
 ADD src/osgWidget/Browser.cpp #include "osg/state/StateAttribute.hpp"
@@ -11428,6 +11485,7 @@ ADD src/osgWidget/Widget.cpp #include <algorithm>
 ADD src/osgWidget/Widget.cpp #include <cmath>
 ADD src/osgWidget/Widget.cpp #include <ostream>
 ADD src/osgWidget/Widget.cpp #include <string>
+ADD src/osgWidget/Widget.cpp #include <vector>
 ADD src/osgWidget/Window.cpp #include "osg/core/CopyOp.hpp"
 ADD src/osgWidget/Window.cpp #include "osg/core/Inherit.hpp"
 ADD src/osgWidget/Window.cpp #include "osg/core/Object.hpp"
@@ -11471,9 +11529,11 @@ ADD src/osgWidget/WindowManager.cpp #include "osgViewer/platform/GraphicsWindow.
 ADD src/osgWidget/WindowManager.cpp #include "osgWidget/ScriptEngine"
 ADD src/osgWidget/WindowManager.cpp #include "osgWidget/StyleManager"
 ADD src/osgWidget/WindowManager.cpp #include "osgWidget/Window"
+ADD src/osgWidget/WindowManager.cpp #include <functional>
 ADD src/osgWidget/WindowManager.cpp #include <map>
 ADD src/osgWidget/WindowManager.cpp #include <osg/GL>
 ADD src/osgWidget/WindowManager.cpp #include <sstream>
+ADD src/osgWidget/WindowManager.cpp #include <vector>
 ADD tests/all_headers_test.cpp #include "gtest/gtest.h"
 ADD tests/all_headers_test.cpp #include <string>
 ADD tests/maths_conventions_test.cpp #include "gtest/gtest.h"
