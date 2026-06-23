@@ -59,51 +59,6 @@ _assert_nonblank_png() {
     return 0
 }
 
-# Ensure a valid native .osgt smoke asset exists at tests/assets/. To avoid
-# hand-authoring a version-specific ascii .osgt (unverifiable at Phase A —
-# osgconv is not yet built), we write a trivially-valid Wavefront .obj seed
-# via heredoc and let osgconv's OWN writer produce the .osgt. The asset is
-# thus valid-by-construction; the contract's measured step (.osgt→.osgb) runs
-# afterward. A vendored tests/assets/smoke_scene.osgt, if present, is used
-# as-is (drop-in for the Phase-A spike). Fail-loud if generation fails.
-ensure_smoke_asset() {
-    local osgconv="$1" kind="$2"
-    local asset_dir="$REPO_ROOT/tests/assets"
-    local osgt="$asset_dir/smoke_scene.osgt"
-    local obj="$asset_dir/smoke_seed.obj"
-    mkdir -p "$asset_dir"
-
-    if [[ -s "$osgt" ]]; then
-        info "using existing smoke asset: $osgt"
-        return 0
-    fi
-
-    if [[ ! -s "$obj" ]]; then
-        cat > "$obj" <<'OBJ'
-# OSGiliath CI app-smoke seed — minimal triangle (Wavefront OBJ).
-# osgconv converts this to a native .osgt at smoke time, so the .osgt is
-# valid-by-construction (OSG's own writer) rather than a hand-authored,
-# version-fragile guess. Replace tests/assets/smoke_scene.osgt with a
-# vendored asset to pin a richer scene.
-v -1.0 -1.0 0.0
-v  1.0 -1.0 0.0
-v  0.0  1.0 0.0
-vn 0.0 0.0 1.0
-f 1//1 2//1 3//1
-OBJ
-    fi
-
-    local -a senv=()
-    _read_kind_env senv "$kind"
-    info "generating native .osgt seed: osgconv $obj → $osgt"
-    if ! ( cd "$REPO_ROOT" && env "${senv[@]}" "$osgconv" "$obj" "$osgt" ) >&2; then
-        fail "could not generate .osgt seed via osgconv (osgdb_obj plugin \
-missing, or a real serializer crash) — vendor a known-good \
-tests/assets/smoke_scene.osgt (Phase-A spike)"
-    fi
-    [[ -s "$osgt" ]] || fail "osgconv ran but did not produce $osgt"
-}
-
 cmd_app_smoke() {
     local build_dir="$1" kind="$2"
     header "app-smoke  ($kind, non-GL: osgversion + osgconv)"
@@ -116,31 +71,36 @@ cmd_app_smoke() {
     osgversion="$(_locate_bin "$build_dir" osgversion)" \
         || fail "osgversion binary not found under $build_dir (build incomplete?)"
     info "osgversion: $osgversion"
-    if ! ver="$( cd "$REPO_ROOT" && env "${senv[@]}" "$osgversion" )"; then
+    if ! ver="$( cd "$REPO_ROOT" && env OSG_LIBRARY_PATH="$build_dir/lib" "${senv[@]}" "$osgversion" )"; then
         fail "osgversion exited non-zero under $kind"
     fi
     [[ -n "$ver" ]] || fail "osgversion produced no output (expected a version string)"
     info "osgversion → $ver"
 
-    # 2) osgconv .osgt→.osgb — exercises osgDB serializers + plugin registry
-    #    read/write with no GL and no display.
-    local osgconv out sz
+    # 2) osgconv duck.glb → .obj — exercises the glTF READER, the plugin
+    #    registry, scene-graph construction, and the OBJ WRITER under the
+    #    sanitizer, with no GL and no display. NOTE: OSGiliath deleted the native
+    #    .osgt/.osgb serializers and glTF write is unsupported; the OBJ writer
+    #    is the only model writer (and emits header-only output). The value here
+    #    is sanitizer COVERAGE of the read/write code paths — the render-smoke
+    #    separately proves duck.glb decodes to a real, drawable scene.
+    local osgconv model out sz
     osgconv="$(_locate_bin "$build_dir" osgconv)" \
         || fail "osgconv binary not found under $build_dir (build incomplete?)"
-    ensure_smoke_asset "$osgconv" "$kind"
-    local osgt="$REPO_ROOT/tests/assets/smoke_scene.osgt"
-    out="$(mktemp -t osgiliath-smoke.XXXXXX.osgb)"
-    info "osgconv $osgt → $out"
-    if ! ( cd "$REPO_ROOT" && env "${senv[@]}" "$osgconv" "$osgt" "$out" ) >&2; then
+    model="$REPO_ROOT/tests/assets/duck.glb"
+    [[ -s "$model" ]] || fail "smoke model missing: $model"
+    out="$(mktemp -t osgiliath-smoke.XXXXXX.obj)"
+    info "osgconv $model → $out"
+    if ! ( cd "$REPO_ROOT" && env OSG_LIBRARY_PATH="$build_dir/lib" "${senv[@]}" "$osgconv" "$model" "$out" ) >&2; then
         rm -f "$out"
-        fail "osgconv .osgt→.osgb exited non-zero under $kind"
+        fail "osgconv duck.glb→.obj exited non-zero under $kind"
     fi
     sz="$(stat -c%s "$out" 2>/dev/null || wc -c < "$out")"
     if (( sz <= 0 )); then
         rm -f "$out"
-        fail "osgconv produced an empty .osgb ($out) — write path failed silently"
+        fail "osgconv produced an empty file ($out) — read/write path failed"
     fi
-    info "osgconv produced $out ($sz bytes)"
+    info "osgconv read duck.glb + wrote $out ($sz bytes)"
     rm -f "$out"
 
     ok "app-smoke  ($kind)  green"
