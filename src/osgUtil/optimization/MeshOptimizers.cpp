@@ -1096,14 +1096,18 @@ namespace osgUtil
                 unsigned vertIdx = triToAdd->verts[i];
                 Vertex*  vert    = &vertices[vertIdx];
                 vertDrawList.push_back( vertIdx );
-                std::remove( vertTriListStore.begin() +
-                                 static_cast<std::ptrdiff_t>( vert->triList ),
-                             vertTriListStore.begin() +
-                                 static_cast<std::ptrdiff_t>(
-                                     vert->triList +
-                                     static_cast<size_t>( vert->numActiveTris )
-                                 ),
-                             triToAddIdx );
+                // std::remove compacts the kept entries to the front; the
+                // matching entry is dropped logically by numActiveTris-- below,
+                // so the returned new-end iterator is intentionally unused
+                // (libc++ marks std::remove [[nodiscard]]).
+                ( void )std::remove( vertTriListStore.begin() +
+                                         static_cast<std::ptrdiff_t>( vert->triList ),
+                                     vertTriListStore.begin() +
+                                         static_cast<std::ptrdiff_t>(
+                                             vert->triList +
+                                             static_cast<size_t>( vert->numActiveTris )
+                                         ),
+                                     triToAddIdx );
                 vert->numActiveTris--;
             }
             // Assume that the three oldest cache entries will get kicked

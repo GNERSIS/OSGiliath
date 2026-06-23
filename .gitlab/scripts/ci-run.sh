@@ -125,7 +125,14 @@ run_step_for() {
             [[ "$kind" == build ]] && { printf 'tidy'; return 0; }
             printf 'none' ;;
         tests)
-            printf 'ctest' ;;                       # build/asan/tsan/msan all ctest
+            # msan is compile-only. MSan-instrumented test binaries crash at
+            # process exit (stack-overflow, "nested bug ... aborting") recursing
+            # through libosg's static destructors into UNINSTRUMENTED GLEW/X11/
+            # zlib — the test logic + gtest teardown pass, only final exit can't.
+            # Not fixable without an instrumented GL/X11 stack. Compile-clean
+            # under libc++ is MSan's value here (it caught real libc++ bugs).
+            [[ "$kind" == msan ]] && { printf 'none'; return 0; }
+            printf 'ctest' ;;                       # build/asan/tsan run ctest
         applications)
             case "$kind" in
                 build|asan|tsan) printf 'app-smoke' ;;
