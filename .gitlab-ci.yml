@@ -1,14 +1,28 @@
 # OSGiliath GitLab CI — adapted from l0's pipeline for a single-lib repo.
 #
-# Three gates, all hard (l0-faithful):
-#   format → clang-format --dry-run --Werror (file set = cmake/Format.cmake's)
-#   build  → full build (lib+plugins+apps+examples+tests) under -Werror with
-#            ASan+UBSan always-on, 0-warning clang-tidy gate, ctest
-#   iwyu   → include-what-you-use as compiler proxy; any actionable
-#            add/remove recommendation fails
+# Component-staged static-analysis matrix (l0-faithful):
+#   format → src → applications → examples → tests   (docs stage dropped)
 #
-# All logic lives in .gitlab/scripts/ci-run.sh — the YAML is a thin
-# wrapper, so local runs (`./.gitlab/scripts/ci-run.sh build`) and CI are
+# Within each runnable component stage, five KINDS run in parallel — each its
+# own build dir + per-kind ccache (mirrors l0's tier×kind matrix):
+#   build → optimized no-sanitizer compile + 0-warning clang-tidy gate
+#   asan  → ASan+UBSan always-on; RUN ctest / headless smoke
+#   tsan  → ThreadSanitizer (+UBSan); RUN non-GL ctest / smoke
+#   msan  → MemorySanitizer (+UBSan) w/ instrumented libc++; RUN non-GL ctest
+#   iwyu  → include-what-you-use gate (any add/remove recommendation fails)
+#
+# Component = which CMake targets build/run (scoped by BUILD_* options):
+#   src           → lib + osgdb_* plugins (compile-only; build kind = tidy gate)
+#   applications  → application_* + non-GL app smoke (osgversion / osgconv)
+#   examples      → example_*     + headless render smoke (Xvfb + llvmpipe)
+#   tests         → 3 gtest bins + ctest
+#
+# msan-applications, msan-examples and tsan-examples are COMPILE-ONLY, but they
+# are REAL jobs that run ci-run.sh and actually compile — never skipped, never
+# allow_failure, never manual. Manufacturing green via skips is forbidden.
+#
+# All logic lives in .gitlab/scripts/ci-run.sh — the YAML is a thin wrapper, so
+# local runs (`./.gitlab/scripts/ci-run.sh <kind> <component>`) and CI are
 # structurally identical.
 #
 # Image: built LOCALLY on the runner host (legion) from
@@ -41,7 +55,7 @@ default:
 
 variables:
   # /ccache is a persistent host bind-mount (see register-runner.sh);
-  # keyed per kind so build and iwyu object caches don't evict each other.
+  # keyed per kind so each kind's object cache doesn't evict the others.
   CCACHE_DIR: "/ccache/default"
   CCACHE_MAXSIZE: "10G"
   CCACHE_COMPRESS: "true"
@@ -49,13 +63,18 @@ variables:
   CCACHE_COMPILERCHECK: "content"
   GIT_DEPTH: "10"
 
-# Stage ordering gates execution: `check` jobs only start when `format`
-# is green (fast-fail on style). Within `check`, build and iwyu run in
-# parallel when the runner has concurrent > 1. No `needs:` anywhere —
-# needs would switch GitLab to DAG mode and bypass the stage gate.
+# Stage ordering gates execution: the component stages run strictly in
+# dependency order — `src` must be green before `applications`, `examples`
+# and `tests` start (OSGiliath is ONE shared lib that the rest link, so src
+# is the chain gate). Within a stage the 5 kinds run in parallel when the
+# runner has concurrent > 1. No `needs:` anywhere — `needs` would switch
+# GitLab to DAG mode and bypass the stage gate (l0 + OSGiliath invariant).
 stages:
   - format
-  - check
+  - src
+  - applications
+  - examples
+  - tests
 
 format:
   stage: format
@@ -69,34 +88,84 @@ format:
       - format.log
       - format-files.txt
 
-build:
-  stage: check
-  dependencies: []
+# ── Per-kind templates ──────────────────────────────────────────────────────
+# Hidden jobs (leading dot) are pulled in via `extends:` — never executed
+# themselves. Each carries the kind's ccache dir, the 3h heavy-job timeout,
+# empty `dependencies:` (artifacts never propagate between stages), and the
+# kind's artifact/JUnit shape. The component-specific bit (stage + the
+# ci-run.sh args) is set on the concrete jobs below.
+
+.kind-build:
   variables:
     CCACHE_DIR: "/ccache/build"
+  dependencies: []
   timeout: 3h
-  script:
-    - .gitlab/scripts/ci-run.sh build
   artifacts:
     when: always
     expire_in: 1 week
     paths:
       # build.log is multi-GB (tidy notes per TU) — deliberately NOT shipped.
       - build/build-tail.log
-      - build/ctest-results.xml
+      - build/build-results.xml
       - build/tidy-warning-summary.txt
       - build/tidy-warnings-unique.log
+      - build/smoke/*.png                # render/app smoke output (debug on fail)
     reports:
-      junit: build/ctest-results.xml
+      junit: build/build-results.xml
 
-iwyu:
-  stage: check
+.kind-asan:
+  variables:
+    CCACHE_DIR: "/ccache/asan"
   dependencies: []
+  timeout: 3h
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - build-asan/build-tail.log
+      - build-asan/asan-results.xml
+      - build-asan/smoke/*.png
+    reports:
+      junit: build-asan/asan-results.xml
+
+.kind-tsan:
+  variables:
+    CCACHE_DIR: "/ccache/tsan"
+  dependencies: []
+  timeout: 3h
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      # No smoke/*.png glob: under tsan, examples are compile-only and the
+      # applications app-smoke (osgversion/osgconv) writes no PNG — nothing ever
+      # lands in build-tsan/smoke/, so the glob would only match nothing.
+      - build-tsan/build-tail.log
+      - build-tsan/tsan-results.xml
+    reports:
+      junit: build-tsan/tsan-results.xml
+
+.kind-msan:
+  variables:
+    CCACHE_DIR: "/ccache/msan"
+  dependencies: []
+  timeout: 3h
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      # No smoke/*.png glob: msan runs every component compile-only or ctest
+      # (no render/app smoke at all) — nothing ever lands in build-msan/smoke/.
+      - build-msan/build-tail.log
+      - build-msan/msan-results.xml
+    reports:
+      junit: build-msan/msan-results.xml
+
+.kind-iwyu:
   variables:
     CCACHE_DIR: "/ccache/iwyu"
+  dependencies: []
   timeout: 3h
-  script:
-    - .gitlab/scripts/ci-run.sh iwyu
   artifacts:
     when: always
     expire_in: 1 week
@@ -107,3 +176,138 @@ iwyu:
       - build-iwyu/iwyu-results.xml
     reports:
       junit: build-iwyu/iwyu-results.xml
+
+# ── src ─────────────────────────────────────────────────────────────────────
+# Compile-only (lib + osgdb_* plugins). The build kind additionally runs the
+# 0-warning clang-tidy gate here.
+
+build-src:
+  extends: .kind-build
+  stage: src
+  script:
+    - .gitlab/scripts/ci-run.sh build src
+
+asan-src:
+  extends: .kind-asan
+  stage: src
+  script:
+    - .gitlab/scripts/ci-run.sh asan src
+
+tsan-src:
+  extends: .kind-tsan
+  stage: src
+  script:
+    - .gitlab/scripts/ci-run.sh tsan src
+
+msan-src:
+  extends: .kind-msan
+  stage: src
+  script:
+    - .gitlab/scripts/ci-run.sh msan src
+
+iwyu-src:
+  extends: .kind-iwyu
+  stage: src
+  script:
+    - .gitlab/scripts/ci-run.sh iwyu src
+
+# ── applications ─────────────────────────────────────────────────────────────
+# build/asan/tsan → compile + non-GL app smoke. msan → compile-only (apps pull
+# GL + uninstrumented C). All five are REAL jobs that compile.
+
+build-applications:
+  extends: .kind-build
+  stage: applications
+  script:
+    - .gitlab/scripts/ci-run.sh build applications
+
+asan-applications:
+  extends: .kind-asan
+  stage: applications
+  script:
+    - .gitlab/scripts/ci-run.sh asan applications
+
+tsan-applications:
+  extends: .kind-tsan
+  stage: applications
+  script:
+    - .gitlab/scripts/ci-run.sh tsan applications
+
+msan-applications:
+  extends: .kind-msan
+  stage: applications
+  script:
+    - .gitlab/scripts/ci-run.sh msan applications
+
+iwyu-applications:
+  extends: .kind-iwyu
+  stage: applications
+  script:
+    - .gitlab/scripts/ci-run.sh iwyu applications
+
+# ── examples ─────────────────────────────────────────────────────────────────
+# build/asan → compile + headless render smoke (Xvfb + llvmpipe).
+# tsan/msan → compile-only (GL driver threads / uninstrumented C). All real.
+
+build-examples:
+  extends: .kind-build
+  stage: examples
+  script:
+    - .gitlab/scripts/ci-run.sh build examples
+
+asan-examples:
+  extends: .kind-asan
+  stage: examples
+  script:
+    - .gitlab/scripts/ci-run.sh asan examples
+
+tsan-examples:
+  extends: .kind-tsan
+  stage: examples
+  script:
+    - .gitlab/scripts/ci-run.sh tsan examples
+
+msan-examples:
+  extends: .kind-msan
+  stage: examples
+  script:
+    - .gitlab/scripts/ci-run.sh msan examples
+
+iwyu-examples:
+  extends: .kind-iwyu
+  stage: examples
+  script:
+    - .gitlab/scripts/ci-run.sh iwyu examples
+
+# ── tests ────────────────────────────────────────────────────────────────────
+# All 3 gtest bins are non-GL → ctest runs under every sanitizer.
+
+build-tests:
+  extends: .kind-build
+  stage: tests
+  script:
+    - .gitlab/scripts/ci-run.sh build tests
+
+asan-tests:
+  extends: .kind-asan
+  stage: tests
+  script:
+    - .gitlab/scripts/ci-run.sh asan tests
+
+tsan-tests:
+  extends: .kind-tsan
+  stage: tests
+  script:
+    - .gitlab/scripts/ci-run.sh tsan tests
+
+msan-tests:
+  extends: .kind-msan
+  stage: tests
+  script:
+    - .gitlab/scripts/ci-run.sh msan tests
+
+iwyu-tests:
+  extends: .kind-iwyu
+  stage: tests
+  script:
+    - .gitlab/scripts/ci-run.sh iwyu tests

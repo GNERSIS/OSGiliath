@@ -27,6 +27,41 @@
                 "CMAKE_C_COMPILER": "gcc",
                 "BUILD_OSG_EXAMPLES": "ON"
             }
+        },
+        {
+            "name": "build",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "ENABLE_SANITIZERS": "OFF",
+                "ENABLE_COVERAGE": "OFF"
+            }
+        },
+        {
+            "name": "asan",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-asan",
+            "cacheVariables": {
+                "ENABLE_COVERAGE": "OFF"
+            }
+        },
+        {
+            "name": "tsan",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-tsan",
+            "cacheVariables": {
+                "THREAD_SANITIZE": "ON",
+                "ENABLE_COVERAGE": "OFF"
+            }
+        },
+        {
+            "name": "msan",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-msan",
+            "cacheVariables": {
+                "MEMORY_SANITIZE": "ON",
+                "ENABLE_COVERAGE": "OFF"
+            }
         }
     ]
 }

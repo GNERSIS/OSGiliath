@@ -1,12 +1,22 @@
-# Include-What-You-Use gate. Adapted from l0's iwyu.sh (single-lib paths).
+# iwyu kind — Include-What-You-Use gate, per component.
+# Adapted from l0's iwyu.sh (single-lib paths).
 #
 # Runs IWYU as a compiler proxy via CMAKE_CXX_INCLUDE_WHAT_YOU_USE (set
 # by the `iwyu` preset → WITH_IWYU=ON → cmake/IWYU.cmake). The gate
 # fails iff at least one TU has an actionable recommendation (an
 # #include line inside an "add" block or a `- #include` line inside a
 # "remove" block).
+#
+# This is a COMPILE-TIME gate: it has no RUN step. It fires for every
+# component (src/applications/examples/tests, §2c) — the component only
+# selects which BUILD_* targets enter the IWYU compile surface. The build
+# dir (build-iwyu, matching the preset) is wiped per run so ninja can't
+# skip a stale TU and fake-green the gate.
 
 cmd_iwyu() {
+    local component="$1"
+    require_component "$component"
+
     if ! command -v include-what-you-use >/dev/null 2>&1; then
         for candidate in "$HOME/.local/iwyu/bin" "$HOME/.cache/iwyu_build/bin"; do
             if [[ -x "$candidate/include-what-you-use" ]]; then
@@ -22,7 +32,7 @@ cmd_iwyu() {
     require_tool include-what-you-use
     setup_ccache
 
-    header "iwyu"
+    header "iwyu  $component"
 
     local build_subdir="build-iwyu"
     local build_dir="$REPO_ROOT/$build_subdir"
@@ -40,17 +50,20 @@ cmd_iwyu() {
     mkdir -p "$build_dir"
     : > "$log_file"
 
-    info "configure (iwyu preset, B=$build_subdir)"
+    local -a comp_flags
+    read -ra comp_flags <<< "$(component_cmake_flags "$component")"
+
+    info "configure (iwyu preset, component=$component, B=$build_subdir)"
     if ! ( cd "$REPO_ROOT" && cmake --preset iwyu \
-                                      -DBUILD_TESTING=ON \
-                                      -DBUILD_OSG_PLUGIN_FFMPEG=0 \
+                                      "${comp_flags[@]}" \
                                       -B "$build_subdir" ) \
             > "$log_file" 2>&1; then
         warn "configure failed — last 50 lines of $log_file:"
         tail -50 "$log_file" >&2
+        _persist_build_tail "$log_file" "$build_dir"
         _write_junit_stub "$junit_file" "cmake-configure" \
-            "cmake --preset iwyu failed"
-        fail "cmake configure failed (iwyu)"
+            "cmake --preset iwyu ($component) failed"
+        fail "cmake configure failed (iwyu/$component)"
     fi
 
     info "build (-j$(nproc_value)) — IWYU runs as compiler proxy"
@@ -58,6 +71,7 @@ cmd_iwyu() {
             >> "$log_file" 2>&1; then
         warn "build failed — last 100 lines of $log_file:"
         tail -100 "$log_file" >&2
+        _persist_build_tail "$log_file" "$build_dir"
         _write_junit_stub "$junit_file" "cmake-build" \
             "cmake --build failed under IWYU"
         fail "cmake build failed (iwyu)"
@@ -66,7 +80,8 @@ cmd_iwyu() {
 
     # The full log carries clang-tidy noise per TU (Tidy.cmake is
     # unconditional) — multi-GB. Ship only a tail + the recommendations.
-    tail -500 "$log_file" > "$build_dir/build-tail.log" || true
+    # (Same writer the failure paths above use, for a consistent artifact.)
+    _persist_build_tail "$log_file" "$build_dir"
 
     info "scanning for IWYU recommendations"
     awk -v repo="$REPO_ROOT" '

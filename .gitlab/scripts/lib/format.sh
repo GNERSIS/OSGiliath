@@ -21,9 +21,13 @@ cmd_format() {
     )
     total=${#files[@]}
 
+    # Zero discovered files is NOT a pass. In this repo include/src/examples/
+    # applications/tests always hold source, so an empty set can only mean a wrong
+    # CWD or a moved/renamed tree — a misconfiguration that must fail loud, never
+    # a silent always-green gate.
     if (( total == 0 )); then
-        warn "no source files found — nothing to format-check"
-        return 0
+        fail "no source files discovered under include/src/examples/applications/tests \
+— the format gate cannot run (wrong CWD or a moved/renamed tree?)"
     fi
 
     info "running clang-format on $total files (parallel: $(nproc_value))"

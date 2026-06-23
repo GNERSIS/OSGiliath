@@ -1,77 +1,68 @@
-# Build + 0-warning clang-tidy gate + ctest.
+# build kind — the no-sanitizer baseline compile, per component.
 #
-# Unlike l0 (whose `build` wave is Release/no-sanitizers), OSGiliath's
-# toolchain keeps ASan+UBSan and --coverage ALWAYS on (cmake/Sanitizers.cmake,
-# Coverage.cmake have no toggles), so this single job covers l0's `build`
-# AND `asan` kinds: compile under -Werror, clang-tidy on every TU, then
-# ctest runs the GTest suite under ASan+UBSan.
+# The `build` preset (CMakePresets.json) is ENABLE_SANITIZERS=OFF +
+# ENABLE_COVERAGE=OFF: an optimized compile under -Werror with clang-tidy
+# running on every TU. This is l0's `build` kind (the dedicated `asan`
+# kind owns the ASan/UBSan RUN now — see lib/asan.sh).
+#
+# Per the RUN matrix (§2c) the `build` kind RUNs:
+#   src           → tidy gate (the ONLY place the 0-new-warning gate fires)
+#   applications  → app-smoke (osgversion + osgconv, non-GL)
+#   examples      → render-smoke (6 headless examples, Xvfb + llvmpipe)
+#   tests         → ctest
+# All of that is dispatched by _run_component; this file owns the build
+# configure/compile and the tidy gate itself.
 
 cmd_build() {
-    require_tool cmake
-    require_tool ninja
+    local component="$1"
+    require_component "$component"
     setup_ccache
 
-    header "build  (default preset: clang, ASan+UBSan, tidy on every TU, ctest)"
+    header "build  $component  (no-sanitizer baseline, clang-tidy on every TU)"
 
-    local build_dir="$REPO_ROOT/build"
-    local log_file="$REPO_ROOT/build.log"
-    local junit_file="$build_dir/ctest-results.xml"
+    local build_dir="$REPO_ROOT/$(kind_build_dir build)"
+    local log_file="$REPO_ROOT/build-$component.log"
+    local junit_file="$build_dir/build-results.xml"
 
-    mkdir -p "$build_dir"
-    : > "$log_file"
+    # Wipe build/ at job start — SAME rationale as iwyu.sh's rm -rf (read its
+    # comment). clang-tidy runs via CMAKE_CXX_CLANG_TIDY ONLY when ninja fires a
+    # compile rule for a TU. On an incremental re-run ninja skips up-to-date TUs,
+    # so clang-tidy is never re-invoked on a dirty-but-unchanged file → the tidy
+    # gate greps an empty log and reports a green that proves nothing. CI clones
+    # fresh per job (build/ always absent there), so wiping locally is what makes
+    # the local tidy gate CI-faithful and forces EVERY TU back through clang-tidy
+    # each invocation. ccache keeps the recompile cheap; clang-tidy itself still
+    # re-runs, which is exactly the point of the wipe.
+    rm -rf "$build_dir"
 
-    # BUILD_OSG_EXAMPLES=ON comes from the preset — examples are part of
-    # the tidy surface by design (l0: "ALL means ALL").
-    info "configure (default preset, BUILD_TESTING=ON)"
-    if ! ( cd "$REPO_ROOT" && cmake --preset default \
-                                      -DBUILD_TESTING=ON \
-                                      -DBUILD_OSG_PLUGIN_FFMPEG=0 ) \
-            > "$log_file" 2>&1; then
-        warn "configure failed — last 50 lines of $log_file:"
-        tail -50 "$log_file" >&2
-        _write_junit_stub "$junit_file" "cmake-configure" \
-            "cmake --preset default failed"
-        fail "cmake configure failed"
-    fi
+    _configure_and_build build "$component" "$build_dir" "$log_file" "$junit_file"
+    _run_component build "$component" "$build_dir" "$log_file"
 
-    info "build (-j$(nproc_value))"
-    # Log to file only — keeps GitLab's 4 MB job-log cap from filling with
-    # compile commands + tidy notes. Full log is in the artifact.
-    if ! ( cd "$REPO_ROOT" && cmake --build build -j"$(nproc_value)" ) \
-            >> "$log_file" 2>&1; then
-        warn "build failed — last 100 lines of $log_file:"
-        tail -100 "$log_file" >&2
-        _write_junit_stub "$junit_file" "cmake-build" \
-            "cmake --build failed"
-        fail "cmake build failed"
-    fi
-    info "build succeeded ($(wc -l < "$log_file") lines logged to $log_file)"
+    show_ccache_stats
+    ok "build  $component  green"
+}
 
-    # ctest BEFORE the tidy gate (deliberate reorder vs l0): the tidy
-    # gate starts deep red on this codebase (~880k warnings at adoption,
-    # hard-gate policy accepted), and running tests first means the
-    # JUnit report still lands in GitLab while the cleanup campaign runs.
-    info "ctest (--parallel $(nproc_value))"
-    if ! ( cd "$REPO_ROOT" && ctest --test-dir build \
-                                    --output-on-failure \
-                                    --parallel "$(nproc_value)" \
-                                    --output-junit ctest-results.xml ); then
-        # ctest emits its own ctest-results.xml even on failure.
-        fail "ctest failed"
-    fi
+# 0-new-warning clang-tidy gate. Tidy.cmake runs clang-tidy during the
+# build (warnings only — compiler -Werror failures are caught earlier in
+# _configure_and_build), so the gate is a post-build scan of the build log.
+# Fires ONLY on `build src` (§2c): src is the lib's own TUs; apps/examples/
+# tests run their RUN steps instead. New warnings (vs cmake/tidy-baseline.txt)
+# fail the gate; baseline warnings pass.
+_tidy_gate() {
+    local build_dir="$1" log_file="$2"
 
     info "tidy gate (project policy: 0 new warnings)"
-    # Anchored to clang-tidy's diagnostic format:
-    #   path/to/file.cpp:LINE:COL: warning: <msg> [check-name]
-    #   path/to/file.cpp:LINE:COL: warning: <msg> [check-a,check-b]
+    # clang-tidy diagnostic shape:
+    #   path/file.cpp:LINE:COL: warning: <msg> [check-name]
     # Compiler diagnostics surfaced by clang-tidy use clang-diagnostic-* and
-    # are caught earlier by -Werror in the build phase, so this gate's job is
-    # strictly tidy checks.
+    # are already caught by -Werror in the build, so the gate is strictly
+    # tidy checks.
     local tidy_re='^[^:]+:[0-9]+:[0-9]+: warning: .* \[[[:alpha:]][^]]*\]$'
     local tidy_ignore_re=' \[clang-diagnostic-[^]]*\]$'
-    # build.log can be large on this codebase. Ship instead: normalized,
-    # deduped new warnings, a per-check summary, and a tail for triage.
-    tail -500 "$log_file" > "$build_dir/build-tail.log" || true
+
+    # build-tail.log is written authoritatively by _configure_and_build
+    # (_persist_build_tail) for every kind×component, so the tidy gate no longer
+    # needs to emit it here.
     local tidy_baseline="$REPO_ROOT/cmake/tidy-baseline.txt"
     local tidy_warnings_all="$build_dir/tidy-warnings-all.log"
     local tidy_warnings="$build_dir/tidy-warnings-new.log"
@@ -117,7 +108,4 @@ cmd_build() {
         ok "tidy gate green (0 warnings)"
     fi
     rm -f "$tidy_warnings"
-
-    show_ccache_stats
-    ok "build green"
 }
