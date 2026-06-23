@@ -3,8 +3,9 @@
  */
 #include "obj.hpp"
 
+#include <algorithm>
+#include <ctype.h>
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>

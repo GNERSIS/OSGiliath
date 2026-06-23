@@ -13820,3 +13820,5 @@ REMOVE src/osgWidget/Widget.cpp #include <osg/core/io_utils.hpp>
 REMOVE src/osgWidget/Widget.cpp #include <osg/maths/Math.hpp>
 REMOVE src/osgWidget/WindowManager.cpp #include <iostream>
 REMOVE tests/all_headers_test.cpp #include <all_osg_headers.hpp>
+ADD src/osgPlugins/OpenFlight/AncillaryRecords.cpp #include <ios>
+ADD src/osgPlugins/OpenFlight/RecordInputStream.hpp #include <ios>
