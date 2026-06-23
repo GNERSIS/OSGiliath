@@ -157,3 +157,6 @@ build-iwyu-build.log
 build.log
 format.log
 format-files.txt
+
+# sanitizer / variant build dirs (asan, tsan, msan, iwyu)
+build-*/

@@ -42,7 +42,8 @@
             "inherits": "default",
             "binaryDir": "${sourceDir}/build-asan",
             "cacheVariables": {
-                "ENABLE_COVERAGE": "OFF"
+                "ENABLE_COVERAGE": "OFF",
+                "ENABLE_TIDY": "OFF"
             }
         },
         {
@@ -51,7 +52,8 @@
             "binaryDir": "${sourceDir}/build-tsan",
             "cacheVariables": {
                 "THREAD_SANITIZE": "ON",
-                "ENABLE_COVERAGE": "OFF"
+                "ENABLE_COVERAGE": "OFF",
+                "ENABLE_TIDY": "OFF"
             }
         },
         {
@@ -60,7 +62,8 @@
             "binaryDir": "${sourceDir}/build-msan",
             "cacheVariables": {
                 "MEMORY_SANITIZE": "ON",
-                "ENABLE_COVERAGE": "OFF"
+                "ENABLE_COVERAGE": "OFF",
+                "ENABLE_TIDY": "OFF"
             }
         }
     ]
