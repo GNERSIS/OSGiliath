@@ -170,6 +170,14 @@ cmd_render_smoke() {
     local smoke_dir="$build_dir/smoke"
     mkdir -p "$smoke_dir"
 
+    # Test model + GL env. duck.glb is the small committed fixture under
+    # tests/assets (examples fall back to it / take it as an arg). llvmpipe caps
+    # at GL 4.5 natively, but OSGiliath requests 4.6 and ships #version 460
+    # shaders, so MESA_GL_VERSION_OVERRIDE=4.6 + GLSL 460 are REQUIRED or context
+    # creation fails. OSG_LIBRARY_PATH is needed for plugin (gltf/png) discovery.
+    local model_dir="$REPO_ROOT/tests/assets"
+    local model="duck.glb"
+
     local name bin png failures=0
     for name in "${examples[@]}"; do
         if ! bin="$(_locate_bin "$build_dir" "$name")"; then
@@ -181,8 +189,11 @@ cmd_render_smoke() {
         rm -f "$png"
         info "render $name → $png"
         if timeout 120 xvfb-run -a -s "-screen 0 1280x1024x24" \
-                env LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe "${senv[@]}" \
-                "$bin" --headless "$png"; then
+                env LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe \
+                    MESA_GL_VERSION_OVERRIDE=4.6 MESA_GLSL_VERSION_OVERRIDE=460 \
+                    OSG_LIBRARY_PATH="$build_dir/lib" OSG_FILE_PATH="$model_dir" \
+                    "${senv[@]}" \
+                "$bin" --headless "$png" "$model"; then
             if _assert_nonblank_png "$png"; then
                 ok "  $name  render OK ($(stat -c%s "$png" 2>/dev/null || echo '?') bytes)"
             else
