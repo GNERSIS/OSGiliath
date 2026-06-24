@@ -48,16 +48,14 @@ default:
   after_script:
     - ccache --show-stats || true
   retry:
-    # The legion runner is shared with other heavy projects; the ASan/TSan
-    # app-smoke jobs occasionally OOM/contention-flake (each is verified green in
-    # isolation — a clean cold-clone run passes with zero findings). Retry
-    # tolerates that environmental flakiness: a DETERMINISTIC failure still fails
-    # after all retries (NOT masked), only transient ones recover.
-    max: 2
+    # Retry ONLY on genuine infra transients — never on script_failure, which
+    # would mask real sanitizer findings (fake green). The TSan ASLR flake that
+    # tempted a script_failure retry is a runner-config issue fixed properly via
+    # register-runner.sh's seccomp=unconfined, not by retrying.
+    max: 1
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-      - script_failure
 
 variables:
   # /ccache is a persistent host bind-mount (see register-runner.sh);

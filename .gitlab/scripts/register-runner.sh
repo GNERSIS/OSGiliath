@@ -71,7 +71,15 @@ sudo gitlab-runner register \
     --docker-pull-policy "if-not-present" \
     --docker-volumes "/cache" \
     --docker-volumes "${CCACHE_HOST_DIR}:/ccache:rw" \
+    --docker-security-opt "seccomp=unconfined" \
     --description "${HOSTNAME:-$(hostname)} (osgiliath self-hosted)"
+# seccomp=unconfined: ThreadSanitizer maps shadow memory at fixed addresses and,
+# when the layout conflicts (high host ASLR entropy, e.g. vm.mmap_rnd_bits=32),
+# must re-exec with ASLR disabled via personality(ADDR_NO_RANDOMIZE) — which the
+# default Docker seccomp profile blocks, so the tsan RUN jobs (tsan-tests,
+# tsan-applications) FATAL intermittently. Unconfining seccomp lets TSan disable
+# ASLR. Lighter alternative (host-wide, no seccomp change): sysctl
+# vm.mmap_rnd_bits=28 (persist in /etc/sysctl.d/). ASan/UBSan/MSan are unaffected.
 # With the glrt- auth-token flow, attributes like --locked/--run-untagged
 # are server-side (set in the GitLab UI when creating the runner).
 
