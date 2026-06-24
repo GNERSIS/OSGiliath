@@ -62,6 +62,12 @@ variables:
   CCACHE_COMPRESSLEVEL: "6"
   CCACHE_COMPILERCHECK: "content"
   GIT_DEPTH: "10"
+  # Cap per-job build/test parallelism. The legion runner is concurrent=4 and
+  # shared with other projects, so unbounded -j$(nproc)=-j32 across 4 concurrent
+  # sanitizer builds oversubscribes 32 cores (~128 procs) and the memory-heavy
+  # ASan/TSan/MSan builds OOM-flake. nproc/4 keeps total compile concurrency at
+  # ~cores. ci-run.sh's nproc_value() honours JFACTOR.
+  JFACTOR: "8"
 
 # Stage ordering gates execution: the component stages run strictly in
 # dependency order — `src` must be green before `applications`, `examples`
