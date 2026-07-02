@@ -160,3 +160,4 @@ format-files.txt
 
 # sanitizer / variant build dirs (asan, tsan, msan, iwyu)
 build-*/
+.worktrees/
