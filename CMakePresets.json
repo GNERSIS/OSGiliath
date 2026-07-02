@@ -65,6 +65,43 @@
                 "ENABLE_COVERAGE": "OFF",
                 "ENABLE_TIDY": "OFF"
             }
+        },
+        {
+            "name": "release",
+            "displayName": "Release — no sanitizers, no coverage, no tidy",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_SANITIZERS": "OFF",
+                "ENABLE_COVERAGE": "OFF",
+                "ENABLE_TIDY": "OFF",
+                "BUILD_OSG_EXAMPLES": "OFF",
+                "BUILD_TESTING": "ON"
+            }
+        },
+        {
+            "name": "profile",
+            "displayName": "Profiling — RelWithDebInfo + frame pointers, uninstrumented",
+            "inherits": "release",
+            "binaryDir": "${sourceDir}/build-profile",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS": "-fno-omit-frame-pointer",
+                "CMAKE_C_FLAGS": "-fno-omit-frame-pointer"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug — sanitizers on, coverage off, tidy off",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_COVERAGE": "OFF",
+                "ENABLE_TIDY": "OFF",
+                "BUILD_TESTING": "ON"
+            }
         }
     ]
 }

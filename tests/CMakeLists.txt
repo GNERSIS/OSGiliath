@@ -68,3 +68,10 @@ target_include_directories(all_headers_test PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_test(NAME all_headers_test COMMAND all_headers_test)
+
+# ── Performance suite (benchmarks + frame stress) ──
+# Not registered with ctest: run manually from a release/profile build.
+option(BUILD_PERF_TESTS "Build the performance benchmark suite" ON)
+if(BUILD_PERF_TESTS)
+    add_subdirectory(perf)
+endif()
