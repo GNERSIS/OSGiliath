@@ -6,9 +6,9 @@
 #endif
 
 #include <osgDB/io/FileUtils.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Python>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Python.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 namespace osgWidget
 {

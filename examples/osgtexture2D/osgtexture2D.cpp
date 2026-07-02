@@ -13,7 +13,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

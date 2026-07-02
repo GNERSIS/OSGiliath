@@ -14,9 +14,9 @@
 #include <osg/nodes/CoordinateSystemNode.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgSim/ElevationSlice>
-#include <osgSim/HeightAboveTerrain>
-#include <osgSim/LineOfSight>
+#include <osgSim/ElevationSlice.hpp>
+#include <osgSim/HeightAboveTerrain.hpp>
+#include <osgSim/LineOfSight.hpp>
 #include <osgUtil/culling/UpdateVisitor.hpp>
 #include <osgUtil/intersection/IntersectionVisitor.hpp>
 #include <osgUtil/intersection/LineSegmentIntersector.hpp>

@@ -1,0 +1,288 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Standard shadow mapping with configurable precision.
+ * Single shadow map with bias and polygon offset.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osg/state/Uniform.hpp>
+#include <osgShadow/DebugShadowMap.hpp>
+
+namespace osgShadow
+{
+
+    class OSGSHADOW_EXPORT StandardShadowMap
+        : public osg::Inherit<DebugShadowMap, StandardShadowMap>
+    {
+        public:
+
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef StandardShadowMap ThisClass;
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef DebugShadowMap    BaseClass;
+
+            /** Classic OSG constructor */
+            StandardShadowMap();
+
+            /** Classic OSG cloning constructor */
+            StandardShadowMap( const StandardShadowMap& ssm,
+                               const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            /** Declaration of standard OSG object methods */
+            OSG_REGISTER_TYPE( osgShadow,
+                               StandardShadowMap )
+
+            void
+            setBaseTextureUnit( unsigned int unit )
+            {
+                _baseTextureUnit = unit;
+                dirty();
+            }
+
+            unsigned int
+            getBaseTextureUnit( void ) const
+            {
+                return _baseTextureUnit;
+            }
+
+            void
+            setShadowTextureUnit( unsigned int unit )
+            {
+                _shadowTextureUnit = unit;
+                dirty();
+            }
+
+            unsigned int
+            getShadowTextureUnit( void ) const
+            {
+                return _shadowTextureUnit;
+            }
+
+            // Texture Indices are changed by search and replace on shader source
+            // Carefully order these calls when changing both base and shadow indices
+            // In worst case when intend to swap indices
+            // one will have to call these  methods more than once
+            // with one extra pass to change index to unused value to avoid
+            // unwanted superfluous replace:
+            //
+            // Example: Imagine we want to swap base(0) and shadow(1) indices:
+            // We have to do an extra step to make sure both do not end up as 1
+            //
+            // // initially change base to something else than 1
+            // setBaseTextureCoordIndex( 100 );
+            // // now search and replace all gl_TexCord[1] to gl_TexCord[0]
+            // setShadowTextureCoordIndex( 0 );
+            // // finally change base from 100 to 0
+            // setBaseTextureCoordIndex( 1 );
+
+            void
+            setBaseTextureCoordIndex( unsigned int index )
+            {
+                updateTextureCoordIndices( _baseTextureCoordIndex, index );
+                _baseTextureCoordIndex = index;
+            }
+
+            unsigned int
+            getBaseTextureCoordIndex( void ) const
+            {
+                return _baseTextureCoordIndex;
+            }
+
+            // Texture Indices are changed by search and replace on shader source
+            // Look at the comment above setBaseTextureCoordIndex
+
+            void
+            setShadowTextureCoordIndex( unsigned int index )
+            {
+                updateTextureCoordIndices( _shadowTextureCoordIndex, index );
+                _shadowTextureCoordIndex = index;
+            }
+
+            unsigned int
+            getShadowTextureCoordIndex( void ) const
+            {
+                return _shadowTextureCoordIndex;
+            }
+
+            void
+            setTextureSize( const osg::svec2& textureSize )
+            {
+                _textureSize = textureSize;
+                dirty();
+            }
+
+            const osg::svec2&
+            getTextureSize() const
+            {
+                return _textureSize;
+            }
+
+            void
+            setLight( osg::Light* light )
+            {
+                _light = light;
+            }
+
+            osg::Light*
+            getLight( void )
+            {
+                return _light.get();
+            }
+
+            const osg::Light*
+            getLight( void ) const
+            {
+                return _light.get();
+            }
+
+            osg::Shader*
+            getShadowVertexShader()
+            {
+                return _shadowVertexShader.get();
+            }
+
+            osg::Shader*
+            getShadowFragmentShader()
+            {
+                return _shadowFragmentShader.get();
+            }
+
+            osg::Shader*
+            getMainVertexShader()
+            {
+                return _mainVertexShader.get();
+            }
+
+            osg::Shader*
+            getMainFragmentShader()
+            {
+                return _mainFragmentShader.get();
+            }
+
+            void
+            setShadowVertexShader( osg::Shader* shader )
+            {
+                _shadowVertexShader = shader;
+            }
+
+            void
+            setShadowFragmentShader( osg::Shader* shader )
+            {
+                _shadowFragmentShader = shader;
+            }
+
+            void
+            setMainVertexShader( osg::Shader* shader )
+            {
+                _mainVertexShader = shader;
+            }
+
+            void
+            setMainFragmentShader( osg::Shader* shader )
+            {
+                _mainFragmentShader = shader;
+            }
+
+            /** Resize any per context GLObject buffers to specified size. */
+            virtual void
+            resizeGLObjectBuffers( unsigned int maxSize );
+
+            /** If State is non-zero, this function releases any associated OpenGL
+             * objects for the specified graphics context. Otherwise, releases OpenGL
+             * objects for all graphics contexts. */
+            virtual void
+            releaseGLObjects( osg::State* = 0 ) const;
+
+        protected:
+
+            /** Classic protected OSG destructor */
+            virtual ~StandardShadowMap( void );
+
+            virtual void
+            updateTextureCoordIndices( unsigned int baseTexCoordIndex,
+                                       unsigned int shadowTexCoordIndex );
+
+            virtual void
+            searchAndReplaceShaderSource( osg::Shader*,
+                                          std::string fromString,
+                                          std::string toString );
+
+            osg::ref_ptr<osg::Shader> _mainVertexShader;
+            osg::ref_ptr<osg::Shader> _mainFragmentShader;
+            osg::ref_ptr<osg::Shader> _shadowVertexShader;
+            osg::ref_ptr<osg::Shader> _shadowFragmentShader;
+
+            osg::ref_ptr<osg::Light>  _light;
+            float                     _polygonOffsetFactor;
+            float                     _polygonOffsetUnits;
+            osg::svec2                _textureSize;
+            unsigned int              _baseTextureUnit;
+            unsigned int              _shadowTextureUnit;
+            unsigned int              _baseTextureCoordIndex;
+            unsigned int              _shadowTextureCoordIndex;
+
+            struct OSGSHADOW_EXPORT ViewData : public BaseClass::ViewData
+            {
+                    osg::ref_ptr<osg::Light>*   _lightPtr;
+                    unsigned int*               _baseTextureUnitPtr;
+                    unsigned int*               _shadowTextureUnitPtr;
+
+                    // ShadowMap texture is defined by base DebugShadowMap
+                    // osg::ref_ptr<osg::Texture2D>  _texture;
+
+                    // ShadowMap camera is defined by base DebugShadowMap
+                    // osg::ref_ptr<osg::Camera>     _camera;
+
+                    osg::ref_ptr<osg::StateSet> _stateset;
+                    osg::ref_ptr<osg::Uniform>  _shadowTextureMatrixUniform;
+
+                    using BaseClass::ViewData::init;
+                    virtual void
+                    init( ThisClass*            st,
+                          osgUtil::CullVisitor* cv );
+
+                    virtual void
+                    cull();
+
+                    virtual void
+                    aimShadowCastingCamera( const osg::sphere& bounds,
+                                            const osg::Light*  light,
+                                            const osg::vec4&   worldLightPos,
+                                            const osg::vec3&   worldLightDir,
+                                            const osg::vec3&   worldLightUp =
+                                                osg::vec3( 0,
+                                                           1,
+                                                           0 ) );
+
+                    virtual void
+                    cullShadowReceivingScene();
+
+                    virtual void
+                    cullShadowCastingScene();
+
+                    virtual const osg::Light*
+                    selectLight( osg::vec4& viewLightPos,
+                                 osg::vec3& viewLightDir );
+
+                    virtual void
+                    aimShadowCastingCamera( const osg::Light* light,
+                                            const osg::vec4&  worldLightPos,
+                                            const osg::vec3&  worldLightDir,
+                                            const osg::vec3&  worldLightUp =
+                                                osg::vec3( 0,
+                                                           1,
+                                                           0 ) );
+
+                    virtual void
+                    resizeGLObjectBuffers( unsigned int maxSize );
+                    virtual void
+                    releaseGLObjects( osg::State* = 0 ) const;
+            };
+
+            friend struct ViewData;
+
+            META_ViewDependentShadowTechniqueData( ThisClass,
+                                                   ThisClass::ViewData )
+    };
+
+}    // namespace osgShadow

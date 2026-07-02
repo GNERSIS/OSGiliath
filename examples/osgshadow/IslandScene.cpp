@@ -8,7 +8,7 @@
 #include <osg/state/CullFace.hpp>
 #include <osg/state/Depth.hpp>
 #include <osg/textures/Texture2D.hpp>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/TerrainTile.hpp>
 #include <stdlib.h>
 
 static unsigned int heightTexture[] = {

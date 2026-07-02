@@ -6,7 +6,7 @@
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/rendering/GLU.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <vector>
 
 #ifndef CALLBACK

@@ -16,11 +16,11 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/events/GUIEventHandler.hpp>
-#include <osgParticle/ExplosionDebrisEffect>
-#include <osgParticle/ExplosionEffect>
-#include <osgParticle/FireEffect>
-#include <osgParticle/SmokeEffect>
-#include <osgText/Text>
+#include <osgParticle/ExplosionDebrisEffect.hpp>
+#include <osgParticle/ExplosionEffect.hpp>
+#include <osgParticle/FireEffect.hpp>
+#include <osgParticle/SmokeEffect.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgUtil/utils/GLObjectsVisitor.hpp>
 #include <osgViewer/core/Viewer.hpp>

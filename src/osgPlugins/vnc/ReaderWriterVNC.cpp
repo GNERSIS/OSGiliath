@@ -6,7 +6,7 @@
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/registry/ReaderWriter.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgWidget/VncClient>
+#include <osgWidget/VncClient.hpp>
 
 extern "C"
 {

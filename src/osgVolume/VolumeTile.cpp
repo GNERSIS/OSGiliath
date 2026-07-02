@@ -2,9 +2,9 @@
  * Single volume tile holding a 3D image layer.
  * Generates rendering geometry from volumetric data.
  */
-#include <osgVolume/VolumeTile>
+#include <osgVolume/VolumeTile.hpp>
 
-#include <osgVolume/Volume>
+#include <osgVolume/Volume.hpp>
 
 using namespace osg;
 using namespace osgVolume;

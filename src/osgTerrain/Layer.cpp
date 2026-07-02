@@ -2,7 +2,7 @@
  * Abstract terrain data layer (elevation or imagery).
  * Provides tiled access to geo-referenced raster data.
  */
-#include <osgTerrain/Layer>
+#include <osgTerrain/Layer.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>

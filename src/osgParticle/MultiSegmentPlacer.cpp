@@ -1,8 +1,8 @@
-#include <osgParticle/MultiSegmentPlacer>
+#include <osgParticle/MultiSegmentPlacer.hpp>
 
 #include <osg/core/CopyOp.hpp>
 #include <osg/maths/vec3.hpp>
-#include <osgParticle/Placer>
+#include <osgParticle/Placer.hpp>
 
 osgParticle::MultiSegmentPlacer::MultiSegmentPlacer() :
     _total_length( 0 )

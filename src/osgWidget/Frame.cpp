@@ -1,11 +1,11 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Frame>
+#include <osgWidget/Frame.hpp>
 
 #include <cassert>
 #include <osg/core/io_utils.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 namespace osgWidget
 {

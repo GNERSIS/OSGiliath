@@ -1,7 +1,7 @@
-#include <osgFX/Technique>
+#include <osgFX/Technique.hpp>
 
 #include <osg/rendering/GLExtensions.hpp>
-#include <osgFX/Effect>
+#include <osgFX/Effect.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 
 using namespace osgFX;

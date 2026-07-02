@@ -1,4 +1,4 @@
-#include <osgText/String>
+#include <osgText/String.hpp>
 
 #include <iterator>
 #include <osg/core/Notify.hpp>

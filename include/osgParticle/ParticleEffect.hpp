@@ -1,0 +1,234 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Convenience node combining emitter, program, and particle
+ * system. Pre-configured effects (explosion, fire, smoke).
+ */
+#pragma once
+
+#include <osgParticle/Emitter.hpp>
+#include <osgParticle/Program.hpp>
+
+namespace osgParticle
+{
+
+    class OSGPARTICLE_EXPORT ParticleEffect : public osg::Group
+    {
+        public:
+
+            explicit ParticleEffect( bool automaticSetup = true ) :
+                _automaticSetup( automaticSetup ),
+                _useLocalParticleSystem( true ),
+                _scale( 1.0F ),
+                _intensity( 1.0F ),
+                _startTime( 0.0 ),
+                _emitterDuration( 1.0 ),
+                _wind( 0.0F,
+                       0.0F,
+                       0.0F )
+            {
+            }
+
+            ParticleEffect( const ParticleEffect& copy,
+                            const osg::CopyOp&    copyop = osg::CopyOp::SHALLOW_COPY );
+
+            virtual const char*
+            libraryName() const
+            {
+                return "osgParticle";
+            }
+
+            virtual const char*
+            className() const
+            {
+                return "ParticleEffect";
+            }
+
+            virtual bool
+            isSameKindAs( const osg::Object* obj ) const
+            {
+                return dynamic_cast<const ParticleEffect*>( obj ) != 0;
+            }
+
+            virtual void
+            accept( osg::NodeVisitor& nv )
+            {
+                if( nv.validNodeMask( *this ) )
+                {
+                    nv.pushOntoNodePath( this );
+                    nv.apply( *this );
+                    nv.popFromNodePath();
+                }
+            }
+
+            void
+            setAutomaticSetup( bool flag )
+            {
+                _automaticSetup = flag;
+            }
+
+            bool
+            getAutomaticSetup() const
+            {
+                return _automaticSetup;
+            }
+
+            void
+            setUseLocalParticleSystem( bool local );
+
+            bool
+            getUseLocalParticleSystem() const
+            {
+                return _useLocalParticleSystem;
+            }
+
+            void
+            setTextureFileName( const std::string& filename );
+
+            const std::string&
+            getTextureFileName() const
+            {
+                return _textureFileName;
+            }
+
+            void
+            setDefaultParticleTemplate( const Particle& p );
+
+            const Particle&
+            getDefaultParticleTemplate() const
+            {
+                return _defaultParticleTemplate;
+            }
+
+            void
+            setPosition( const osg::vec3& position );
+
+            const osg::vec3&
+            getPosition() const
+            {
+                return _position;
+            }
+
+            void
+            setScale( float scale );
+
+            float
+            getScale() const
+            {
+                return _scale;
+            }
+
+            void
+            setIntensity( float intensity );
+
+            float
+            getIntensity() const
+            {
+                return _intensity;
+            }
+
+            void
+            setStartTime( double startTime );
+
+            double
+            getStartTime() const
+            {
+                return _startTime;
+            }
+
+            void
+            setEmitterDuration( double duration );
+
+            double
+            getEmitterDuration() const
+            {
+                return _emitterDuration;
+            }
+
+            void
+            setParticleDuration( double duration );
+
+            double
+            getParticleDuration() const
+            {
+                return _defaultParticleTemplate.getLifeTime();
+            }
+
+            void
+            setWind( const osg::vec3& wind );
+
+            const osg::vec3&
+            getWind() const
+            {
+                return _wind;
+            }
+
+            /// Get whether all particles are dead
+            bool
+            areAllParticlesDead() const
+            {
+                return _particleSystem.valid() ? _particleSystem->areAllParticlesDead()
+                                               : true;
+            }
+
+            virtual Emitter*
+            getEmitter() = 0;
+            virtual const Emitter*
+            getEmitter() const = 0;
+
+            virtual Program*
+            getProgram() = 0;
+            virtual const Program*
+            getProgram() const = 0;
+
+            void
+            setParticleSystem( ParticleSystem* ps );
+
+            template<class T>
+            void
+            setParticleSystem( const osg::ref_ptr<T>& ri )
+            {
+                setParticleSystem( ri.get() );
+            }
+
+            inline ParticleSystem*
+            getParticleSystem()
+            {
+                return _particleSystem.get();
+            }
+
+            inline const ParticleSystem*
+            getParticleSystem() const
+            {
+                return _particleSystem.get();
+            }
+
+            virtual void
+            setDefaults();
+
+            virtual void
+            setUpEmitterAndProgram() = 0;
+
+            virtual void
+            buildEffect();
+
+        protected:
+
+            virtual ~ParticleEffect()
+            {
+            }
+
+            bool                         _automaticSetup;
+
+            osg::ref_ptr<ParticleSystem> _particleSystem;
+
+            bool                         _useLocalParticleSystem;
+            std::string                  _textureFileName;
+            Particle                     _defaultParticleTemplate;
+            osg::vec3                    _position;
+            float                        _scale;
+            float                        _intensity;
+            double                       _startTime;
+            double                       _emitterDuration;
+            osg::vec3                    _wind;
+    };
+
+}

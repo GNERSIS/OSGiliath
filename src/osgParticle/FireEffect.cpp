@@ -2,17 +2,17 @@
  * Pre-configured fire particle effect.
  * Rising, color-shifting particles for flame visualization.
  */
-#include <osgParticle/FireEffect>
+#include <osgParticle/FireEffect.hpp>
 
 #include <osg/nodes/Geode.hpp>
-#include <osgParticle/AccelOperator>
-#include <osgParticle/FluidFrictionOperator>
-#include <osgParticle/ModularEmitter>
-#include <osgParticle/ModularProgram>
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/RadialShooter>
-#include <osgParticle/RandomRateCounter>
-#include <osgParticle/SectorPlacer>
+#include <osgParticle/AccelOperator.hpp>
+#include <osgParticle/FluidFrictionOperator.hpp>
+#include <osgParticle/ModularEmitter.hpp>
+#include <osgParticle/ModularProgram.hpp>
+#include <osgParticle/ParticleSystemUpdater.hpp>
+#include <osgParticle/RadialShooter.hpp>
+#include <osgParticle/RandomRateCounter.hpp>
+#include <osgParticle/SectorPlacer.hpp>
 
 using namespace osgParticle;
 

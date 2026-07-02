@@ -22,12 +22,12 @@
 
 // view configurations.
 #include <iterator>
-#include <osgViewer/config/AcrossAllScreens>
-#include <osgViewer/config/PanoramicSphericalDisplay>
-#include <osgViewer/config/SingleScreen>
-#include <osgViewer/config/SingleWindow>
-#include <osgViewer/config/SphericalDisplay>
-#include <osgViewer/config/WoWVxDisplay>
+#include <osgViewer/config/AcrossAllScreens.hpp>
+#include <osgViewer/config/PanoramicSphericalDisplay.hpp>
+#include <osgViewer/config/SingleScreen.hpp>
+#include <osgViewer/config/SingleWindow.hpp>
+#include <osgViewer/config/SphericalDisplay.hpp>
+#include <osgViewer/config/WoWVxDisplay.hpp>
 
 using namespace osgViewer;
 

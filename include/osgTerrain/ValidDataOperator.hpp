@@ -1,0 +1,125 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Validity test operator for terrain data values.
+ * Filters no-data values in elevation and imagery layers.
+ */
+#pragma once
+
+#include <osg/core/Referenced.hpp>
+#include <osg/maths/vec2.hpp>
+#include <osg/maths/vec3.hpp>
+#include <osg/maths/vec4.hpp>
+#include <osgTerrain/Export.hpp>
+
+namespace osgTerrain
+{
+
+    struct ValidDataOperator : public osg::Referenced
+    {
+            virtual bool
+            operator()( float /*value*/ ) const
+            {
+                return true;
+            }
+
+            virtual bool
+            operator()( const osg::vec2& value ) const
+            {
+                return operator()( value.x ) && operator()( value.y );
+            }
+
+            virtual bool
+            operator()( const osg::vec3& value ) const
+            {
+                return
+                operator()( value.x ) && operator()( value.y ) && operator()( value.z );
+            }
+
+            virtual bool
+            operator()( const osg::vec4& value ) const
+            {
+                return operator()( value.x ) &&
+                       operator()( value.y ) &&
+                       operator()( value.z ) &&
+                       operator()( value.w );
+            }
+    };
+
+    struct ValidRange : public ValidDataOperator
+    {
+            ValidRange( float minValue,
+                        float maxValue ) :
+                _minValue( minValue ),
+                _maxValue( maxValue )
+            {
+            }
+
+            void
+            setRange( float minValue,
+                      float maxValue )
+            {
+                _minValue = minValue;
+                _maxValue = maxValue;
+            }
+
+            void
+            setMinValue( float minValue )
+            {
+                _minValue = minValue;
+            }
+
+            float
+            getMinValue() const
+            {
+                return _minValue;
+            }
+
+            void
+            setMaxValue( float maxValue )
+            {
+                _maxValue = maxValue;
+            }
+
+            float
+            getMaxValue() const
+            {
+                return _maxValue;
+            }
+
+            virtual bool
+            operator()( float value ) const
+            {
+                return value >= _minValue && value <= _maxValue;
+            }
+
+            float _minValue, _maxValue;
+    };
+
+    struct NoDataValue : public ValidDataOperator
+    {
+            NoDataValue( float value ) :
+                _value( value )
+            {
+            }
+
+            void
+            setNoDataValue( float value )
+            {
+                _value = value;
+            }
+
+            float
+            getValue() const
+            {
+                return _value;
+            }
+
+            virtual bool
+            operator()( float value ) const
+            {
+                return value != _value;
+            }
+
+            float _value;
+    };
+
+}

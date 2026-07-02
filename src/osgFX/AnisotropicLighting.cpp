@@ -1,8 +1,8 @@
-#include <osgFX/AnisotropicLighting>
+#include <osgFX/AnisotropicLighting.hpp>
 
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 #include <sstream>
 
 using namespace osgFX;

@@ -20,7 +20,7 @@
 #include <osgDB/io/XmlParser.hpp>
 #include <osgDB/registry/Registry.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 
 class TrackSegment : public osg::Inherit<osg::Object, TrackSegment>

@@ -2,7 +2,7 @@
  * Visual styling for UI widgets. Defines colors, fonts,
  * borders, and geometry generation for widget rendering.
  */
-#include <osgUI/Style>
+#include <osgUI/Style.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/geometry/ShapeDrawable.hpp>
@@ -11,7 +11,7 @@
 #include <osg/state/Depth.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 
 using namespace osgUI;

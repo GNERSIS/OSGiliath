@@ -1,4 +1,4 @@
-#include <osgViewer/api/Win32/Win32GWUtils>
+#include <osgViewer/api/Win32/Win32GWUtils.hpp>
 
 #include <osg/rendering/GLExtensions.hpp>
 #include <sstream>

@@ -6,12 +6,12 @@
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgAnimation/core/EaseMotion.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Frame>
-#include <osgWidget/Types>
-#include <osgWidget/Util>
-#include <osgWidget/Widget>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Frame.hpp>
+#include <osgWidget/Types.hpp>
+#include <osgWidget/Util.hpp>
+#include <osgWidget/Widget.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 const unsigned int MASK_2D = 0XF0'00'00'00;
 

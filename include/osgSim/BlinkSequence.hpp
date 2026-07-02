@@ -1,0 +1,256 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Blink timing sequence for light points. Defines on/off
+ * pulse patterns for flashing navigation lights.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osg/core/Object.hpp>
+#include <osg/core/ref_ptr.hpp>
+#include <osg/maths/quat.hpp>
+#include <osg/maths/vec3.hpp>
+#include <osg/maths/vec4.hpp>
+#include <osgSim/Export.hpp>
+#include <vector>
+
+namespace osgSim
+{
+
+    /** sequence group which can be used to synchronize related blink sequences.*/
+    class OSGSIM_EXPORT SequenceGroup : public osg::Inherit<osg::Object, SequenceGroup>
+    {
+        public:
+
+            SequenceGroup();
+            SequenceGroup( const SequenceGroup& bs,
+                           const osg::CopyOp&   copyop = osg::CopyOp::SHALLOW_COPY );
+            SequenceGroup( double baseTime );
+
+            OSG_REGISTER_TYPE( osgSim,
+                               SequenceGroup )
+
+            inline void
+            setBaseTime( double t )
+            {
+                _baseTime = t;
+            }
+
+            inline double
+            getBaseTime() const
+            {
+                return _baseTime;
+            }
+
+            double _baseTime;
+    };
+
+    class OSGSIM_EXPORT BlinkSequence : public osg::Inherit<osg::Object, BlinkSequence>
+    {
+        public:
+
+            BlinkSequence();
+
+            BlinkSequence( const BlinkSequence& bs,
+                           const osg::CopyOp&   copyop = osg::CopyOp::SHALLOW_COPY );
+
+            OSG_REGISTER_TYPE( osgSim,
+                               BlinkSequence )
+
+            /** add a pulse of specified color and duration to the BlinkSequence.*/
+            inline void
+            addPulse( double           length,
+                      const osg::vec4& color );
+
+            /** return the number of pulses. */
+            inline int
+            getNumPulses() const
+            {
+                return static_cast<int>( _pulseData.size() );
+            }
+
+            /** return the pulse data at position i. */
+            inline void
+            getPulse( unsigned int i,
+                      double&      length,
+                      osg::vec4&   color ) const;
+
+            /** set pulse of specified color and duration to the BlinkSequence.*/
+            inline void
+            setPulse( unsigned int     i,
+                      double           length,
+                      const osg::vec4& color );
+
+            /** get the total pulse period of the blink sequence, which is equal to the
+             * sum of all the pulse periods.*/
+            inline double
+            getPulsePeriod() const
+            {
+                return _pulsePeriod;
+            }
+
+            /** set the sequence group which can be used to synchronize related blink
+             * sequences.*/
+            inline void
+            setSequenceGroup( SequenceGroup* sg )
+            {
+                _sequenceGroup = sg;
+            }
+
+            /** get the non const sequence group.*/
+            inline SequenceGroup*
+            getSequenceGroup()
+            {
+                return _sequenceGroup.get();
+            }
+
+            /** get the const sequence group.*/
+            inline const SequenceGroup*
+            getSequenceGroup() const
+            {
+                return _sequenceGroup.get();
+            }
+
+            /** set the phase shift of the blink sequence, this would be used to shift a
+             * sequence within a sequence group.*/
+            inline void
+            setPhaseShift( double ps )
+            {
+                _phaseShift = ps;
+            }
+
+            /** get the pahse shift.*/
+            inline double
+            getPhaseShift() const
+            {
+                return _phaseShift;
+            }
+
+            /** compute the local time clamped to this BlinkSequences period, and
+             * accounting for the phase shift and sequence group.*/
+            inline double
+            localTime( double time ) const;
+
+            /** compute the color for the time interval sepecifed. Averages the colors if
+             * the length is greater than the current pulse.*/
+            inline osg::vec4
+            color( double time,
+                   double length ) const;
+
+        protected:
+
+            typedef std::pair<double, osg::vec4> IntervalColor;
+            typedef std::vector<IntervalColor>   PulseData;
+
+            double                               _pulsePeriod;
+            double                               _phaseShift;
+            PulseData                            _pulseData;
+            osg::ref_ptr<SequenceGroup>          _sequenceGroup;
+    };
+
+    inline double
+    BlinkSequence::localTime( double time ) const
+    {
+        if( _sequenceGroup.valid() )
+        {
+            time -= _sequenceGroup->_baseTime;
+        }
+        time -= _phaseShift;
+        return time - floor( time / _pulsePeriod ) * _pulsePeriod;
+    }
+
+    inline void
+    BlinkSequence::addPulse( double           length,
+                             const osg::vec4& color )
+    {
+        _pulseData.push_back( IntervalColor( length, color ) );
+        _pulsePeriod += length;
+    }
+
+    inline void
+    BlinkSequence::getPulse( unsigned int i,
+                             double&      length,
+                             osg::vec4&   color ) const
+    {
+        const IntervalColor& ic = _pulseData[i];
+        length                  = ic.first;
+        color                   = ic.second;
+    }
+
+    inline void
+    BlinkSequence::setPulse( unsigned int     i,
+                             double           length,
+                             const osg::vec4& color )
+    {
+        if( i >= _pulseData.size() )
+        {
+            return;
+        }
+        IntervalColor& ic = _pulseData[i];
+        ic.first          = length;
+        ic.second         = color;
+    }
+
+    inline osg::vec4
+    BlinkSequence::color( double time,
+                          double length ) const
+    {
+        if( _pulseData.empty() )
+        {
+            return osg::vec4( 1.0F, 1.0F, 1.0F, 1.0F );
+        }
+        double                    lt  = localTime( time );
+        PulseData::const_iterator itr = _pulseData.begin();
+
+        // find the first sample at this time point.
+        while( lt > itr->first )
+        {
+            lt -= itr->first;
+            ++itr;
+            if( itr == _pulseData.end() )
+            {
+                itr = _pulseData.begin();
+            }
+        }
+
+        // if time interval fits inside the current pulse
+        // then simply return this pulses color value.
+        if( lt + length <= itr->first )
+        {
+            return itr->second;
+        }
+
+        // time length exceeds the current pulse therefore
+        // we have to average out the pules to get the correct
+        // results...
+
+        // accumulate final part of the first active pulses.
+        osg::vec4 color( itr->second * static_cast<float>( itr->first - lt ) );
+        double    len = length - ( itr->first - lt );
+        ++itr;
+        if( itr == _pulseData.end() )
+        {
+            itr = _pulseData.begin();
+        }
+
+        // accumulate all the whole pluses pulses.
+        while( len > itr->first )
+        {
+            len   -= itr->first;
+            color += itr->second * static_cast<float>( itr->first );
+            ++itr;
+            if( itr == _pulseData.end() )
+            {
+                itr = _pulseData.begin();
+            }
+        }
+
+        // add remaining part of the final pulse.
+        color += itr->second * static_cast<float>( len );
+
+        // normalise the time waited color.
+        color /= static_cast<float>( length );
+
+        return color;
+    }
+
+}

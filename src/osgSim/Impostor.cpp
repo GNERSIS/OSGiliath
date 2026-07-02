@@ -2,7 +2,7 @@
  * LOD node that replaces distant geometry with a billboard
  * image captured from the current viewpoint.
  */
-#include <osgSim/Impostor>
+#include <osgSim/Impostor.hpp>
 
 #include <algorithm>
 #include <osg/maths/compat.hpp>

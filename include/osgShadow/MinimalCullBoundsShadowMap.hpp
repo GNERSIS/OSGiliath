@@ -1,0 +1,86 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Shadow map using cull-pass bounds for frustum optimization.
+ * Tighter shadow projection from CPU-side bounding volumes.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osgShadow/MinimalShadowMap.hpp>
+
+namespace osgShadow
+{
+
+    class OSGSHADOW_EXPORT MinimalCullBoundsShadowMap
+        : public osg::Inherit<MinimalShadowMap, MinimalCullBoundsShadowMap>
+    {
+        public:
+
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef MinimalCullBoundsShadowMap ThisClass;
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef MinimalShadowMap           BaseClass;
+
+            /** Classic OSG constructor */
+            MinimalCullBoundsShadowMap();
+
+            /** Classic OSG cloning constructor */
+            MinimalCullBoundsShadowMap( const MinimalCullBoundsShadowMap& mcbsm,
+                                        const osg::CopyOp&                copyop =
+                                            osg::CopyOp::SHALLOW_COPY );
+
+            /** Declaration of standard OSG object methods */
+            OSG_REGISTER_TYPE( osgShadow,
+                               MinimalCullBoundsShadowMap )
+
+        protected:
+
+            /** Classic protected OSG destructor */
+            virtual ~MinimalCullBoundsShadowMap( void );
+
+            struct OSGSHADOW_EXPORT ViewData : public MinimalShadowMap::ViewData
+            {
+                    using BaseClass::ViewData::init;
+                    virtual void
+                    init( ThisClass*            st,
+                          osgUtil::CullVisitor* cv );
+
+                    virtual void
+                    cullShadowReceivingScene();
+
+                    virtual void
+                    aimShadowCastingCamera( const osg::Light* light,
+                                            const osg::vec4&  worldLightPos,
+                                            const osg::vec3&  worldLightDir,
+                                            const osg::vec3&  worldLightUp =
+                                                osg::vec3( 0,
+                                                           1,
+                                                           0 ) );
+
+                    typedef std::vector<osgUtil::RenderLeaf*> RenderLeafList;
+
+                    static unsigned
+                    RemoveOldRenderLeaves( RenderLeafList& rllNew,
+                                           RenderLeafList& rllOld );
+
+                    static unsigned
+                    RemoveIgnoredRenderLeaves( RenderLeafList& rll );
+
+                    static osg::box
+                    ComputeRenderLeavesBounds( RenderLeafList& rll,
+                                               osg::dmat4&     projectionToWorld );
+
+                    static osg::box
+                    ComputeRenderLeavesBounds( RenderLeafList& rll,
+                                               osg::dmat4&     projectionToWorld,
+                                               osg::Polytope&  polytope );
+
+                    static void
+                    GetRenderLeaves( osgUtil::RenderBin* rb,
+                                     RenderLeafList&     rll );
+            };
+
+            META_ViewDependentShadowTechniqueData( ThisClass,
+                                                   ThisClass::ViewData )
+    };
+
+}    // namespace osgShadow

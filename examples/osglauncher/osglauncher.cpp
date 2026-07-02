@@ -23,7 +23,7 @@
 #include <osgDB/io/fstream.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>

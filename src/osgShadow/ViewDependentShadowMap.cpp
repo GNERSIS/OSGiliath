@@ -2,14 +2,14 @@
  * View-dependent cascaded shadow mapping. Splits the view frustum
  * into ranges with dedicated shadow maps for each.
  */
-#include <osgShadow/ViewDependentShadowMap>
+#include <osgShadow/ViewDependentShadowMap.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/nodes/Geode.hpp>
 #include <osg/state/CullFace.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 #include <sstream>
 
 using namespace osgShadow;

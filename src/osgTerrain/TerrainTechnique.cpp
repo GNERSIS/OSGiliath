@@ -2,9 +2,9 @@
  * Abstract rendering technique for terrain tiles.
  * Defines the interface for mesh generation from elevation data.
  */
-#include <osgTerrain/TerrainTechnique>
+#include <osgTerrain/TerrainTechnique.hpp>
 
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/TerrainTile.hpp>
 
 using namespace osgTerrain;
 

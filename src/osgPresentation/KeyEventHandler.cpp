@@ -2,12 +2,12 @@
  * Keyboard event handler for presentation control.
  * Maps keys to presentation actions (forward, back, home, quit).
  */
-#include <osgPresentation/KeyEventHandler>
+#include <osgPresentation/KeyEventHandler.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/core/os_utils.hpp>
 #include <osgDB/io/FileUtils.hpp>
-#include <osgPresentation/SlideEventHandler>
+#include <osgPresentation/SlideEventHandler.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <stdlib.h>
 

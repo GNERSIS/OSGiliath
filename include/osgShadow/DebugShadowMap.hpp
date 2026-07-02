@@ -1,0 +1,256 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Debug visualization shadow map. Displays shadow map frustum,
+ * depth texture, and projection wireframes for debugging.
+ */
+#pragma once
+
+#include <map>
+#include <osg/core/Inherit.hpp>
+#include <osg/geometry/Geometry.hpp>
+#include <osg/nodes/Geode.hpp>
+#include <osg/nodes/MatrixTransform.hpp>
+#include <osgShadow/ConvexPolyhedron.hpp>
+#include <osgShadow/ViewDependentShadowTechnique.hpp>
+#include <string>
+
+namespace osgShadow
+{
+
+    /**
+    Class used as a layer for debugging resources used by derived xxxShadowMap classes.
+    As designed by its base ViewDepndentShadowTechnique, DebugShadowMap serves mainly as
+    container of DebugShadowMap::ViewData objects. Most of the debugging support work is
+    done by these objects. DebugShadowMap technique only initializes them in
+    initViewDependentData method.
+
+    Debugging outputs present:
+        Shadow maps (pseudo colored to improve readability)
+        Shadow and related volumes (represented as convex polyhedra)
+    */
+
+    class OSGSHADOW_EXPORT DebugShadowMap
+        : public osg::Inherit<ViewDependentShadowTechnique, DebugShadowMap>
+    {
+        public:
+
+            /*
+            All classes stemming from ViewDependentShadowTechnique follow the same
+            pattern.
+
+            They are always based on some underlying level base Technique and they always
+            derive their ViewData from ViewData structure defined in underlying base
+            Technique.
+
+            I use some typedefs to make these inheritance patterns easier to
+            declare/define.
+            */
+
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef DebugShadowMap               ThisClass;
+            /** Convenient typedef used in definition of ViewData struct and methods */
+            typedef ViewDependentShadowTechnique BaseClass;
+
+            /** Classic OSG constructor */
+            DebugShadowMap();
+
+            /** Classic OSG cloning constructor */
+            DebugShadowMap( const DebugShadowMap& dsm,
+                            const osg::CopyOp&    copyop = osg::CopyOp::SHALLOW_COPY );
+
+            /** Declaration of standard OSG object methods */
+            OSG_REGISTER_TYPE( osgShadow,
+                               DebugShadowMap )
+
+            /** Turn on/off debugging hud & rendering of debug volumes in main view */
+            void
+            setDebugDraw( bool draw )
+            {
+                _doDebugDraw = draw;
+            }
+
+            /** Tell if debugging hud & rendering of debug volumes is active */
+            bool
+            getDebugDraw( void ) const
+            {
+                return _doDebugDraw;
+            }
+
+            /** Get the file name of debugging dump */
+            std::string
+            getDebugDump( void ) const
+            {
+                return _debugDump;
+            }
+
+            /** Set the file name of debugging dump */
+            void
+            setDebugDump( const std::string& debugDumpFile )
+            {
+                _debugDump = debugDumpFile;
+            }
+
+            /** Resize any per context GLObject buffers to specified size. */
+            virtual void
+            resizeGLObjectBuffers( unsigned int maxSize );
+
+            /** If State is non-zero, this function releases any associated OpenGL
+             * objects for the specified graphics context. Otherwise, releases OpenGL
+             * objects for all graphics contexts. */
+            virtual void
+            releaseGLObjects( osg::State* = 0 ) const;
+
+        protected:
+
+            /** Classic protected OSG destructor */
+            virtual ~DebugShadowMap();
+
+            // forward declare, interface and implementation provided in
+            // DebugShadowMap.cpp
+            class DrawableDrawWithDepthShadowComparisonOffCallback;
+
+            osg::svec2                _hudSize;
+            osg::svec2                _hudOrigin;
+            osg::svec2                _viewportSize;
+            osg::svec2                _viewportOrigin;
+            osg::svec2                _orthoSize;
+            osg::svec2                _orthoOrigin;
+
+            bool                      _doDebugDraw;
+            std::string               _debugDump;
+
+            osg::ref_ptr<osg::Shader> _depthColorFragmentShader;
+
+            struct OSGSHADOW_EXPORT ViewData : public BaseClass::ViewData
+            {
+                    /**
+                    Texture used as ShadowMap - initialized by derived classes.
+                    But it has to be defined now since DebugShadowMap::ViewData methods
+                    use it
+                    */
+                    osg::ref_ptr<osg::Texture>     _texture;
+                    /**
+                    Camera used to render ShadowMap - initialized by derived classes.
+                    But it has to be defined now since DebugShadowMap::ViewData methods
+                    use it
+                    */
+                    osg::ref_ptr<osg::Camera>      _camera;
+
+                    osg::dmat4                     _viewProjection;
+                    osg::observer_ptr<osg::Camera> _viewCamera;
+
+                    // Debug hud variables
+
+                    /** Coloring Shader used to present shadow depth map contents */
+                    osg::ref_ptr<osg::Shader>      _depthColorFragmentShader;
+
+                    struct PolytopeGeometry
+                    {
+
+                            ConvexPolyhedron            _polytope;
+                            osg::ref_ptr<osg::Geometry> _geometry[2];
+                            osg::dvec4                  _colorOutline;
+                            osg::dvec4                  _colorInside;
+                    };
+
+                    typedef std::map<std::string, PolytopeGeometry> PolytopeGeometryMap;
+
+                    osg::svec2                                      _hudSize;
+                    osg::svec2                                      _hudOrigin;
+                    osg::svec2                                      _viewportSize;
+                    osg::svec2                                      _viewportOrigin;
+                    osg::svec2                                      _orthoSize;
+                    osg::svec2                                      _orthoOrigin;
+
+                    bool*                                           _doDebugDrawPtr;
+                    std::string*                                    _debugDumpPtr;
+
+                    PolytopeGeometryMap                             _polytopeGeometryMap;
+                    osg::ref_ptr<osg::Geode>                        _geode[2];
+                    osg::ref_ptr<osg::MatrixTransform>              _transform[2];
+
+                    std::map<std::string, osg::dmat4>               _matrixMap;
+                    std::map<std::string, osg::Polytope>            _polytopeMap;
+                    std::map<std::string, osg::box>                 _boundingBoxMap;
+
+                    osg::ref_ptr<osg::Camera>                       _cameraDebugHUD;
+
+                    bool
+                    getDebugDraw()
+                    {
+                        return *_doDebugDrawPtr;
+                    }
+
+                    std::string*
+                    getDebugDump()
+                    {
+                        return _debugDumpPtr;
+                    }
+
+                    using BaseClass::ViewData::init;
+                    virtual void
+                    init( ThisClass*            st,
+                          osgUtil::CullVisitor* cv );
+
+                    virtual void
+                    cull();
+
+                    virtual void
+                    createDebugHUD( void );
+
+                    virtual void
+                    cullDebugGeometry();
+
+                    virtual void
+                    updateDebugGeometry( const osg::Camera* screenCam,
+                                         const osg::Camera* shadowCam );
+
+                    void
+                    setDebugPolytope( const char*             name,
+                                      const ConvexPolyhedron& polytope,
+                                      osg::vec4 colorOutline = osg::vec4( 0,
+                                                                          0,
+                                                                          0,
+                                                                          0 ),
+                                      osg::vec4 colorInside  = osg::vec4( 0,
+                                                                          0,
+                                                                          0,
+                                                                          0 ) );
+
+                    bool
+                    DebugBoundingBox( const osg::box& bb,
+                                      const char*     name = "" );
+                    bool
+                    DebugPolytope( const osg::Polytope& p,
+                                   const char*          name = "" );
+                    bool
+                    DebugMatrix( const osg::dmat4& m,
+                                 const char*       name = "" );
+
+                    static osg::dvec3
+                    computeShadowTexelToPixelError( const osg::dmat4& mvpwView,
+                                                    const osg::dmat4& mvpwShadow,
+                                                    const osg::dvec3& vWorld,
+                                                    const osg::dvec3& vDelta =
+                                                        osg::dvec3( 0.01,
+                                                                    0.01,
+                                                                    0.01 ) );
+
+                    static void
+                    displayShadowTexelToPixelErrors( const osg::Camera*      viewCam,
+                                                     const osg::Camera*      shadowCam,
+                                                     const ConvexPolyhedron* hull );
+
+                    void
+                    dump( const std::string& filename );
+
+                    virtual void
+                    resizeGLObjectBuffers( unsigned int maxSize );
+                    virtual void
+                    releaseGLObjects( osg::State* = 0 ) const;
+            };
+
+            META_ViewDependentShadowTechniqueData( ThisClass,
+                                                   ViewData )
+    };
+
+}    // namespace osgShadow

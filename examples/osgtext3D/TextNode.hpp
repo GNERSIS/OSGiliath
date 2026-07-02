@@ -8,10 +8,10 @@
     #include <osg/maths/compat.hpp>
     #include <osg/maths/quat.hpp>
     #include <osg/nodes/Group.hpp>
-    #include <osgText/Font>
-    #include <osgText/Glyph>
-    #include <osgText/String>
-    #include <osgText/Style>
+    #include <osgText/Font.hpp>
+    #include <osgText/Glyph.hpp>
+    #include <osgText/String.hpp>
+    #include <osgText/Style.hpp>
     #include <osgUtil/culling/CullVisitor.hpp>
 
 namespace osgText

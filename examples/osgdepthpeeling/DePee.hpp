@@ -15,7 +15,7 @@
 #include <osg/nodes/Group.hpp>
 #include <osg/nodes/Node.hpp>
 #include <osg/textures/Texture2D.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <stack>
 #include <string>
 

@@ -12,9 +12,9 @@
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgViewer/config/SingleScreen>
-#include <osgViewer/config/SingleWindow>
-#include <osgViewer/config/WoWVxDisplay>
+#include <osgViewer/config/SingleScreen.hpp>
+#include <osgViewer/config/SingleWindow.hpp>
+#include <osgViewer/config/WoWVxDisplay.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

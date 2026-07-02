@@ -8,22 +8,22 @@ ENDIF(DYNAMIC_OSGILIATH)
 SET(LIB_NAME osgUI)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/ColorPalette
-    ${HEADER_PATH}/Widget
-    ${HEADER_PATH}/Label
-    ${HEADER_PATH}/LineEdit
-    ${HEADER_PATH}/Dialog
-    ${HEADER_PATH}/Popup
-    ${HEADER_PATH}/PushButton
-    ${HEADER_PATH}/ComboBox
-    ${HEADER_PATH}/Callbacks
-    ${HEADER_PATH}/Style
-    ${HEADER_PATH}/AlignmentSettings
-    ${HEADER_PATH}/FrameSettings
-    ${HEADER_PATH}/TabWidget
-    ${HEADER_PATH}/TextSettings
-    ${HEADER_PATH}/Validator
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/ColorPalette.hpp
+    ${HEADER_PATH}/Widget.hpp
+    ${HEADER_PATH}/Label.hpp
+    ${HEADER_PATH}/LineEdit.hpp
+    ${HEADER_PATH}/Dialog.hpp
+    ${HEADER_PATH}/Popup.hpp
+    ${HEADER_PATH}/PushButton.hpp
+    ${HEADER_PATH}/ComboBox.hpp
+    ${HEADER_PATH}/Callbacks.hpp
+    ${HEADER_PATH}/Style.hpp
+    ${HEADER_PATH}/AlignmentSettings.hpp
+    ${HEADER_PATH}/FrameSettings.hpp
+    ${HEADER_PATH}/TabWidget.hpp
+    ${HEADER_PATH}/TextSettings.hpp
+    ${HEADER_PATH}/Validator.hpp
 )
 
 SET(TARGET_SRC

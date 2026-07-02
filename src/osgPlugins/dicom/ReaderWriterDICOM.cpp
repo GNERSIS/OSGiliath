@@ -12,9 +12,9 @@
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgVolume/RayTracedTechnique>
-#include <osgVolume/Volume>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/RayTracedTechnique.hpp>
+#include <osgVolume/Volume.hpp>
+#include <osgVolume/VolumeTile.hpp>
 
 #ifdef USE_DCMTK
     #ifndef _MSC_VER

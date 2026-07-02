@@ -1,6 +1,6 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Table>
+#include <osgWidget/Table.hpp>
 
 namespace osgWidget
 {

@@ -45,8 +45,8 @@
 #include <osg/nodes/PagedLOD.hpp>
 #include <osg/state/StateSet.hpp>
 #include <osg/textures/Texture2D.hpp>
-#include <osgSim/LightPointNode>
-#include <osgText/Font>
+#include <osgSim/LightPointNode.hpp>
+#include <osgText/Font.hpp>
 
 namespace txp
 {

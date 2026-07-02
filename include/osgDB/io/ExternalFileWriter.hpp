@@ -5,7 +5,7 @@
 #pragma once
 
 #include <map>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <string>
 
 namespace osg

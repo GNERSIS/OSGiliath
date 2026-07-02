@@ -1,4 +1,4 @@
-#include <osgSim/ScalarsToColors>
+#include <osgSim/ScalarsToColors.hpp>
 
 using namespace osgSim;
 

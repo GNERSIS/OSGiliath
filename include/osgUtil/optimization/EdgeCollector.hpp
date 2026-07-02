@@ -10,7 +10,7 @@
 #include <osg/core/ref_ptr.hpp>
 #include <osg/geometry/Array.hpp>
 #include <osg/geometry/Geometry.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <set>
 #include <vector>
 

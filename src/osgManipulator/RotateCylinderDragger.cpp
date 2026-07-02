@@ -4,13 +4,13 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/RotateCylinderDragger>
+#include <osgManipulator/RotateCylinderDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/ShapeDrawable.hpp>
 #include <osg/nodes/Geode.hpp>
 #include <osg/state/Material.hpp>
-#include <osgManipulator/Command>
+#include <osgManipulator/Command.hpp>
 
 using namespace osgManipulator;
 

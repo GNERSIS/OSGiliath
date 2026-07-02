@@ -2,7 +2,7 @@
  * Shadow map using cull-pass bounds for frustum optimization.
  * Tighter shadow projection from CPU-side bounding volumes.
  */
-#include <osgShadow/MinimalCullBoundsShadowMap>
+#include <osgShadow/MinimalCullBoundsShadowMap.hpp>
 
 #include <osg/maths/Matrix.hpp>
 #include <osgUtil/culling/RenderLeaf.hpp>

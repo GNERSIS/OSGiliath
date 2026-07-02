@@ -2,7 +2,7 @@
  * Line-of-sight intersection testing between scene points.
  * Determines visibility through terrain and obstacles.
  */
-#include <osgSim/LineOfSight>
+#include <osgSim/LineOfSight.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osgDB/io/ReadFile.hpp>

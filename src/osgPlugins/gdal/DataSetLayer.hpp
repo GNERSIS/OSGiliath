@@ -7,7 +7,7 @@
 #include <gdal_priv.h>
 #include <osg/core/Inherit.hpp>
 #include <osgDB/registry/ReaderWriter.hpp>
-#include <osgTerrain/Layer>
+#include <osgTerrain/Layer.hpp>
 
 namespace GDALPlugin
 {

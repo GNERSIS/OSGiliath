@@ -2,7 +2,7 @@
  * Controls blending weights between multiple texture layers.
  * Used for terrain multi-texturing with smooth transitions.
  */
-#include <osgFX/MultiTextureControl>
+#include <osgFX/MultiTextureControl.hpp>
 
 using namespace osg;
 using namespace osgFX;

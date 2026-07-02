@@ -2,7 +2,7 @@
  * Convex polyhedron utility for shadow volume computation.
  * Clips and intersects convex volumes for shadow analysis.
  */
-#include <osgShadow/ConvexPolyhedron>
+#include <osgShadow/ConvexPolyhedron.hpp>
 
 #include <algorithm>
 #include <cassert>

@@ -6,7 +6,7 @@
 
 #include <osgAnimation/core/Timeline.hpp>
 #include <osgGA/events/GUIEventHandler.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/core/ViewerBase.hpp>
 

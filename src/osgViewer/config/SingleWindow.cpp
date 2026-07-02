@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * SingleWindow — osgViewer library implementation.
  */
-#include <osgViewer/config/SingleWindow>
+#include <osgViewer/config/SingleWindow.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/maths/compat.hpp>

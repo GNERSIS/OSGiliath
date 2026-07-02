@@ -14,7 +14,7 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgParticle/PrecipitationEffect>
+#include <osgParticle/PrecipitationEffect.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgUtil/utils/TransformCallback.hpp>

@@ -2,7 +2,7 @@
  * Abstract base for text drawables. Provides position, alignment,
  * rotation, font, and character size properties.
  */
-#include <osgText/TextBase>
+#include <osgText/TextBase.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
@@ -11,7 +11,7 @@
 #include <osg/maths/Math.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Font>
+#include <osgText/Font.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 
 using namespace osg;

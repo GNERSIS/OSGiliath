@@ -9,8 +9,8 @@ SET(LIB_NAME osgGA)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
     # Top-level
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Version
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Version.hpp
 
     # events/
     ${HEADER_PATH}/events/Device.hpp

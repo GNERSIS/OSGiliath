@@ -19,10 +19,10 @@
 #include <osgDB/fstream>
 #include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
-#include <osgSim/BlinkSequence>
-#include <osgSim/LightPoint>
-#include <osgSim/LightPointNode>
-#include <osgSim/Sector>
+#include <osgSim/BlinkSequence.hpp>
+#include <osgSim/LightPoint.hpp>
+#include <osgSim/LightPointNode.hpp>
+#include <osgSim/Sector.hpp>
 
 #if defined( linux )
     #include <unistd.h>

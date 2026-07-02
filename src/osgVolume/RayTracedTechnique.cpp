@@ -2,7 +2,7 @@
  * GPU ray-marching volume rendering technique.
  * Casts rays through the volume for direct rendering.
  */
-#include <osgVolume/RayTracedTechnique>
+#include <osgVolume/RayTracedTechnique.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/geometry/Geometry.hpp>
@@ -15,7 +15,7 @@
 #include <osg/textures/TransferFunction.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/VolumeTile.hpp>
 
 namespace osgVolume
 {

@@ -2,7 +2,7 @@
  * VNC remote desktop client widget. Displays a VNC
  * session as a texture within the widget system.
  */
-#include <osgWidget/VncClient>
+#include <osgWidget/VncClient.hpp>
 
 #include <osgDB/io/ReadFile.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

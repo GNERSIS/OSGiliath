@@ -1,0 +1,92 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Effect technique registry. Maps technique names to factory
+ * functions for runtime technique selection.
+ */
+// osgFX - Copyright (C) 2003 Marco Jez
+
+#pragma once
+
+#include <map>
+#include <osg/core/ref_ptr.hpp>
+#include <osgFX/Effect.hpp>
+#include <osgFX/Export.hpp>
+#include <string>
+
+namespace osgFX
+{
+
+    class OSGFX_EXPORT Registry : public osg::Referenced
+    {
+        public:
+
+            struct Proxy
+            {
+                    Proxy( const Effect* effect ) :
+                        _effect( effect )
+                    {
+                        Registry::instance()->registerEffect( effect );
+                    }
+
+                    ~Proxy()
+                    {
+                        Registry::instance()->removeEffect( _effect.get() );
+                    }
+
+                private:
+
+                    osg::ref_ptr<const Effect> _effect;
+            };
+
+            typedef std::map<std::string, osg::ref_ptr<const Effect>> EffectMap;
+
+            static Registry*
+            instance();
+
+            inline void
+            registerEffect( const Effect* effect );
+
+            inline void
+            removeEffect( const Effect* effect );
+
+            inline const EffectMap&
+            getEffectMap() const;
+
+        protected:
+
+            // Registry is a singleton; constructor and destructor must be protected
+            Registry();
+
+            ~Registry()
+            {
+            }
+
+        private:
+
+            EffectMap _effects;
+    };
+
+    // INLINE METHODS
+
+    inline const Registry::EffectMap&
+    Registry::getEffectMap() const
+    {
+        return _effects;
+    }
+
+    inline void
+    Registry::registerEffect( const Effect* effect )
+    {
+        _effects[effect->effectName()] = effect;
+    }
+
+    inline void
+    Registry::removeEffect( const Effect* effect )
+    {
+        EffectMap::iterator itr = _effects.find( effect->effectName() );
+        if( itr != _effects.end() )
+        {
+            _effects.erase( itr );
+        }
+    }
+
+}

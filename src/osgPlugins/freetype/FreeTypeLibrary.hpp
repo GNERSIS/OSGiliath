@@ -8,8 +8,8 @@
 
 #include <ft2build.h>
 #include <istream>
-#include <osgText/Font3D>
-#include <osgText/Font>
+#include <osgText/Font.hpp>
+#include <osgText/Font3D.hpp>
 #include <set>
 
 class FreeTypeLibrary : public osg::Referenced

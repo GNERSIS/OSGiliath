@@ -1,8 +1,8 @@
-#include <osgParticle/ModularProgram>
+#include <osgParticle/ModularProgram.hpp>
 
-#include <osgParticle/Particle>
-#include <osgParticle/ParticleSystem>
-#include <osgParticle/Program>
+#include <osgParticle/Particle.hpp>
+#include <osgParticle/ParticleSystem.hpp>
+#include <osgParticle/Program.hpp>
 
 osgParticle::ModularProgram::ModularProgram()
 {

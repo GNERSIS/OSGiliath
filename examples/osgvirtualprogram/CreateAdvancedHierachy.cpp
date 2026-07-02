@@ -7,7 +7,7 @@
 #include <osg/state/BlendFunc.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 using osgCandidate::VirtualProgram;
 

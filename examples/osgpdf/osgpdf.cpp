@@ -2,7 +2,7 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/PdfReader>
+#include <osgWidget/PdfReader.hpp>
 
 int
 main( int    argc,

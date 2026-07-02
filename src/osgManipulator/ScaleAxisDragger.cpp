@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/ScaleAxisDragger>
+#include <osgManipulator/ScaleAxisDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/maths/quat.hpp>

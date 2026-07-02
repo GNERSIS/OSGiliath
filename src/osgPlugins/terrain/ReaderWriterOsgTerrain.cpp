@@ -7,7 +7,7 @@
 #include <osgDB/registry/Registry.hpp>
 #include <osgDB/serialization/Input.hpp>
 #include <osgDB/serialization/Output.hpp>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/TerrainTile.hpp>
 #include <sstream>
 
 class ReaderWriterTerrain : public osgDB::ReaderWriter

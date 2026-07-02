@@ -20,7 +20,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgSim/LightPointNode>
+#include <osgSim/LightPointNode.hpp>
 
 namespace flt
 {

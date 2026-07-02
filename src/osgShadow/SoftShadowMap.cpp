@@ -2,15 +2,15 @@
  * PCF soft shadow mapping. Extends ShadowMap with percentage-closer
  * filtering for smooth shadow edges.
  */
-#include <osgShadow/SoftShadowMap>
+#include <osgShadow/SoftShadowMap.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/state/CullFace.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
-#include <osgShadow/ShadowedScene>
-#include <osgShadow/ShadowMap>
+#include <osgShadow/ShadowedScene.hpp>
+#include <osgShadow/ShadowMap.hpp>
 #include <stdlib.h>
 
 using namespace osgShadow;
@@ -24,7 +24,7 @@ using namespace osgShadow;
 #include <osg/state/PolygonMode.hpp>
 #include <osg/textures/Texture3D.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 //////////////////////////////////////////////////////////////////
 // fragment shader

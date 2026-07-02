@@ -1,0 +1,45 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * DLL export/import macros for the osgUtil library.
+ * Defines OSGUTIL_EXPORT for shared library symbol visibility.
+ */
+// The following symbol has a underscore suffix for compatibility.
+#pragma once
+
+#include <osg/Config>
+
+#if defined( _MSC_VER ) && defined( OSG_DISABLE_MSVC_WARNINGS )
+    #pragma warning( disable : 4'244 )
+    #pragma warning( disable : 4'251 )
+    #pragma warning( disable : 4'267 )
+    #pragma warning( disable : 4'275 )
+    #pragma warning( disable : 4'290 )
+    #pragma warning( disable : 4'786 )
+    #pragma warning( disable : 4'305 )
+    #pragma warning( disable : 4'996 )
+#endif
+
+#if defined( _MSC_VER ) ||       \
+    defined( __CYGWIN__ ) ||     \
+    defined( __MINGW32__ ) ||    \
+    defined( __BCPLUSPLUS__ ) || \
+    defined( __MWERKS__ )
+    #if defined( OSG_LIBRARY_STATIC )
+        #define OSGUTIL_EXPORT
+    #elif defined( OSGUTIL_LIBRARY )
+        #define OSGUTIL_EXPORT __declspec( dllexport )
+    #else
+        #define OSGUTIL_EXPORT __declspec( dllimport )
+    #endif
+#else
+    #define OSGUTIL_EXPORT
+#endif
+
+/**
+
+\namespace osgUtil
+
+The osgUtil library provides general purpose utility classes such as update, cull and
+draw traverses, scene graph operators such a scene graph optimisation, tri stripping, and
+tessellation.
+
+*/

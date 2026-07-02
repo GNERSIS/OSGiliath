@@ -1,13 +1,13 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * osgdirectinput example application
  */
-#include "DirectInputRegistry"
+#include "DirectInputRegistry.hpp"
 
 #include <iostream>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
-#include <osgViewer/api/Win32/GraphicsWindowWin32>
+#include <osgViewer/api/Win32/GraphicsWindowWin32.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

@@ -2,7 +2,7 @@
  * 2D/3D text drawable using FreeType-rendered glyphs. Supports
  * multiple fonts, alignment, layout, and backdrop effects.
  */
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 #include <iomanip>
 #include <osg/core/io_utils.hpp>

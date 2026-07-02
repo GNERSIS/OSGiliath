@@ -18,7 +18,7 @@
 #include <dom/domConstants.h>
 #include <dom/domNode.h>
 #include <osgAnimation/skeletal/Bone.hpp>
-#include <osgSim/DOFTransform>
+#include <osgSim/DOFTransform.hpp>
 
 #ifdef COLLADA_DOM_2_4_OR_LATER
     #include <dom/domAny.h>

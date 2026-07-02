@@ -1,4 +1,4 @@
-#include <osgSim/ScalarBar>
+#include <osgSim/ScalarBar.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/maths/compat.hpp>
@@ -6,7 +6,7 @@
 #include <osg/maths/Matrix.hpp>
 #include <osg/state/Material.hpp>
 #include <osg/state/PolygonOffset.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <sstream>
 
 using namespace osgSim;

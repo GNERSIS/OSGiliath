@@ -15,8 +15,8 @@
 #include <osgGA/manipulators/AnimationPathManipulator.hpp>
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgSim/DOFTransform>
-#include <osgSim/MultiSwitch>
+#include <osgSim/DOFTransform.hpp>
+#include <osgSim/MultiSwitch.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

@@ -7,7 +7,7 @@
 #include <list>
 #include <osg/core/ref_ptr.hpp>
 #include <osg/core/Referenced.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <osgDB/registry/ReaderWriter.hpp>
 #include <string>
 

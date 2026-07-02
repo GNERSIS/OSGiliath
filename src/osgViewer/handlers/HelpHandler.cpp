@@ -4,7 +4,7 @@
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/state/PolygonMode.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Renderer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

@@ -16,7 +16,7 @@
 #include <osgGA/manipulators/DriveManipulator.hpp>
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgSim/OverlayNode>
+#include <osgSim/OverlayNode.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 

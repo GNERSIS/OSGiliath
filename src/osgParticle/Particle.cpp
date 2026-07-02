@@ -1,11 +1,11 @@
-#include <osgParticle/Particle>
+#include <osgParticle/Particle.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/maths/mat4.hpp>
 #include <osg/maths/vec3.hpp>
 #include <osg/maths/vec4.hpp>
-#include <osgParticle/LinearInterpolator>
-#include <osgParticle/ParticleSystem>
+#include <osgParticle/LinearInterpolator.hpp>
+#include <osgParticle/ParticleSystem.hpp>
 
 namespace
 {

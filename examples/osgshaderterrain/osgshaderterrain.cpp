@@ -23,7 +23,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/SmoothingVisitor.hpp>
 #include <osgViewer/core/Viewer.hpp>
 

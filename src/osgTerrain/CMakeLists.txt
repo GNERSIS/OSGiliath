@@ -7,17 +7,17 @@ ENDIF()
 SET(LIB_NAME osgTerrain)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/DisplacementMappingTechnique
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Locator
-    ${HEADER_PATH}/Layer
-    ${HEADER_PATH}/TerrainTile
-    ${HEADER_PATH}/TerrainTechnique
-    ${HEADER_PATH}/Terrain
-    ${HEADER_PATH}/GeometryTechnique
-    ${HEADER_PATH}/GeometryPool
-    ${HEADER_PATH}/ValidDataOperator
-    ${HEADER_PATH}/Version
+    ${HEADER_PATH}/DisplacementMappingTechnique.hpp
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Locator.hpp
+    ${HEADER_PATH}/Layer.hpp
+    ${HEADER_PATH}/TerrainTile.hpp
+    ${HEADER_PATH}/TerrainTechnique.hpp
+    ${HEADER_PATH}/Terrain.hpp
+    ${HEADER_PATH}/GeometryTechnique.hpp
+    ${HEADER_PATH}/GeometryPool.hpp
+    ${HEADER_PATH}/ValidDataOperator.hpp
+    ${HEADER_PATH}/Version.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

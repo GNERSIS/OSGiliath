@@ -13,7 +13,7 @@
 #include <osg/state/CullFace.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osgDB/io/FileNameUtils.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 

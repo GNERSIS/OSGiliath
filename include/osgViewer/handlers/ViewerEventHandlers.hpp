@@ -9,7 +9,7 @@
 #include <osgDB/io/fstream.hpp>
 #include <osgGA/events/GUIEventHandler.hpp>
 #include <osgGA/manipulators/AnimationPathManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/platform/GraphicsWindow.hpp>
 

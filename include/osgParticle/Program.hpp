@@ -1,0 +1,95 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Particle program node. Runs a chain of Operators on
+ * particles each frame for physics and effect simulation.
+ */
+// osgParticle - Copyright (C) 2002 Marco Jez
+
+#pragma once
+
+#include <osg/core/CopyOp.hpp>
+#include <osg/core/Object.hpp>
+#include <osg/nodes/Node.hpp>
+#include <osg/traversal/NodeVisitor.hpp>
+#include <osgParticle/Export.hpp>
+#include <osgParticle/ParticleProcessor.hpp>
+
+namespace osgParticle
+{
+
+    /**    An abstract <CODE>ParticleProcessor</CODE> descendant for modifying particles
+       "on the fly" during the cull traversal. Descendants of this class must implement
+       the <CODE>execute()</CODE> method, which should iterate through all particles in
+       the linked particle system and modify them somehow (usually updating their
+       velocity vector).
+    */
+    class OSGPARTICLE_EXPORT Program : public ParticleProcessor
+    {
+        public:
+
+            Program();
+            Program( const Program&     copy,
+                     const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            virtual const char*
+            libraryName() const
+            {
+                return "osgParticle";
+            }
+
+            virtual const char*
+            className() const
+            {
+                return "Program";
+            }
+
+            virtual bool
+            isSameKindAs( const osg::Object* obj ) const
+            {
+                return dynamic_cast<const Program*>( obj ) != 0;
+            }
+
+            virtual void
+            accept( osg::NodeVisitor& nv )
+            {
+                if( nv.validNodeMask( *this ) )
+                {
+                    nv.pushOntoNodePath( this );
+                    nv.apply( *this );
+                    nv.popFromNodePath();
+                }
+            }
+
+        protected:
+
+            virtual ~Program()
+            {
+            }
+
+            Program&
+            operator=( const Program& )
+            {
+                return *this;
+            }
+
+            /// Implementation of <CODE>ParticleProcessor::process()</CODE>. Do not call
+            /// this method by yourself.
+            inline void
+            process( double dt );
+
+            /// Execute the program on the particle system. Must be overridden in
+            /// descendant classes.
+            virtual void
+            execute( double dt ) = 0;
+
+        private:
+    };
+
+    // INLINE FUNCTIONS
+
+    inline void
+    Program::process( double dt )
+    {
+        execute( dt );
+    }
+
+}

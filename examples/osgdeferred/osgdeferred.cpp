@@ -8,7 +8,7 @@
 #include <osg/state/PolygonMode.hpp>
 #include <osg/traversal/AnimationPath.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgShadow/SoftShadowMap>
+#include <osgShadow/SoftShadowMap.hpp>
 #include <osgUtil/optimization/TangentSpaceGenerator.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

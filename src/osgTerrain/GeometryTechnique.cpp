@@ -2,7 +2,7 @@
  * Default terrain rendering technique. Builds triangle meshes
  * from HeightFieldLayer data with texture coordinates.
  */
-#include <osgTerrain/GeometryTechnique>
+#include <osgTerrain/GeometryTechnique.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Timer.hpp>
@@ -12,8 +12,8 @@
 #include <osg/textures/Texture1D.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/FileUtils.hpp>
-#include <osgTerrain/Terrain>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/Terrain.hpp>
+#include <osgTerrain/TerrainTile.hpp>
 #include <osgUtil/optimization/MeshOptimizers.hpp>
 
 using namespace osgTerrain;

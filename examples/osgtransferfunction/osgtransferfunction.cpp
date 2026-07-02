@@ -20,9 +20,9 @@
 #include <osgDB/io/WriteFile.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgVolume/RayTracedTechnique>
-#include <osgVolume/Volume>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/RayTracedTechnique.hpp>
+#include <osgVolume/Volume.hpp>
+#include <osgVolume/VolumeTile.hpp>
 
 class Histogram
 {

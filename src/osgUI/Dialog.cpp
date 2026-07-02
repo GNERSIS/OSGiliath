@@ -2,15 +2,15 @@
  * Modal or modeless dialog container for UI widgets.
  * Provides title bar and layout management.
  */
-#include <osgUI/Dialog>
+#include <osgUI/Dialog.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
-#include <osgUI/Callbacks>
-#include <osgUI/Label>
-#include <osgUI/PushButton>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
+#include <osgUI/Callbacks.hpp>
+#include <osgUI/Label.hpp>
+#include <osgUI/PushButton.hpp>
 
 using namespace osgUI;
 

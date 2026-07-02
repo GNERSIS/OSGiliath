@@ -5,7 +5,7 @@
 #pragma once
 
 #include <osgGA/events/GUIEventHandler.hpp>
-#include <osgGA/Export>
+#include <osgGA/Export.hpp>
 #include <osgGA/manipulators/CameraManipulator.hpp>
 
 namespace osgGA

@@ -24,10 +24,10 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgTerrain/GeometryTechnique>
-#include <osgTerrain/Layer>
-#include <osgTerrain/TerrainTile>
-#include <osgText/FadeText>
+#include <osgTerrain/GeometryTechnique.hpp>
+#include <osgTerrain/Layer.hpp>
+#include <osgTerrain/TerrainTile.hpp>
+#include <osgText/FadeText.hpp>
 #include <osgUtil/utils/IncrementalCompileOperation.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

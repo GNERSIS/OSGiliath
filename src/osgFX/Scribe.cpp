@@ -1,11 +1,11 @@
-#include <osgFX/Scribe>
+#include <osgFX/Scribe.hpp>
 
 #include <osg/GL>
 #include <osg/state/LineWidth.hpp>
 #include <osg/state/Material.hpp>
 #include <osg/state/PolygonMode.hpp>
 #include <osg/state/PolygonOffset.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 #include <string.h>
 
 using namespace osgFX;

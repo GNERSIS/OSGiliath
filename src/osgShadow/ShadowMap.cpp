@@ -2,14 +2,14 @@
  * Basic shadow mapping technique. Renders a depth map from the
  * light's view and projects it for shadow lookup.
  */
-#include <osgShadow/ShadowMap>
+#include <osgShadow/ShadowMap.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/state/CullFace.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 using namespace osgShadow;
 
@@ -21,7 +21,7 @@ using namespace osgShadow;
 #include <osg/maths/Math.hpp>
 #include <osg/state/PolygonMode.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 //////////////////////////////////////////////////////////////////
 // vertex shader (no base texture - shadow coords in texCoord_0)

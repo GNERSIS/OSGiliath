@@ -3,7 +3,7 @@
  * Provides: supportsExtension, supportsExtension, supportsExtension, supportsExtension,
  * supportsExtension, className.
  */
-#include "DirectShowTexture"
+#include "DirectShowTexture.hpp"
 
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/io/FileUtils.hpp>

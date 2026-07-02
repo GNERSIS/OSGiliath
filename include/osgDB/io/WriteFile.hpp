@@ -7,7 +7,7 @@
 #include <osg/geometry/Shape.hpp>
 #include <osg/images/Image.hpp>
 #include <osg/nodes/Node.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <osgDB/registry/Registry.hpp>
 #include <string>
 

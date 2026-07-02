@@ -12,10 +12,10 @@
 // TODO:
 // implement http://www.opengl.org/registry/specs/OML/glx_swap_method.txt
 
-#include <osgViewer/api/X11/GraphicsWindowX11>
+#include <osgViewer/api/X11/GraphicsWindowX11.hpp>
 
 #include <osg/core/DeleteHandler.hpp>
-#include <osgViewer/api/X11/PixelBufferX11>
+#include <osgViewer/api/X11/PixelBufferX11.hpp>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>

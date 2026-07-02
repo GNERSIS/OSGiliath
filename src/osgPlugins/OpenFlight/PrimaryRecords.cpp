@@ -23,10 +23,10 @@
 #include <osg/nodes/ProxyNode.hpp>
 #include <osg/nodes/Sequence.hpp>
 #include <osgDB/io/FileUtils.hpp>
-#include <osgSim/DOFTransform>
-#include <osgSim/GeographicLocation>
-#include <osgSim/MultiSwitch>
-#include <osgSim/ObjectRecordData>
+#include <osgSim/DOFTransform.hpp>
+#include <osgSim/GeographicLocation.hpp>
+#include <osgSim/MultiSwitch.hpp>
+#include <osgSim/ObjectRecordData.hpp>
 #include <typeinfo>
 
 namespace flt

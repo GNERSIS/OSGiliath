@@ -20,8 +20,8 @@
 #include <osg/state/Material.hpp>
 #include <osg/state/Point.hpp>
 #include <osg/state/PolygonOffset.hpp>
-#include <osgSim/LightPointNode>
-#include <osgText/Text>
+#include <osgSim/LightPointNode.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/Optimizer>
 #include <stdlib.h>
 

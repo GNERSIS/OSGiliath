@@ -12,7 +12,7 @@
 #include <osg/maths/vec3.hpp>
 #include <osg/maths/vec4.hpp>
 #include <osg/textures/TextureCubeMap.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <vector>
 
 namespace osgUtil

@@ -24,7 +24,7 @@
 #include <osg/nodes/LOD.hpp>
 #include <osg/nodes/Sequence.hpp>
 #include <osg/nodes/Switch.hpp>
-#include <osgSim/MultiSwitch>
+#include <osgSim/MultiSwitch.hpp>
 
 using namespace osgDAE;
 

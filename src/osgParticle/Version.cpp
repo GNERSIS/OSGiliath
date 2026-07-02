@@ -2,7 +2,7 @@
  * Library version query for osgParticle.
  * Returns version strings matching the core osg library.
  */
-#include <osgParticle/Version>
+#include <osgParticle/Version.hpp>
 
 #include <osg/Version>
 

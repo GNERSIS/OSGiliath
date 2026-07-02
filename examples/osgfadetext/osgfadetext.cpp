@@ -15,9 +15,9 @@
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
-#include <osgSim/OverlayNode>
-#include <osgSim/SphereSegment>
-#include <osgText/FadeText>
+#include <osgSim/OverlayNode.hpp>
+#include <osgSim/SphereSegment.hpp>
+#include <osgText/FadeText.hpp>
 #include <osgViewer/core/Viewer.hpp>
 
 osg::Node*

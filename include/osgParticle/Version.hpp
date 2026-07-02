@@ -1,0 +1,40 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Library version query for osgParticle.
+ * Returns version strings matching the core osg library.
+ */
+// osgParticle - Copyright (C) 2002 Marco Jez
+
+#pragma once
+
+#include <osgParticle/Export.hpp>
+
+extern "C"
+{
+
+    /**
+     * osgParticleGetVersion() returns the library version number.
+     * Numbering convention : OpenSceneGraph-1.0 will return 1.0 from
+     osgParticleGetVersion.
+     *
+     * This C function can be also used to check for the existence of the OpenSceneGraph
+     * library using autoconf and its m4 macro AC_CHECK_LIB.
+     *
+     * Here is the code to add to your configure.in:
+     \verbatim
+     #
+     # Check for the OpenSceneGraph Particle library
+     #
+     AC_CHECK_LIB(osg, osgParticleGetVersion, ,
+        [AC_MSG_ERROR(OpenSceneGraph Particle library not found. See
+     http://www.openscenegraph.org)],)
+     \endverbatim
+    */
+    OSGPARTICLE_EXPORT const char*
+    osgParticleGetVersion();
+
+    /**
+     * osgParticleGetLibraryName() returns the library name in human friendly form.
+     */
+    OSGPARTICLE_EXPORT const char*
+    osgParticleGetLibraryName();
+}

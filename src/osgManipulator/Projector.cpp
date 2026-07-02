@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/Projector>
+#include <osgManipulator/Projector.hpp>
 
 #include <osg/maths/Math.hpp>
 

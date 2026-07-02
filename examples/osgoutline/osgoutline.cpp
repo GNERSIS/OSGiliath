@@ -9,7 +9,7 @@
 #include <osg/nodes/PositionAttitudeTransform.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgFX/Outline>
+#include <osgFX/Outline.hpp>
 #include <osgViewer/core/Viewer.hpp>
 
 int

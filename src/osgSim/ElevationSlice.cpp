@@ -2,7 +2,7 @@
  * Terrain elevation sampling along a line segment.
  * Returns height values for profile and cross-section analysis.
  */
-#include <osgSim/ElevationSlice>
+#include <osgSim/ElevationSlice.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

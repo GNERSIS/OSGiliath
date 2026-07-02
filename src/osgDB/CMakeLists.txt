@@ -44,7 +44,7 @@ SET(LIB_NAME osgDB)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
     # top-level
-    ${HEADER_PATH}/Export
+    ${HEADER_PATH}/Export.hpp
 
     # registry/
     ${HEADER_PATH}/registry/Archive.hpp

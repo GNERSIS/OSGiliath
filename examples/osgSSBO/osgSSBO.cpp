@@ -49,8 +49,8 @@
 #include <osgGA/manipulators/DriveManipulator.hpp>
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Font>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgUtil/optimization/SmoothingVisitor.hpp>
 #include <osgViewer/core/Renderer.hpp>

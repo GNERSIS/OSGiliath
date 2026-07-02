@@ -4,10 +4,10 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/Command>
+#include <osgManipulator/Command.hpp>
 
 #include <algorithm>
-#include <osgManipulator/Constraint>
+#include <osgManipulator/Constraint.hpp>
 
 using namespace osgManipulator;
 

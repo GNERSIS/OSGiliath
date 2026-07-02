@@ -8,16 +8,16 @@ ENDIF()
 SET(LIB_NAME osgPresentation)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Cursor
-    ${HEADER_PATH}/AnimationMaterial
-    ${HEADER_PATH}/CompileSlideCallback
-    ${HEADER_PATH}/PickEventHandler
-    ${HEADER_PATH}/PropertyManager
-    ${HEADER_PATH}/KeyEventHandler
-    ${HEADER_PATH}/SlideEventHandler
-    ${HEADER_PATH}/SlideShowConstructor
-    ${HEADER_PATH}/Timeout
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Cursor.hpp
+    ${HEADER_PATH}/AnimationMaterial.hpp
+    ${HEADER_PATH}/CompileSlideCallback.hpp
+    ${HEADER_PATH}/PickEventHandler.hpp
+    ${HEADER_PATH}/PropertyManager.hpp
+    ${HEADER_PATH}/KeyEventHandler.hpp
+    ${HEADER_PATH}/SlideEventHandler.hpp
+    ${HEADER_PATH}/SlideShowConstructor.hpp
+    ${HEADER_PATH}/Timeout.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

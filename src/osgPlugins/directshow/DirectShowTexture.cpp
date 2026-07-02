@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * Utility functions for osgPlugins: GetPin, EXTERN_GUID.
  */
-#include "DirectShowTexture"
+#include "DirectShowTexture.hpp"
 
 #include <comdef.h>
 #include <functional>

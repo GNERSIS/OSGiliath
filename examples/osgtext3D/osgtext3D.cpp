@@ -12,7 +12,7 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
-#include <osgText/Text3D>
+#include <osgText/Text3D.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

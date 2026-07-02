@@ -1,9 +1,9 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Label>
+#include <osgWidget/Label.hpp>
 
 #include <osg/maths/Math.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 namespace osgWidget
 {

@@ -7,7 +7,7 @@
 
 #include <iosfwd>
 #include <map>
-#include <osgText/Font>
+#include <osgText/Font.hpp>
 #include <string>
 
 class TXFFont : public osgText::Font::FontImplementation

@@ -10,7 +10,7 @@
 #include <osg/nodes/Sequence.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 
 // create text drawable at 'pos'

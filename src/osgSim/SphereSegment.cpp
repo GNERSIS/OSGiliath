@@ -2,7 +2,7 @@
  * Sphere segment geometry for radar/sonar visualization.
  * Renders partial sphere surfaces with configurable extent.
  */
-#include <osgSim/SphereSegment>
+#include <osgSim/SphereSegment.hpp>
 
 #include <algorithm>
 #include <list>

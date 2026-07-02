@@ -11,7 +11,7 @@
 #include <osg/geometry/Array.hpp>
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/PrimitiveSet.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

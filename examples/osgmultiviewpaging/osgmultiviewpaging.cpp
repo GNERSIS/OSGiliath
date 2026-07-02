@@ -18,7 +18,7 @@
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/CompositeViewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

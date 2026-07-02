@@ -2,9 +2,9 @@
  * Abstract rendering technique for volume tiles.
  * Defines the interface for volume visualization methods.
  */
-#include <osgVolume/VolumeTechnique>
+#include <osgVolume/VolumeTechnique.hpp>
 
-#include <osgVolume/VolumeTile>
+#include <osgVolume/VolumeTile.hpp>
 
 using namespace osgVolume;
 

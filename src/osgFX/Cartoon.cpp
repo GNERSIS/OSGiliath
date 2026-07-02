@@ -1,4 +1,4 @@
-#include <osgFX/Cartoon>
+#include <osgFX/Cartoon.hpp>
 
 #include <osg/images/Image.hpp>
 #include <osg/state/CullFace.hpp>
@@ -9,7 +9,7 @@
 #include <osg/state/Program.hpp>
 #include <osg/state/Shader.hpp>
 #include <osg/textures/Texture1D.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 #include <sstream>
 
 using namespace osgFX;

@@ -9,8 +9,8 @@
 #include <osg/maths/Math.hpp>
 #include <osg/rendering/GLU.hpp>
 #include <osg/state/State.hpp>
-#include <osgText/Font>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/SmoothingVisitor.hpp>
 #include <stdlib.h>
 #include <string.h>

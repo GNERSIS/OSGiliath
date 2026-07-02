@@ -2,7 +2,7 @@
  * Library version query for osgGA.
  * Returns version strings matching the core osg library.
  */
-#include <osgGA/Version>
+#include <osgGA/Version.hpp>
 
 #include <osg/Version>
 

@@ -2,7 +2,7 @@
  * Height-above-terrain query. Samples terrain elevation at
  * specified positions for ground-following and clearance checks.
  */
-#include <osgSim/HeightAboveTerrain>
+#include <osgSim/HeightAboveTerrain.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/nodes/CoordinateSystemNode.hpp>

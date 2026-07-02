@@ -5,10 +5,10 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Input>
-#include <osgWidget/ViewerEventHandlers>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Input.hpp>
+#include <osgWidget/ViewerEventHandlers.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 const unsigned int MASK_2D = 0XF0'00'00'00;
 

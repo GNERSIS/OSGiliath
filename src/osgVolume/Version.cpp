@@ -2,7 +2,7 @@
  * Library version query for osgVolume.
  * Returns version strings matching the core osg library.
  */
-#include <osgVolume/Version>
+#include <osgVolume/Version.hpp>
 
 #include <osg/Version>
 

@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include <osgText/Text3D>
+#include <osgText/Text3D.hpp>
 
 namespace osgText
 {

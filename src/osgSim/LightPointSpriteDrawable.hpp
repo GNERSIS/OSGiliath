@@ -7,7 +7,7 @@
 #include "LightPointDrawable.hpp"
 
 #include <osg/geometry/Drawable.hpp>
-#include <osgSim/Export>
+#include <osgSim/Export.hpp>
 
 namespace osgSim
 {

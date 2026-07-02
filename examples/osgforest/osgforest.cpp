@@ -24,7 +24,7 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/intersection/IntersectionVisitor.hpp>
 #include <osgUtil/intersection/LineSegmentIntersector.hpp>
 #include <osgUtil/optimization/SmoothingVisitor.hpp>

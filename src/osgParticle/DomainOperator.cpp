@@ -4,10 +4,10 @@
  */
 // Written by Wang Rui, (C) 2010
 
-#include <osgParticle/DomainOperator>
+#include <osgParticle/DomainOperator.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgParticle/ModularProgram>
+#include <osgParticle/ModularProgram.hpp>
 
 using namespace osgParticle;
 

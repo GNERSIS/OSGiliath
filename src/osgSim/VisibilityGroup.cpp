@@ -2,7 +2,7 @@
  * Group with distance-based visibility switching.
  * Hides children beyond a configured visibility range.
  */
-#include <osgSim/VisibilityGroup>
+#include <osgSim/VisibilityGroup.hpp>
 
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgUtil/intersection/LineSegmentIntersector.hpp>

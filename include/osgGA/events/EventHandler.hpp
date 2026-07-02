@@ -9,7 +9,7 @@
 #include <osg/geometry/Drawable.hpp>
 #include <osgGA/events/GUIActionAdapter.hpp>
 #include <osgGA/events/GUIEventAdapter.hpp>
-#include <osgGA/Export>
+#include <osgGA/Export.hpp>
 #include <vector>
 
 namespace osgGA

@@ -4,12 +4,12 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/Constraint>
+#include <osgManipulator/Constraint.hpp>
 
 #include <math.h>
 #include <osg/maths/vec2.hpp>
-#include <osgManipulator/Command>
-#include <osgManipulator/Dragger>
+#include <osgManipulator/Command.hpp>
+#include <osgManipulator/Dragger.hpp>
 
 using namespace osgManipulator;
 

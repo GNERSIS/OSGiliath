@@ -6,10 +6,10 @@
     #pragma warning( disable : 4'786 )
 #endif
 
-#include <osgSim/InsertImpostorsVisitor>
+#include <osgSim/InsertImpostorsVisitor.hpp>
 
 #include <algorithm>
-#include <osgSim/Impostor>
+#include <osgSim/Impostor.hpp>
 
 using namespace osg;
 using namespace osgSim;

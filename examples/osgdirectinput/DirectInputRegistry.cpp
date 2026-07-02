@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * DirectInputRegistry example application
  */
-#include "DirectInputRegistry"
+#include "DirectInputRegistry.hpp"
 
 #include <iostream>
 #include <osgGA/events/EventQueue.hpp>

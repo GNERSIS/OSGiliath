@@ -16,12 +16,12 @@
 #include <osg/state/Material.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgFX/Scribe>
+#include <osgFX/Scribe.hpp>
 #include <osgGA/events/Device.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/CompositeViewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

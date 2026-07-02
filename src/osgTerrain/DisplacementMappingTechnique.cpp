@@ -2,9 +2,9 @@
  * GPU displacement mapping terrain technique. Uses vertex
  * texture fetch to displace terrain mesh on the GPU.
  */
-#include <osgTerrain/DisplacementMappingTechnique>
+#include <osgTerrain/DisplacementMappingTechnique.hpp>
 
-#include <osgTerrain/Terrain>
+#include <osgTerrain/Terrain.hpp>
 
 using namespace osgTerrain;
 

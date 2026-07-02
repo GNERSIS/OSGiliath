@@ -2,7 +2,7 @@
  * Degree-of-freedom transform node for articulated models.
  * Supports translate, rotate, and scale with limits per axis.
  */
-#include <osgSim/DOFTransform>
+#include <osgSim/DOFTransform.hpp>
 
 using namespace osgSim;
 using namespace osg;

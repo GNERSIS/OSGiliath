@@ -6,7 +6,7 @@
 
 #include <osg/core/Inherit.hpp>
 #include <osg/core/Object.hpp>
-#include <osgGA/Export>
+#include <osgGA/Export.hpp>
 
 namespace osgGA
 {

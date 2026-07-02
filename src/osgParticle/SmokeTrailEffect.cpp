@@ -2,14 +2,14 @@
  * Pre-configured smoke trail particle effect.
  * Generates a lingering trail behind a moving emitter.
  */
-#include <osgParticle/SmokeTrailEffect>
+#include <osgParticle/SmokeTrailEffect.hpp>
 
 #include <osg/nodes/Geode.hpp>
-#include <osgParticle/ConnectedParticleSystem>
-#include <osgParticle/ConstantRateCounter>
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/RadialShooter>
-#include <osgParticle/SectorPlacer>
+#include <osgParticle/ConnectedParticleSystem.hpp>
+#include <osgParticle/ConstantRateCounter.hpp>
+#include <osgParticle/ParticleSystemUpdater.hpp>
+#include <osgParticle/RadialShooter.hpp>
+#include <osgParticle/SectorPlacer.hpp>
 
 using namespace osgParticle;
 

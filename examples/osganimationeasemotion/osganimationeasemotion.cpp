@@ -11,10 +11,10 @@
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Label>
-#include <osgWidget/Table>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Label.hpp>
+#include <osgWidget/Table.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 class EaseMotionSampler;
 

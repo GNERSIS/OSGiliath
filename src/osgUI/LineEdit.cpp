@@ -2,13 +2,13 @@
  * Single-line text input widget. Provides text editing
  * with cursor, selection, and keyboard input handling.
  */
-#include <osgUI/LineEdit>
+#include <osgUI/LineEdit.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/core/ValueObject.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

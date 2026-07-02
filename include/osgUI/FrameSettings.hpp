@@ -1,0 +1,87 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Frame decoration settings for dialog/window widgets.
+ * Controls title bar visibility, border style, and close button.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osg/core/Object.hpp>
+#include <osg/maths/box.hpp>
+#include <osg/maths/vec4.hpp>
+#include <osgUI/Export.hpp>
+
+namespace osgUI
+{
+
+    class OSGUI_EXPORT FrameSettings : public osg::Inherit<osg::Object, FrameSettings>
+    {
+        public:
+
+            FrameSettings();
+            FrameSettings( const FrameSettings& frameSettings,
+                           const osg::CopyOp&   copyop = osg::CopyOp::SHALLOW_COPY );
+            OSG_REGISTER_TYPE( osgUI,
+                               FrameSettings )
+
+            enum Shape
+            {
+                NO_FRAME,
+                BOX,
+                PANEL
+            };
+
+            void
+            setShape( Shape shape )
+            {
+                _shape = shape;
+            }
+
+            Shape
+            getShape() const
+            {
+                return _shape;
+            }
+
+            enum Shadow
+            {
+                PLAIN,
+                SUNKEN,
+                RAISED
+            };
+
+            void
+            setShadow( Shadow shadow )
+            {
+                _shadow = shadow;
+            }
+
+            Shadow
+            getShadow() const
+            {
+                return _shadow;
+            }
+
+            void
+            setLineWidth( float width )
+            {
+                _lineWidth = width;
+            }
+
+            float
+            getLineWidth() const
+            {
+                return _lineWidth;
+            }
+
+        protected:
+
+            virtual ~FrameSettings()
+            {
+            }
+
+            Shape  _shape;
+            Shadow _shadow;
+            float  _lineWidth;
+    };
+
+}

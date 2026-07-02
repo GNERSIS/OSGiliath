@@ -4,10 +4,10 @@
  */
 // Written by Wang Rui, (C) 2010
 
-#include <osgParticle/BounceOperator>
+#include <osgParticle/BounceOperator.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgParticle/ModularProgram>
+#include <osgParticle/ModularProgram.hpp>
 
 using namespace osgParticle;
 

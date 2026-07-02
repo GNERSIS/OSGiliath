@@ -2,7 +2,7 @@
  * Frame decoration settings for dialog/window widgets.
  * Controls title bar visibility, border style, and close button.
  */
-#include <osgUI/FrameSettings>
+#include <osgUI/FrameSettings.hpp>
 
 using namespace osgUI;
 

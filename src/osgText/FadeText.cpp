@@ -2,7 +2,7 @@
  * Distance-fading text that blends out as the camera moves away.
  * Used for annotations that declutter at distance.
  */
-#include <osgText/FadeText>
+#include <osgText/FadeText.hpp>
 
 #include <mutex>
 #include <osg/core/io_utils.hpp>

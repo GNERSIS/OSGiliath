@@ -76,10 +76,10 @@ IF(WIN32)
     ENDIF()
 
     SET(TARGET_H_NO_MODULE_INSTALL
-        ${HEADER_PATH}/api/Win32/GraphicsHandleWin32
-        ${HEADER_PATH}/api/Win32/GraphicsWindowWin32
-        ${HEADER_PATH}/api/Win32/PixelBufferWin32
-        ${HEADER_PATH}/api/Win32/Win32GWUtils
+        ${HEADER_PATH}/api/Win32/GraphicsHandleWin32.hpp
+        ${HEADER_PATH}/api/Win32/GraphicsWindowWin32.hpp
+        ${HEADER_PATH}/api/Win32/PixelBufferWin32.hpp
+        ${HEADER_PATH}/api/Win32/Win32GWUtils.hpp
     )
     SET(LIB_COMMON_FILES ${LIB_COMMON_FILES}
         platform/GraphicsWindowWin32.cpp
@@ -113,9 +113,9 @@ ELSE()
         ENDIF()
 
         SET(TARGET_H_NO_MODULE_INSTALL
-            ${HEADER_PATH}/api/X11/GraphicsHandleX11
-            ${HEADER_PATH}/api/X11/GraphicsWindowX11
-            ${HEADER_PATH}/api/X11/PixelBufferX11
+            ${HEADER_PATH}/api/X11/GraphicsHandleX11.hpp
+            ${HEADER_PATH}/api/X11/GraphicsWindowX11.hpp
+            ${HEADER_PATH}/api/X11/PixelBufferX11.hpp
         )
 
         SET(LIB_COMMON_FILES ${LIB_COMMON_FILES}

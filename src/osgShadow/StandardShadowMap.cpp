@@ -2,7 +2,7 @@
  * Standard shadow mapping with configurable precision.
  * Single shadow map with bias and polygon offset.
  */
-#include <osgShadow/StandardShadowMap>
+#include <osgShadow/StandardShadowMap.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/maths/compat.hpp>
@@ -12,7 +12,7 @@
 #include <osg/state/Point.hpp>
 #include <osg/state/PolygonOffset.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 #include <stdio.h>
 
 using namespace osgShadow;

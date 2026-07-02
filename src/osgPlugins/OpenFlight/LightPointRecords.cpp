@@ -14,9 +14,9 @@
 #include "Registry.hpp"
 
 #include <osg/textures/Texture2D.hpp>
-#include <osgSim/LightPointNode>
-#include <osgSim/LightPointSystem>
-#include <osgSim/MultiSwitch>
+#include <osgSim/LightPointNode.hpp>
+#include <osgSim/LightPointSystem.hpp>
+#include <osgSim/MultiSwitch.hpp>
 
 using namespace flt;
 

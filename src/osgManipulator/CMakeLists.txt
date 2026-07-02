@@ -8,29 +8,29 @@ ENDIF()
 SET(LIB_NAME osgManipulator)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/AntiSquish
-    ${HEADER_PATH}/Command
-    ${HEADER_PATH}/CommandManager
-    ${HEADER_PATH}/Constraint
-    ${HEADER_PATH}/Dragger
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Projector
-    ${HEADER_PATH}/RotateCylinderDragger
-    ${HEADER_PATH}/RotateSphereDragger
-    ${HEADER_PATH}/Scale1DDragger
-    ${HEADER_PATH}/Scale2DDragger
-    ${HEADER_PATH}/ScaleAxisDragger
-    ${HEADER_PATH}/Selection
-    ${HEADER_PATH}/TabBoxDragger
-    ${HEADER_PATH}/TabBoxTrackballDragger
-    ${HEADER_PATH}/TabPlaneDragger
-    ${HEADER_PATH}/TabPlaneTrackballDragger
-    ${HEADER_PATH}/TrackballDragger
-    ${HEADER_PATH}/Translate1DDragger
-    ${HEADER_PATH}/Translate2DDragger
-    ${HEADER_PATH}/TranslateAxisDragger
-    ${HEADER_PATH}/TranslatePlaneDragger
-    ${HEADER_PATH}/Version
+    ${HEADER_PATH}/AntiSquish.hpp
+    ${HEADER_PATH}/Command.hpp
+    ${HEADER_PATH}/CommandManager.hpp
+    ${HEADER_PATH}/Constraint.hpp
+    ${HEADER_PATH}/Dragger.hpp
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Projector.hpp
+    ${HEADER_PATH}/RotateCylinderDragger.hpp
+    ${HEADER_PATH}/RotateSphereDragger.hpp
+    ${HEADER_PATH}/Scale1DDragger.hpp
+    ${HEADER_PATH}/Scale2DDragger.hpp
+    ${HEADER_PATH}/ScaleAxisDragger.hpp
+    ${HEADER_PATH}/Selection.hpp
+    ${HEADER_PATH}/TabBoxDragger.hpp
+    ${HEADER_PATH}/TabBoxTrackballDragger.hpp
+    ${HEADER_PATH}/TabPlaneDragger.hpp
+    ${HEADER_PATH}/TabPlaneTrackballDragger.hpp
+    ${HEADER_PATH}/TrackballDragger.hpp
+    ${HEADER_PATH}/Translate1DDragger.hpp
+    ${HEADER_PATH}/Translate2DDragger.hpp
+    ${HEADER_PATH}/TranslateAxisDragger.hpp
+    ${HEADER_PATH}/TranslatePlaneDragger.hpp
+    ${HEADER_PATH}/Version.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

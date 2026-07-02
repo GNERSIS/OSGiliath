@@ -2,7 +2,7 @@
  * Custom cursor overlay for presentations. Renders a textured
  * cursor sprite following mouse position during slide shows.
  */
-#include <osgPresentation/Cursor>
+#include <osgPresentation/Cursor.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/textures/Texture2D.hpp>

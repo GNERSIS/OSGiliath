@@ -43,7 +43,7 @@
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgSim/MultiSwitch>
+#include <osgSim/MultiSwitch.hpp>
 #include <stack>
 
 #ifdef COLLADA_DOM_2_4_OR_LATER

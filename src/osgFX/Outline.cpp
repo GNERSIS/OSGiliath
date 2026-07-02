@@ -18,7 +18,7 @@
  * osgFX::Outline - Copyright (C) 2004,2009 Ulrich Hertlein
  */
 
-#include <osgFX/Outline>
+#include <osgFX/Outline.hpp>
 
 #include <osg/nodes/Group.hpp>
 #include <osg/state/CullFace.hpp>
@@ -27,7 +27,7 @@
 #include <osg/state/PolygonMode.hpp>
 #include <osg/state/Stencil.hpp>
 #include <osg/textures/Texture1D.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 
 namespace
 {

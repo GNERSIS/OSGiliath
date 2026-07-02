@@ -4,10 +4,10 @@
  */
 // Written by Wang Rui, (C) 2010
 
-#include <osgParticle/SinkOperator>
+#include <osgParticle/SinkOperator.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgParticle/ModularProgram>
+#include <osgParticle/ModularProgram.hpp>
 
 #define SINK_EPSILON 1E-3
 

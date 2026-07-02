@@ -8,7 +8,7 @@
 #include <osg/nodes/Geode.hpp>
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/rendering/GLU.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

@@ -1,10 +1,10 @@
-#include <osgFX/Effect>
+#include <osgFX/Effect.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/geometry/Geometry.hpp>
 #include <osg/nodes/Group.hpp>
 #include <osg/state/StateAttribute.hpp>
-#include <osgFX/Validator>
+#include <osgFX/Validator.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 
 using namespace osgFX;

@@ -58,7 +58,7 @@
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 #include <sstream>

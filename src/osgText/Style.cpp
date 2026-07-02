@@ -2,7 +2,7 @@
  * 3D text style parameters (extrusion depth, bevel, outline).
  * Controls the shape of extruded glyph geometry in Text3D.
  */
-#include <osgText/Style>
+#include <osgText/Style.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

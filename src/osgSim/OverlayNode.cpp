@@ -2,7 +2,7 @@
  * Projective texture overlay. Projects a texture onto terrain
  * geometry for decals, shadows, and runway markings.
  */
-#include <osgSim/OverlayNode>
+#include <osgSim/OverlayNode.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/geometry/Geometry.hpp>

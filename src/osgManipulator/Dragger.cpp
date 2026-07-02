@@ -4,13 +4,13 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/Dragger>
+#include <osgManipulator/Dragger.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/state/FrontFace.hpp>
 #include <osg/state/Material.hpp>
 #include <osgGA/events/EventVisitor.hpp>
-#include <osgManipulator/Command>
+#include <osgManipulator/Command.hpp>
 #include <osgViewer/core/View.hpp>
 using namespace osgManipulator;
 

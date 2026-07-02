@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * Utility functions for osgViewer: center, eye, xAxis, yAxis, screenCenter.
  */
-#include <osgViewer/config/SphericalDisplay>
+#include <osgViewer/config/SphericalDisplay.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/ValueObject.hpp>

@@ -2,7 +2,7 @@
  * Debug visualization shadow map. Displays shadow map frustum,
  * depth texture, and projection wireframes for debugging.
  */
-#include <osgShadow/DebugShadowMap>
+#include <osgShadow/DebugShadowMap.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -13,8 +13,8 @@
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/state/Depth.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgShadow/ConvexPolyhedron>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ConvexPolyhedron.hpp>
+#include <osgShadow/ShadowedScene.hpp>
 #include <osgUtil/culling/RenderLeaf.hpp>
 
 using namespace osgShadow;

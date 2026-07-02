@@ -8,18 +8,18 @@ ENDIF()
 SET(LIB_NAME osgVolume)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Layer
-    ${HEADER_PATH}/Locator
-    ${HEADER_PATH}/MultipassTechnique
-    ${HEADER_PATH}/Property
-    ${HEADER_PATH}/RayTracedTechnique
-    ${HEADER_PATH}/Version
-    ${HEADER_PATH}/Volume
-    ${HEADER_PATH}/VolumeScene
-    ${HEADER_PATH}/VolumeSettings
-    ${HEADER_PATH}/VolumeTechnique
-    ${HEADER_PATH}/VolumeTile
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Layer.hpp
+    ${HEADER_PATH}/Locator.hpp
+    ${HEADER_PATH}/MultipassTechnique.hpp
+    ${HEADER_PATH}/Property.hpp
+    ${HEADER_PATH}/RayTracedTechnique.hpp
+    ${HEADER_PATH}/Version.hpp
+    ${HEADER_PATH}/Volume.hpp
+    ${HEADER_PATH}/VolumeScene.hpp
+    ${HEADER_PATH}/VolumeSettings.hpp
+    ${HEADER_PATH}/VolumeTechnique.hpp
+    ${HEADER_PATH}/VolumeTile.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

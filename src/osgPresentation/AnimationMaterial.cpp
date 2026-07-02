@@ -2,7 +2,7 @@
  * Keyframed material animation for presentation effects.
  * Animates color, transparency, and material properties over time.
  */
-#include <osgPresentation/AnimationMaterial>
+#include <osgPresentation/AnimationMaterial.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

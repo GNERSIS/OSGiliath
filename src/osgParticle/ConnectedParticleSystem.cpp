@@ -2,7 +2,7 @@
  * Linked particle system that renders particles as a connected
  * trail. Used for contrails, ribbons, and fluid streams.
  */
-#include <osgParticle/ConnectedParticleSystem>
+#include <osgParticle/ConnectedParticleSystem.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

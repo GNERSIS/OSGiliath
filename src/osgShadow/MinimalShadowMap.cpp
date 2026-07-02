@@ -2,14 +2,14 @@
  * Shadow map technique that minimizes the shadow frustum.
  * Tightens the light projection to the visible scene.
  */
-#include <osgShadow/MinimalShadowMap>
+#include <osgShadow/MinimalShadowMap.hpp>
 
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
-#include <osgShadow/ConvexPolyhedron>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ConvexPolyhedron.hpp>
+#include <osgShadow/ShadowedScene.hpp>
 
 using namespace osgShadow;
 

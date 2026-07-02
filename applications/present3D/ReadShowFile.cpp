@@ -22,8 +22,8 @@
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/XmlParser.hpp>
-#include <osgPresentation/SlideEventHandler>
-#include <osgVolume/VolumeTile>
+#include <osgPresentation/SlideEventHandler.hpp>
+#include <osgVolume/VolumeTile.hpp>
 #include <string.h>
 
 class AddVolumeEditingCallbackVisitor : public osg::NodeVisitor

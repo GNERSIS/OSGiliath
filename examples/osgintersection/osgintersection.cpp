@@ -10,9 +10,9 @@
 #include <osg/maths/compat.hpp>
 #include <osg/nodes/CoordinateSystemNode.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgSim/ElevationSlice>
-#include <osgSim/HeightAboveTerrain>
-#include <osgSim/LineOfSight>
+#include <osgSim/ElevationSlice.hpp>
+#include <osgSim/HeightAboveTerrain.hpp>
+#include <osgSim/LineOfSight.hpp>
 #include <osgUtil/intersection/IntersectionVisitor.hpp>
 #include <osgUtil/intersection/LineSegmentIntersector.hpp>
 

@@ -2,7 +2,7 @@
  * Weather precipitation (rain, snow). Renders falling particles
  * over a bounded volume relative to the camera.
  */
-#include <osgParticle/PrecipitationEffect>
+#include <osgParticle/PrecipitationEffect.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

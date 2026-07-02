@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * Utility functions for osgViewer: disparity.
  */
-#include <osgViewer/config/WoWVxDisplay>
+#include <osgViewer/config/WoWVxDisplay.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/ValueObject.hpp>

@@ -2,10 +2,10 @@
  * Convenience node combining emitter, program, and particle
  * system. Pre-configured effects (explosion, fire, smoke).
  */
-#include <osgParticle/ParticleEffect>
+#include <osgParticle/ParticleEffect.hpp>
 
 #include <osg/nodes/Geode.hpp>
-#include <osgParticle/ParticleSystemUpdater>
+#include <osgParticle/ParticleSystemUpdater.hpp>
 
 using namespace osgParticle;
 

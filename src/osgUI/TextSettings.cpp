@@ -2,10 +2,10 @@
  * Text rendering settings for UI widgets. Specifies
  * font, character size, and text color for widget text.
  */
-#include <osgUI/TextSettings>
+#include <osgUI/TextSettings.hpp>
 
 #include <osg/nodes/Geode.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

@@ -8,7 +8,7 @@
 #include <osg/nodes/Geode.hpp>
 #include <osg/rendering/DisplaySettings.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

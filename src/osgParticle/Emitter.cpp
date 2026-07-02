@@ -1,7 +1,7 @@
-#include <osgParticle/Emitter>
+#include <osgParticle/Emitter.hpp>
 
 #include <osg/core/CopyOp.hpp>
-#include <osgParticle/ParticleProcessor>
+#include <osgParticle/ParticleProcessor.hpp>
 
 osgParticle::Emitter::Emitter() :
     ParticleProcessor(),

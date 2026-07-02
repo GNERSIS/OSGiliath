@@ -1,0 +1,37 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Library version query for osgSim.
+ * Returns version strings matching the core osg library.
+ */
+#pragma once
+
+#include <osgSim/Export.hpp>
+
+extern "C"
+{
+
+    /**
+     * osgSimGetVersion() returns the library version number.
+     * Numbering convention : OpenSceneGraph-1.0 will return 1.0 from osgSimGetVersion.
+     *
+     * This C function can be also used to check for the existence of the OpenSceneGraph
+     * library using autoconf and its m4 macro AC_CHECK_LIB.
+     *
+     * Here is the code to add to your configure.in:
+     \verbatim
+     #
+     # Check for the OpenSceneGraph (OSG) Sim library
+     #
+     AC_CHECK_LIB(osg, osgSimGetVersion, ,
+        [AC_MSG_ERROR(OpenSceneGraph Sim library not found. See
+     http://www.openscenegraph.org)],)
+     \endverbatim
+    */
+    extern OSGSIM_EXPORT const char*
+    osgSimGetVersion();
+
+    /**
+     * osgSimGetLibraryName() returns the library name in human friendly form.
+     */
+    extern OSGSIM_EXPORT const char*
+    osgSimGetLibraryName();
+}

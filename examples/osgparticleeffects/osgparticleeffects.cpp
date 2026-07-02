@@ -10,12 +10,12 @@
 #include <osg/nodes/PositionAttitudeTransform.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgParticle/ExplosionDebrisEffect>
-#include <osgParticle/ExplosionEffect>
-#include <osgParticle/FireEffect>
-#include <osgParticle/SmokeEffect>
-#include <osgParticle/SmokeTrailEffect>
-#include <osgText/Text>
+#include <osgParticle/ExplosionDebrisEffect.hpp>
+#include <osgParticle/ExplosionEffect.hpp>
+#include <osgParticle/FireEffect.hpp>
+#include <osgParticle/SmokeEffect.hpp>
+#include <osgParticle/SmokeTrailEffect.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 

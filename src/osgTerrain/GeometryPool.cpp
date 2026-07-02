@@ -2,7 +2,7 @@
  * Shared geometry pool for terrain tiles. Reuses vertex/index
  * buffers across tiles with identical topology.
  */
-#include <osgTerrain/GeometryPool>
+#include <osgTerrain/GeometryPool.hpp>
 
 #include <osg/geometry/VertexArrayState.hpp>
 #include <osg/maths/compat.hpp>

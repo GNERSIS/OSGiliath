@@ -1,6 +1,6 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Util>
+#include <osgWidget/Util.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osgDB/io/FileUtils.hpp>
@@ -8,8 +8,8 @@
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/ViewerEventHandlers>
-#include <osgWidget/WindowManager>
+#include <osgWidget/ViewerEventHandlers.hpp>
+#include <osgWidget/WindowManager.hpp>
 #include <stdlib.h>
 
 namespace osgWidget

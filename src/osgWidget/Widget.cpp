@@ -6,7 +6,7 @@
 #include <osg/textures/TextureRectangle.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 // Don't use these macros! :) They're simply for internal optimization!
 #define MACRO_WIDGET_X( v ) ( *v )[LL].x

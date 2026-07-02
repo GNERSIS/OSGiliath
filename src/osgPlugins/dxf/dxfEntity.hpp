@@ -13,7 +13,7 @@
 #include <osg/maths/mat4.hpp>
 #include <osg/maths/vec3.hpp>
 #include <osg/nodes/Node.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <string>
 #include <vector>
 

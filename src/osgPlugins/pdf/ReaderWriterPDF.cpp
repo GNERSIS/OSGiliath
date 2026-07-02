@@ -8,7 +8,7 @@
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/registry/ReaderWriter.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgWidget/PdfReader>
+#include <osgWidget/PdfReader.hpp>
 #include <poppler.h>
 
 class CairoImage : public osg::Referenced

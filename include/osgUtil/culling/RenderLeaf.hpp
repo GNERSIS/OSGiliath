@@ -8,7 +8,7 @@
 #include <osg/geometry/Drawable.hpp>
 #include <osg/maths/mat4.hpp>
 #include <osg/state/State.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

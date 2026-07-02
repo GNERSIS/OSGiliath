@@ -1,4 +1,4 @@
-#include <osgFX/BumpMapping>
+#include <osgFX/BumpMapping.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/geometry/Geometry.hpp>
@@ -6,7 +6,7 @@
 #include <osg/state/Depth.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 #include <osgUtil/optimization/TangentSpaceGenerator.hpp>
 #include <sstream>
 

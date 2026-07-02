@@ -22,8 +22,8 @@
 #include <osgGA/manipulators/SphericalManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgSim/Impostor>
-#include <osgSim/InsertImpostorsVisitor>
+#include <osgSim/Impostor.hpp>
+#include <osgSim/InsertImpostorsVisitor.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

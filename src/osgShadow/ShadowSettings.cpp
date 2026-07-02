@@ -2,7 +2,7 @@
  * Shadow rendering configuration. Controls map resolution,
  * number of cascades, bias, and technique parameters.
  */
-#include <osgShadow/ShadowSettings>
+#include <osgShadow/ShadowSettings.hpp>
 
 #include <float.h>
 

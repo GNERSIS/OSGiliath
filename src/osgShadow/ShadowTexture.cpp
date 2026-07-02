@@ -2,14 +2,14 @@
  * Projective shadow texture technique. Projects a shadow texture
  * from the light source onto receiver geometry.
  */
-#include <osgShadow/ShadowTexture>
+#include <osgShadow/ShadowTexture.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 using namespace osgShadow;
 

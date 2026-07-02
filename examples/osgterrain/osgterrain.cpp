@@ -6,7 +6,7 @@
 #include <osg/maths/compat.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgFX/MultiTextureControl>
+#include <osgFX/MultiTextureControl.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/AnimationPathManipulator.hpp>
 #include <osgGA/manipulators/DriveManipulator.hpp>
@@ -14,11 +14,11 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgTerrain/DisplacementMappingTechnique>
-#include <osgTerrain/GeometryTechnique>
-#include <osgTerrain/Layer>
-#include <osgTerrain/Terrain>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/DisplacementMappingTechnique.hpp>
+#include <osgTerrain/GeometryTechnique.hpp>
+#include <osgTerrain/Layer.hpp>
+#include <osgTerrain/Terrain.hpp>
+#include <osgTerrain/TerrainTile.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

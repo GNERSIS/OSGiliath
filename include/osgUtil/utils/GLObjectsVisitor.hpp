@@ -9,7 +9,7 @@
 #include <osg/nodes/Geode.hpp>
 #include <osg/state/State.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

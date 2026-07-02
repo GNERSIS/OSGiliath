@@ -3,9 +3,9 @@
 #include <osg/maths/compat.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/Canvas>
-#include <osgWidget/Util>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Canvas.hpp>
+#include <osgWidget/Util.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 void
 setupArguments( osg::ArgumentParser& args )

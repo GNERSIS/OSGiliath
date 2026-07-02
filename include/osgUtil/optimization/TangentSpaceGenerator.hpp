@@ -8,7 +8,7 @@
 #include <osg/core/Referenced.hpp>
 #include <osg/geometry/Array.hpp>
 #include <osg/geometry/Geometry.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

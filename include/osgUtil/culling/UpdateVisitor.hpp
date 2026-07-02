@@ -15,7 +15,7 @@
 #include <osg/nodes/Transform.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
 #include <osg/traversal/ScriptEngine.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

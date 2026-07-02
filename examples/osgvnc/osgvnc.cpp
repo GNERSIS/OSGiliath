@@ -2,7 +2,7 @@
 #include <osgDB/registry/Registry.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/VncClient>
+#include <osgWidget/VncClient.hpp>
 
 class EscapeHandler : public osgGA::GUIEventHandler
 {

@@ -2,7 +2,7 @@
  * Library version query for osgSim.
  * Returns version strings matching the core osg library.
  */
-#include <osgSim/Version>
+#include <osgSim/Version.hpp>
 
 #include <osg/Version>
 

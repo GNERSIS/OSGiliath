@@ -2,11 +2,11 @@
  * Text label widget. Displays non-editable text with
  * configurable font, size, and alignment.
  */
-#include <osgUI/Label>
+#include <osgUI/Label.hpp>
 
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

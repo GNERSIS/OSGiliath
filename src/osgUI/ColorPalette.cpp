@@ -2,7 +2,7 @@
  * Color palette widget providing a grid of selectable colors.
  * Used for color picker UIs in 3D scenes.
  */
-#include <osgUI/ColorPalette>
+#include <osgUI/ColorPalette.hpp>
 
 using namespace osgUI;
 

@@ -1,0 +1,80 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Custom cursor overlay for presentations. Renders a textured
+ * cursor sprite following mouse position during slide shows.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osg/nodes/AutoTransform.hpp>
+#include <osg/nodes/Camera.hpp>
+#include <osgPresentation/Export.hpp>
+
+namespace osgPresentation
+{
+
+    class OSGPRESENTATION_EXPORT Cursor : public osg::Inherit<osg::Group, Cursor>
+    {
+        public:
+
+            Cursor();
+
+            Cursor( const std::string& filename,
+                    float              size );
+
+            /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+            Cursor( const Cursor&      rhs,
+                    const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            OSG_REGISTER_TYPE( osgPresentation,
+                               Cursor )
+
+            void
+            setFilename( const std::string& filename )
+            {
+                _filename    = filename;
+                _cursorDirty = true;
+            }
+
+            const std::string&
+            getFilename() const
+            {
+                return _filename;
+            }
+
+            void
+            setSize( float size )
+            {
+                _size        = size;
+                _cursorDirty = true;
+            }
+
+            float
+            getSize() const
+            {
+                return _size;
+            }
+
+            virtual void
+            traverse( osg::NodeVisitor& nv );
+
+        protected:
+
+            virtual ~Cursor();
+
+            void
+            initializeCursor();
+            void
+                                             updatePosition();
+
+            std::string                      _filename;
+            float                            _size;
+
+            bool                             _cursorDirty;
+
+            osg::ref_ptr<osg::AutoTransform> _transform;
+
+            osg::vec2                        _cursorXY;
+            osg::observer_ptr<osg::Camera>   _camera;
+    };
+
+}

@@ -22,7 +22,7 @@
 #include <osgAnimation/transform/StackedScaleElement.hpp>
 #include <osgAnimation/transform/StackedTranslateElement.hpp>
 #include <osgAnimation/transform/UpdateMatrixTransform.hpp>
-#include <osgSim/DOFTransform>
+#include <osgSim/DOFTransform.hpp>
 
 #ifdef COLLADA_DOM_2_4_OR_LATER
     #include <dom/domAny.h>

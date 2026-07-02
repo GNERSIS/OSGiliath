@@ -4,14 +4,14 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/TrackballDragger>
+#include <osgManipulator/TrackballDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/maths/quat.hpp>
 #include <osg/nodes/AutoTransform.hpp>
 #include <osg/state/CullFace.hpp>
 #include <osg/state/PolygonMode.hpp>
-#include <osgManipulator/AntiSquish>
+#include <osgManipulator/AntiSquish.hpp>
 
 using namespace osgManipulator;
 

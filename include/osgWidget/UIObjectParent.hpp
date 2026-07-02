@@ -1,0 +1,165 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Template parent container for UI objects. Provides
+ * indexed access and name-based lookup for children.
+ */
+// Code by: Jeremy Moles (cubicool) 2007-2008
+
+#pragma once
+
+#include <osg/core/Object.hpp>
+#include <osg/core/observer_ptr.hpp>
+
+namespace osgWidget
+{
+
+    template<typename T>
+    class UIObjectParent
+    {
+        public:
+
+            typedef T                               object_type;
+            typedef osg::observer_ptr<object_type>  ptr_type;
+            typedef std::vector<ptr_type>           Vector;
+            typedef typename Vector::iterator       Iterator;
+            typedef typename Vector::const_iterator ConstIterator;
+
+            Iterator
+            begin()
+            {
+                return _objects.begin();
+            }
+
+            ConstIterator
+            begin() const
+            {
+                return _objects.begin();
+            }
+
+            Iterator
+            end()
+            {
+                return _objects.end();
+            }
+
+            ConstIterator
+            end() const
+            {
+                return _objects.end();
+            }
+
+            typename Vector::size_type
+            size() const
+            {
+                return _objects.size();
+            }
+
+            object_type*
+            getByName( const std::string& name )
+            {
+                return _getByName( name );
+            }
+
+            const object_type*
+            getByName( const std::string& name ) const
+            {
+                return _getByName( name );
+            }
+
+            object_type*
+            getByIndex( unsigned int index )
+            {
+                return _getByIndex( index );
+            }
+
+            const object_type*
+            getByIndex( unsigned int index ) const
+            {
+                return _getByIndex( index );
+            }
+
+            unsigned int
+            getNumObjects() const
+            {
+                return _objects.size();
+            }
+
+            Vector&
+            getObjects()
+            {
+                return _objects;
+            }
+
+            const Vector&
+            getObjects() const
+            {
+                return _objects;
+            }
+
+        protected:
+
+            bool
+            _remove( object_type* obj )
+            {
+                Iterator i = std::find( begin(), end(), obj );
+
+                if( i == end() )
+                {
+                    return false;
+                }
+
+                _objects.erase( i );
+
+                return true;
+            }
+
+            bool
+            _removeByName( const std::string& name )
+            {
+                for( Iterator i = begin(); i != end(); i++ )
+                {
+                    if( i->get()->getName() == name )
+                    {
+                        _objects.erase( i );
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            Vector _objects;
+
+        private:
+
+            // I had to add this to avoid ambiguity errors with MSVC. Garbage.
+            object_type*
+            _getByName( const std::string& name ) const
+            {
+                for( ConstIterator i = begin(); i != end(); i++ )
+                {
+                    if( i->valid() && i->get()->getName() == name )
+                    {
+                        return i->get();
+                    }
+                }
+
+                return 0;
+            }
+
+            object_type*
+            _getByIndex( unsigned int index ) const
+            {
+                for( ConstIterator i = begin(); i != end(); i++ )
+                {
+                    if( i->valid() && i->get()->getIndex() == index )
+                    {
+                        return i->get();
+                    }
+                }
+
+                return 0;
+            }
+    };
+
+}

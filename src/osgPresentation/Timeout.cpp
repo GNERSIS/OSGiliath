@@ -2,7 +2,7 @@
  * Idle timeout handler for presentations. Returns to a home
  * slide after a configurable period of inactivity.
  */
-#include <osgPresentation/Timeout>
+#include <osgPresentation/Timeout.hpp>
 
 #include <osgGA/events/EventVisitor.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>

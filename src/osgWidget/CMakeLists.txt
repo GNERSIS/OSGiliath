@@ -15,30 +15,30 @@ ENDIF()
 SET(LIB_NAME osgWidget)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Box
-    ${HEADER_PATH}/Browser
-    ${HEADER_PATH}/PdfReader
-    ${HEADER_PATH}/VncClient
-    ${HEADER_PATH}/Canvas
-    ${HEADER_PATH}/EventInterface
-    ${HEADER_PATH}/Frame
-    ${HEADER_PATH}/Input
-    ${HEADER_PATH}/Label
-    ${HEADER_PATH}/Lua
-    ${HEADER_PATH}/Python
-    ${HEADER_PATH}/ScriptEngine
-    ${HEADER_PATH}/StyleInterface
-    ${HEADER_PATH}/StyleManager
-    ${HEADER_PATH}/Table
-    ${HEADER_PATH}/Types
-    ${HEADER_PATH}/UIObjectParent
-    ${HEADER_PATH}/Util
-    ${HEADER_PATH}/Version
-    ${HEADER_PATH}/ViewerEventHandlers
-    ${HEADER_PATH}/Widget
-    ${HEADER_PATH}/Window
-    ${HEADER_PATH}/WindowManager
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Box.hpp
+    ${HEADER_PATH}/Browser.hpp
+    ${HEADER_PATH}/PdfReader.hpp
+    ${HEADER_PATH}/VncClient.hpp
+    ${HEADER_PATH}/Canvas.hpp
+    ${HEADER_PATH}/EventInterface.hpp
+    ${HEADER_PATH}/Frame.hpp
+    ${HEADER_PATH}/Input.hpp
+    ${HEADER_PATH}/Label.hpp
+    ${HEADER_PATH}/Lua.hpp
+    ${HEADER_PATH}/Python.hpp
+    ${HEADER_PATH}/ScriptEngine.hpp
+    ${HEADER_PATH}/StyleInterface.hpp
+    ${HEADER_PATH}/StyleManager.hpp
+    ${HEADER_PATH}/Table.hpp
+    ${HEADER_PATH}/Types.hpp
+    ${HEADER_PATH}/UIObjectParent.hpp
+    ${HEADER_PATH}/Util.hpp
+    ${HEADER_PATH}/Version.hpp
+    ${HEADER_PATH}/ViewerEventHandlers.hpp
+    ${HEADER_PATH}/Widget.hpp
+    ${HEADER_PATH}/Window.hpp
+    ${HEADER_PATH}/WindowManager.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

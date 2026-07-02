@@ -1,0 +1,40 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * AnimtkViewerGUI example application
+ */
+#ifndef ANIMTKVIEWERGUI_H
+#define ANIMTKVIEWERGUI_H
+
+#include <osgWidget/WindowManager.hpp>
+
+class AnimtkViewerGUI : public osgWidget::WindowManager
+{
+        osg::ref_ptr<osgWidget::Box> _buttonBox;
+        osg::ref_ptr<osgWidget::Box> _listBox;
+        osg::ref_ptr<osgWidget::Box> _labelBox;
+
+    protected:
+
+        osgWidget::Widget*
+        _createButton( const std::string& );
+
+        bool
+        _buttonPush( osgWidget::Event& );
+        bool
+        _listMouseHover( osgWidget::Event& );
+
+        void
+        _createButtonBox();
+        void
+        _createListBox();
+        void
+        _createLabelBox();
+
+    public:
+
+        AnimtkViewerGUI( osgViewer::View*,
+                         float,
+                         float,
+                         unsigned int );
+};
+
+#endif

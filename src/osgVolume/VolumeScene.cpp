@@ -2,7 +2,7 @@
  * Scene-level volume rendering manager. Coordinates multiple
  * VolumeTiles with proper back-to-front ordering.
  */
-#include <osgVolume/VolumeScene>
+#include <osgVolume/VolumeScene.hpp>
 
 #include <limits>
 #include <osg/core/io_utils.hpp>

@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 extern "C"
 {

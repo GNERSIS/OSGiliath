@@ -2,7 +2,7 @@
  * Directional visibility sector for light points. Defines
  * azimuth and elevation angle ranges for light visibility.
  */
-#include <osgSim/Sector>
+#include <osgSim/Sector.hpp>
 
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Matrix.hpp>

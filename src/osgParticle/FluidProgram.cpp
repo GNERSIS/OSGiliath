@@ -1,4 +1,4 @@
-#include <osgParticle/FluidProgram>
+#include <osgParticle/FluidProgram.hpp>
 
 osgParticle::FluidProgram::FluidProgram()
 {

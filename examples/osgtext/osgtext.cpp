@@ -13,8 +13,8 @@
 #include <osgDB/io/WriteFile.hpp>
 #include <osgDB/registry/Registry.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
-#include <osgText/Font>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

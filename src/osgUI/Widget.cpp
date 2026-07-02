@@ -2,7 +2,7 @@
  * Abstract base for 3D UI widgets. Provides event handling,
  * focus management, and style application for in-scene UI.
  */
-#include <osgUI/Widget>
+#include <osgUI/Widget.hpp>
 
 #include <algorithm>
 #include <osg/core/io_utils.hpp>

@@ -6,7 +6,7 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
-#include <osgViewer/api/win32/GraphicsWindowWin32>
+#include <osgViewer/api/Win32/GraphicsWindowWin32.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 #include <string>

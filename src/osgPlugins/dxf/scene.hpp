@@ -18,7 +18,7 @@
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/state/Hint.hpp>
 #include <osg/state/LineWidth.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/SmoothingVisitor.hpp>
 
 class dxfLayerTable;

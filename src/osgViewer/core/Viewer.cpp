@@ -16,10 +16,10 @@
 #include <osgDB/registry/Registry.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgUtil/intersection/RayIntersector.hpp>
-#include <osgViewer/config/PanoramicSphericalDisplay>
-#include <osgViewer/config/SingleWindow>
-#include <osgViewer/config/SphericalDisplay>
-#include <osgViewer/config/WoWVxDisplay>
+#include <osgViewer/config/PanoramicSphericalDisplay.hpp>
+#include <osgViewer/config/SingleWindow.hpp>
+#include <osgViewer/config/SphericalDisplay.hpp>
+#include <osgViewer/config/WoWVxDisplay.hpp>
 #include <osgViewer/core/CompositeViewer.hpp>
 #include <osgViewer/core/Renderer.hpp>
 #include <sstream>

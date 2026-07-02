@@ -2,7 +2,7 @@
  * Blink timing sequence for light points. Defines on/off
  * pulse patterns for flashing navigation lights.
  */
-#include <osgSim/BlinkSequence>
+#include <osgSim/BlinkSequence.hpp>
 
 #include <stdlib.h>
 

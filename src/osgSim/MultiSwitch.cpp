@@ -2,7 +2,7 @@
  * Switch node supporting named switch sets. Each named set
  * defines a different visibility configuration for children.
  */
-#include <osgSim/MultiSwitch>
+#include <osgSim/MultiSwitch.hpp>
 
 #include <algorithm>
 

@@ -13,7 +13,7 @@
 #pragma once
 
 #include <osg/textures/Texture3D.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

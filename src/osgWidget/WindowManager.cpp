@@ -1,17 +1,17 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 // $Id: WindowManager.cpp 66 2008-07-14 21:54:09Z cubicool $
 
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 #include <algorithm>
 #include <iostream>
 #include <osg/core/io_utils.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Label>
-#include <osgWidget/Lua>
-#include <osgWidget/Python>
-#include <osgWidget/Types>
-#include <osgWidget/Util>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Label.hpp>
+#include <osgWidget/Lua.hpp>
+#include <osgWidget/Python.hpp>
+#include <osgWidget/Types.hpp>
+#include <osgWidget/Util.hpp>
 
 namespace osgWidget
 {

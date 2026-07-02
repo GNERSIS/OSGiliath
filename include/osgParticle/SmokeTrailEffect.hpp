@@ -1,0 +1,72 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Pre-configured smoke trail particle effect.
+ * Generates a lingering trail behind a moving emitter.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osgParticle/FluidProgram.hpp>
+#include <osgParticle/ModularEmitter.hpp>
+#include <osgParticle/ParticleEffect.hpp>
+
+namespace osgParticle
+{
+
+    class OSGPARTICLE_EXPORT SmokeTrailEffect
+        : public osg::Inherit<ParticleEffect, SmokeTrailEffect>
+    {
+        public:
+
+            explicit SmokeTrailEffect( bool automaticSetup = true );
+
+            SmokeTrailEffect( const osg::vec3& position,
+                              float            scale     = 1.0F,
+                              float            intensity = 1.0F );
+
+            SmokeTrailEffect( const SmokeTrailEffect& copy,
+                              const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            OSG_REGISTER_TYPE( osgParticle,
+                               SmokeTrailEffect )
+
+            virtual void
+            setDefaults();
+
+            virtual void
+            setUpEmitterAndProgram();
+
+            virtual Emitter*
+            getEmitter()
+            {
+                return _emitter.get();
+            }
+
+            virtual const Emitter*
+            getEmitter() const
+            {
+                return _emitter.get();
+            }
+
+            virtual Program*
+            getProgram()
+            {
+                return _program.get();
+            }
+
+            virtual const Program*
+            getProgram() const
+            {
+                return _program.get();
+            }
+
+        protected:
+
+            virtual ~SmokeTrailEffect()
+            {
+            }
+
+            osg::ref_ptr<ModularEmitter> _emitter;
+            osg::ref_ptr<FluidProgram>   _program;
+    };
+
+}

@@ -6,7 +6,7 @@
 
 #include <osg/core/Notify.hpp>
 #include <osg/geometry/PrimitiveSet.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

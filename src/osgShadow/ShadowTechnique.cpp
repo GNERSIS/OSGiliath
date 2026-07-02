@@ -2,13 +2,13 @@
  * Abstract base for shadow rendering techniques.
  * Subclasses implement shadow map generation and projection.
  */
-#include <osgShadow/ShadowTechnique>
+#include <osgShadow/ShadowTechnique.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 using namespace osgShadow;
 

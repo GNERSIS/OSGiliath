@@ -1,8 +1,8 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * AnimtkViewer example application
  */
-#include "AnimtkViewerGUI"
-#include "AnimtkViewerKeyHandler"
+#include "AnimtkViewerGUI.hpp"
+#include "AnimtkViewerKeyHandler.hpp"
 
 #include <iostream>
 #include <osg/core/io_utils.hpp>
@@ -19,7 +19,7 @@
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/ViewerEventHandlers>
+#include <osgWidget/ViewerEventHandlers.hpp>
 
 const int WIDTH  = 1'440;
 const int HEIGHT = 900;

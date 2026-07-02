@@ -2,7 +2,7 @@
  * Pre-compilation callback for presentation slides.
  * Compiles GL objects before a slide is displayed to avoid stalls.
  */
-#include <osgPresentation/CompileSlideCallback>
+#include <osgPresentation/CompileSlideCallback.hpp>
 
 #include <osgUtil/utils/GLObjectsVisitor.hpp>
 

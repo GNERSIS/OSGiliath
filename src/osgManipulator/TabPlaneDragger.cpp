@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/TabPlaneDragger>
+#include <osgManipulator/TabPlaneDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/ShapeDrawable.hpp>
@@ -14,7 +14,7 @@
 #include <osg/state/CullFace.hpp>
 #include <osg/state/LineWidth.hpp>
 #include <osg/state/PolygonMode.hpp>
-#include <osgManipulator/AntiSquish>
+#include <osgManipulator/AntiSquish.hpp>
 
 using namespace osgManipulator;
 

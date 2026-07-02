@@ -2,13 +2,13 @@
  * Pre-configured rising smoke particle effect.
  * Buoyant particles with fade-out for smoke visualization.
  */
-#include <osgParticle/SmokeEffect>
+#include <osgParticle/SmokeEffect.hpp>
 
 #include <osg/nodes/Geode.hpp>
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/RadialShooter>
-#include <osgParticle/RandomRateCounter>
-#include <osgParticle/SectorPlacer>
+#include <osgParticle/ParticleSystemUpdater.hpp>
+#include <osgParticle/RadialShooter.hpp>
+#include <osgParticle/RandomRateCounter.hpp>
+#include <osgParticle/SectorPlacer.hpp>
 
 using namespace osgParticle;
 

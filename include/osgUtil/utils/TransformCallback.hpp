@@ -8,7 +8,7 @@
 
 #include <osg/core/Callback.hpp>
 #include <osg/maths/compat.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

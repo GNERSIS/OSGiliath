@@ -2,7 +2,7 @@
  * Volume coordinate locator. Transforms between voxel indices
  * and world coordinates for volume positioning.
  */
-#include <osgVolume/Locator>
+#include <osgVolume/Locator.hpp>
 
 #include <list>
 #include <osg/core/io_utils.hpp>

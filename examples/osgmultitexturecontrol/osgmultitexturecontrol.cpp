@@ -9,7 +9,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgFX/MultiTextureControl>
+#include <osgFX/MultiTextureControl.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/AnimationPathManipulator.hpp>
 #include <osgGA/manipulators/DriveManipulator.hpp>
@@ -17,8 +17,8 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgTerrain/Terrain>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/Terrain.hpp>
+#include <osgTerrain/TerrainTile.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

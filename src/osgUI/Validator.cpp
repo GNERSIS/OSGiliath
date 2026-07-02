@@ -2,7 +2,7 @@
  * Abstract input validator for text input widgets.
  * Subclasses enforce numeric ranges or regex patterns.
  */
-#include <osgUI/Validator>
+#include <osgUI/Validator.hpp>
 
 #include <cfloat>
 #include <limits.h>

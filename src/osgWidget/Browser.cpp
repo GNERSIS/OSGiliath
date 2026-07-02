@@ -2,7 +2,7 @@
  * Web browser widget embedding (platform-specific).
  * Displays HTML content within the widget system.
  */
-#include <osgWidget/Browser>
+#include <osgWidget/Browser.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>

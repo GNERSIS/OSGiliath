@@ -7,7 +7,7 @@
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/fstream.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgTerrain/Locator>
+#include <osgTerrain/Locator.hpp>
 
 class ESRIShapeReaderWriter : public osgDB::ReaderWriter
 {

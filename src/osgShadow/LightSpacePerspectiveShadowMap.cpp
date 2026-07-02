@@ -2,7 +2,7 @@
  * Light-space perspective shadow mapping (LiSPSM). Warps the
  * shadow projection for better near-camera depth resolution.
  */
-#include <osgShadow/LightSpacePerspectiveShadowMap>
+#include <osgShadow/LightSpacePerspectiveShadowMap.hpp>
 
 #include <iomanip>
 #include <iostream>

@@ -13,7 +13,7 @@
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgFX/Scribe>
+#include <osgFX/Scribe.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgUtil/intersection/IntersectionVisitor.hpp>

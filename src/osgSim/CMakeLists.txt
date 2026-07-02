@@ -8,30 +8,30 @@ ENDIF()
 SET(LIB_NAME osgSim)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/BlinkSequence
-    ${HEADER_PATH}/ColorRange
-    ${HEADER_PATH}/DOFTransform
-    ${HEADER_PATH}/ElevationSlice
-    ${HEADER_PATH}/HeightAboveTerrain
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/GeographicLocation
-    ${HEADER_PATH}/Impostor
-    ${HEADER_PATH}/ImpostorSprite
-    ${HEADER_PATH}/InsertImpostorsVisitor
-    ${HEADER_PATH}/LightPoint
-    ${HEADER_PATH}/LightPointNode
-    ${HEADER_PATH}/LightPointSystem
-    ${HEADER_PATH}/LineOfSight
-    ${HEADER_PATH}/MultiSwitch
-    ${HEADER_PATH}/OverlayNode
-    ${HEADER_PATH}/ObjectRecordData
-    ${HEADER_PATH}/ScalarBar
-    ${HEADER_PATH}/ScalarsToColors
-    ${HEADER_PATH}/Sector
-    ${HEADER_PATH}/ShapeAttribute
-    ${HEADER_PATH}/SphereSegment
-    ${HEADER_PATH}/Version
-    ${HEADER_PATH}/VisibilityGroup
+    ${HEADER_PATH}/BlinkSequence.hpp
+    ${HEADER_PATH}/ColorRange.hpp
+    ${HEADER_PATH}/DOFTransform.hpp
+    ${HEADER_PATH}/ElevationSlice.hpp
+    ${HEADER_PATH}/HeightAboveTerrain.hpp
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/GeographicLocation.hpp
+    ${HEADER_PATH}/Impostor.hpp
+    ${HEADER_PATH}/ImpostorSprite.hpp
+    ${HEADER_PATH}/InsertImpostorsVisitor.hpp
+    ${HEADER_PATH}/LightPoint.hpp
+    ${HEADER_PATH}/LightPointNode.hpp
+    ${HEADER_PATH}/LightPointSystem.hpp
+    ${HEADER_PATH}/LineOfSight.hpp
+    ${HEADER_PATH}/MultiSwitch.hpp
+    ${HEADER_PATH}/OverlayNode.hpp
+    ${HEADER_PATH}/ObjectRecordData.hpp
+    ${HEADER_PATH}/ScalarBar.hpp
+    ${HEADER_PATH}/ScalarsToColors.hpp
+    ${HEADER_PATH}/Sector.hpp
+    ${HEADER_PATH}/ShapeAttribute.hpp
+    ${HEADER_PATH}/SphereSegment.hpp
+    ${HEADER_PATH}/Version.hpp
+    ${HEADER_PATH}/VisibilityGroup.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

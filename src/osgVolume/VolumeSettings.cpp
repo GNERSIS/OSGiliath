@@ -2,7 +2,7 @@
  * Volume rendering parameters. Controls sample density,
  * transfer function, and rendering quality settings.
  */
-#include <osgVolume/VolumeSettings>
+#include <osgVolume/VolumeSettings.hpp>
 
 using namespace osgVolume;
 

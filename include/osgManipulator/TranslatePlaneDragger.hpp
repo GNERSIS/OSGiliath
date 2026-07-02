@@ -1,0 +1,66 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Plane translation dragger with a rectangular handle.
+ * Constrains movement to the plane containing the handle.
+ */
+// osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
+
+#pragma once
+
+#include <osgManipulator/Translate1DDragger.hpp>
+#include <osgManipulator/Translate2DDragger.hpp>
+
+namespace osgManipulator
+{
+
+    /**
+     * Translate plane dragger consists of a wireframe box representing a plane that can
+     * be dragged to translate along the plane.
+     */
+    class OSGMANIPULATOR_EXPORT TranslatePlaneDragger : public CompositeDragger
+    {
+        public:
+
+            TranslatePlaneDragger();
+
+            META_OSGMANIPULATOR_Object(
+                osgManipulator,
+                TranslatePlaneDragger
+            ) virtual bool handle( const PointerInfo&            pi,
+                                   const osgGA::GUIEventAdapter& ea,
+                                   osgGA::GUIActionAdapter&      us );
+
+            /** Setup default geometry for dragger. */
+            void
+            setupDefaultGeometry();
+
+            inline void
+            setColor( const osg::vec4& color )
+            {
+                if( _translate2DDragger.valid() )
+                {
+                    _translate2DDragger->setColor( color );
+                }
+            }
+
+            Translate1DDragger*
+            getTranslate1DDragger()
+            {
+                return _translate1DDragger.get();
+            }
+
+            Translate2DDragger*
+            getTranslate2DDragger()
+            {
+                return _translate2DDragger.get();
+            }
+
+        protected:
+
+            virtual ~TranslatePlaneDragger();
+
+            osg::ref_ptr<Translate2DDragger> _translate2DDragger;
+            osg::ref_ptr<Translate1DDragger> _translate1DDragger;
+            bool                             _usingTranslate1DDragger;
+    };
+
+}

@@ -2,7 +2,7 @@
  * Event handler for slide show navigation.
  * Handles next/previous slide, auto-advance, and slide selection.
  */
-#include <osgPresentation/SlideEventHandler>
+#include <osgPresentation/SlideEventHandler.hpp>
 
 #include <iostream>
 #include <osg/core/io_utils.hpp>
@@ -13,8 +13,8 @@
 #include <osg/traversal/AnimationPath.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/manipulators/AnimationPathManipulator.hpp>
-#include <osgPresentation/AnimationMaterial>
-#include <osgPresentation/SlideShowConstructor>
+#include <osgPresentation/AnimationMaterial.hpp>
+#include <osgPresentation/SlideShowConstructor.hpp>
 #include <osgUtil/utils/GLObjectsVisitor.hpp>
 #include <osgUtil/utils/TransformCallback.hpp>
 

@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 
 extern "C"
 {

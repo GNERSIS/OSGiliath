@@ -1,11 +1,11 @@
-#include <osgParticle/FluidFrictionOperator>
+#include <osgParticle/FluidFrictionOperator.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
-#include <osgParticle/ModularProgram>
-#include <osgParticle/Operator>
-#include <osgParticle/Particle>
+#include <osgParticle/ModularProgram.hpp>
+#include <osgParticle/Operator.hpp>
+#include <osgParticle/Particle.hpp>
 
 osgParticle::FluidFrictionOperator::FluidFrictionOperator() :
     _coeff_A( 0 ),

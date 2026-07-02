@@ -2,7 +2,7 @@
  * Root terrain node managing a grid of TerrainTiles.
  * Coordinates tile loading, LOD, and terrain rendering.
  */
-#include <osgTerrain/Terrain>
+#include <osgTerrain/Terrain.hpp>
 
 #include <iterator>
 #include <osgUtil/culling/UpdateVisitor.hpp>

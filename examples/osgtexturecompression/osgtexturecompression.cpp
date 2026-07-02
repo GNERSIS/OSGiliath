@@ -11,7 +11,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/CompositeViewer.hpp>
 
 osg::Camera*

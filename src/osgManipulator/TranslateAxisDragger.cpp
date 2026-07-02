@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/TranslateAxisDragger>
+#include <osgManipulator/TranslateAxisDragger.hpp>
 
 #include <osg/maths/quat.hpp>
 

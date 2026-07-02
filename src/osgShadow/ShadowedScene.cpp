@@ -2,7 +2,7 @@
  * Root node for shadow-enabled scenes. Attaches a ShadowTechnique
  * that adds shadow mapping passes to the rendering pipeline.
  */
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/nodes/CoordinateSystemNode.hpp>

@@ -3,15 +3,15 @@
  * Provides: getInterface, getScreenSettings, getScreenColorDepth, setScreenSettings,
  * enumerateScreenSettings, getScreenPosition.
  */
-#include <osgViewer/api/Win32/GraphicsWindowWin32>
+#include <osgViewer/api/Win32/GraphicsWindowWin32.hpp>
 
 #include <map>
 #include <osg/core/ApplicationUsage.hpp>
 #include <osg/core/DeleteHandler.hpp>
 #include <osg/core/os_utils.hpp>
 #include <osg/GL>
-#include <osgViewer/api/Win32/PixelBufferWin32>
-#include <osgViewer/api/Win32/Win32GWUtils>
+#include <osgViewer/api/Win32/PixelBufferWin32.hpp>
+#include <osgViewer/api/Win32/Win32GWUtils.hpp>
 #include <osgViewer/core/View.hpp>
 #include <vector>
 #include <windowsx.h>

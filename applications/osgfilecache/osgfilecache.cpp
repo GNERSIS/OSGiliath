@@ -26,7 +26,7 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgDB/registry/Archive.hpp>
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/TerrainTile.hpp>
 #include <signal.h>
 #include <stdlib.h>
 

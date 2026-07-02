@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/TabPlaneTrackballDragger>
+#include <osgManipulator/TabPlaneTrackballDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/ShapeDrawable.hpp>

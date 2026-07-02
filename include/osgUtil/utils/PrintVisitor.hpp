@@ -5,7 +5,7 @@
 #pragma once
 
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <ostream>
 
 namespace osgUtil

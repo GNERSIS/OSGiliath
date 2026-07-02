@@ -2,9 +2,9 @@
  * Abstract base for view-dependent shadow techniques.
  * Provides per-camera shadow setup and clean-up hooks.
  */
-#include <osgShadow/ViewDependentShadowTechnique>
+#include <osgShadow/ViewDependentShadowTechnique.hpp>
 
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 using namespace osgShadow;
 

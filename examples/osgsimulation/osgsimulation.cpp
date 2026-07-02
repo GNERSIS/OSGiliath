@@ -41,10 +41,10 @@
 #include <osgGA/manipulators/NodeTrackerManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgParticle/FireEffect>
-#include <osgSim/OverlayNode>
-#include <osgSim/SphereSegment>
-#include <osgText/Text>
+#include <osgParticle/FireEffect.hpp>
+#include <osgSim/OverlayNode.hpp>
+#include <osgSim/SphereSegment.hpp>
+#include <osgText/Text.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

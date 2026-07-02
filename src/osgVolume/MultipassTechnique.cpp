@@ -2,7 +2,7 @@
  * Multi-pass volume rendering with entry/exit textures.
  * Uses FBO passes for accurate ray segment computation.
  */
-#include <osgVolume/MultipassTechnique>
+#include <osgVolume/MultipassTechnique.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/ValueObject.hpp>
@@ -18,9 +18,9 @@
 #include <osg/textures/TransferFunction.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgVolume/VolumeScene>
-#include <osgVolume/VolumeSettings>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/VolumeScene.hpp>
+#include <osgVolume/VolumeSettings.hpp>
+#include <osgVolume/VolumeTile.hpp>
 
 namespace osgVolume
 {

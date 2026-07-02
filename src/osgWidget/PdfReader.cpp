@@ -2,7 +2,7 @@
  * PDF document viewer widget. Renders PDF pages as
  * textures within the widget system.
  */
-#include <osgWidget/PdfReader>
+#include <osgWidget/PdfReader.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/nodes/Geode.hpp>

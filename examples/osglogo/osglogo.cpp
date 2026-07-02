@@ -21,7 +21,7 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgUtil/mesh/Tessellator.hpp>
 #include <osgViewer/core/Viewer.hpp>

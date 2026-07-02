@@ -14,7 +14,7 @@
 #include <osg/nodes/Switch.hpp>
 #include <osg/nodes/Transform.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <ostream>
 #include <set>
 

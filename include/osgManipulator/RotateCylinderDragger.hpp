@@ -1,0 +1,83 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Rotation dragger using a cylinder interface. Rotates around
+ * a single axis for constrained angular manipulation.
+ */
+// osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
+
+#pragma once
+
+#include <osgManipulator/Dragger.hpp>
+#include <osgManipulator/Projector.hpp>
+
+namespace osgManipulator
+{
+
+    /**
+     * Dragger for performing 3D rotation on a cylinder.
+     */
+    class OSGMANIPULATOR_EXPORT RotateCylinderDragger : public Dragger
+    {
+        public:
+
+            RotateCylinderDragger();
+
+            META_OSGMANIPULATOR_Object( osgManipulator,
+                                        RotateCylinderDragger )
+
+                /**
+                 * Handle pick events on dragger and generate TranslateInLine commands.
+                 */
+                virtual bool handle( const PointerInfo&            pi,
+                                     const osgGA::GUIEventAdapter& ea,
+                                     osgGA::GUIActionAdapter&      us );
+
+            /** Setup default geometry for dragger. */
+            void
+            setupDefaultGeometry();
+
+            /** Set/Get color for dragger. */
+            inline void
+            setColor( const osg::vec4& color )
+            {
+                _color = color;
+                setMaterialColor( _color, *this );
+            }
+
+            inline const osg::vec4&
+            getColor() const
+            {
+                return _color;
+            }
+
+            /**
+             * Set/Get pick color for dragger. Pick color is color of the dragger
+             * when picked. It gives a visual feedback to show that the dragger has
+             * been picked.
+             */
+            inline void
+            setPickColor( const osg::vec4& color )
+            {
+                _pickColor = color;
+            }
+
+            inline const osg::vec4&
+            getPickColor() const
+            {
+                return _pickColor;
+            }
+
+        protected:
+
+            virtual ~RotateCylinderDragger();
+
+            osg::ref_ptr<CylinderPlaneProjector> _projector;
+
+            osg::dvec3                           _prevWorldProjPt;
+            osg::dmat4                           _startLocalToWorld, _startWorldToLocal;
+            osg::quat                            _prevRotation;
+
+            osg::vec4                            _color;
+            osg::vec4                            _pickColor;
+    };
+
+}

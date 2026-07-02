@@ -37,8 +37,8 @@
 #include <osgGA/manipulators/MultiTouchTrackballManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgPresentation/Cursor>
-#include <osgPresentation/SlideEventHandler>
+#include <osgPresentation/Cursor.hpp>
+#include <osgPresentation/SlideEventHandler.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>

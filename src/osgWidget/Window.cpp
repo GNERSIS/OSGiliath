@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <osgGA/events/GUIEventAdapter.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 namespace osgWidget
 {

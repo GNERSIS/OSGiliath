@@ -1,9 +1,9 @@
-#include <osgParticle/ModularEmitter>
+#include <osgParticle/ModularEmitter.hpp>
 
 #include <osg/core/Notify.hpp>
 #include <osg/maths/Matrix.hpp>
-#include <osgParticle/ConnectedParticleSystem>
-#include <osgParticle/Emitter>
+#include <osgParticle/ConnectedParticleSystem.hpp>
+#include <osgParticle/Emitter.hpp>
 
 osgParticle::ModularEmitter::ModularEmitter() :
     _numParticleToCreateMovementCompensationRatio( 0.0F ),

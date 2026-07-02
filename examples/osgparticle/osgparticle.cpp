@@ -7,16 +7,16 @@
 #include <osg/nodes/Group.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgParticle/AccelOperator>
-#include <osgParticle/FluidFrictionOperator>
-#include <osgParticle/ModularEmitter>
-#include <osgParticle/ModularProgram>
-#include <osgParticle/Particle>
-#include <osgParticle/ParticleSystem>
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/RadialShooter>
-#include <osgParticle/RandomRateCounter>
-#include <osgParticle/SectorPlacer>
+#include <osgParticle/AccelOperator.hpp>
+#include <osgParticle/FluidFrictionOperator.hpp>
+#include <osgParticle/ModularEmitter.hpp>
+#include <osgParticle/ModularProgram.hpp>
+#include <osgParticle/Particle.hpp>
+#include <osgParticle/ParticleSystem.hpp>
+#include <osgParticle/ParticleSystemUpdater.hpp>
+#include <osgParticle/RadialShooter.hpp>
+#include <osgParticle/RandomRateCounter.hpp>
+#include <osgParticle/SectorPlacer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

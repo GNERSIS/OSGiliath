@@ -33,17 +33,17 @@
 #include <osgGA/manipulators/FlightManipulator.hpp>
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgManipulator/TabBoxDragger>
-#include <osgManipulator/TabPlaneTrackballDragger>
-#include <osgManipulator/TrackballDragger>
+#include <osgManipulator/TabBoxDragger.hpp>
+#include <osgManipulator/TabPlaneTrackballDragger.hpp>
+#include <osgManipulator/TrackballDragger.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgVolume/MultipassTechnique>
-#include <osgVolume/RayTracedTechnique>
-#include <osgVolume/Volume>
-#include <osgVolume/VolumeScene>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/MultipassTechnique.hpp>
+#include <osgVolume/RayTracedTechnique.hpp>
+#include <osgVolume/Volume.hpp>
+#include <osgVolume/VolumeScene.hpp>
+#include <osgVolume/VolumeTile.hpp>
 
 enum ShadingModel
 {

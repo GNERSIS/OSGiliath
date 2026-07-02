@@ -3,12 +3,12 @@
  * Provides: _handle, _dc, _context, _instance, create, getHandle.
  */
 #if !defined( OSG_USE_EGL )
-    #include <osgViewer/api/Win32/PixelBufferWin32>
+    #include <osgViewer/api/Win32/PixelBufferWin32.hpp>
 
     #include <map>
     #include <osg/textures/TextureRectangle.hpp>
-    #include <osgViewer/api/Win32/GraphicsWindowWin32>
-    #include <osgViewer/api/Win32/Win32GWUtils>
+    #include <osgViewer/api/Win32/GraphicsWindowWin32.hpp>
+    #include <osgViewer/api/Win32/Win32GWUtils.hpp>
     #include <sstream>
     #include <vector>
 

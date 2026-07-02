@@ -7,7 +7,7 @@
 
 #include <map>
 #include <osg/core/ref_ptr.hpp>
-#include <osgText/Font>
+#include <osgText/Font.hpp>
 
 namespace osgText
 {

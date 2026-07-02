@@ -2,7 +2,7 @@
  * Library version query for osgManipulator.
  * Returns version strings matching the core osg library.
  */
-#include <osgManipulator/Version>
+#include <osgManipulator/Version.hpp>
 
 #include <osg/Version>
 

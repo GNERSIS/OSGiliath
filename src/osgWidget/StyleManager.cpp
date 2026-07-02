@@ -1,6 +1,6 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/StyleManager>
+#include <osgWidget/StyleManager.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <sstream>

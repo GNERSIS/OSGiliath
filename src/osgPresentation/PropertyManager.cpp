@@ -2,7 +2,7 @@
  * Named property store for presentation variables.
  * Manages key-value state for slide conditional logic.
  */
-#include <osgPresentation/PropertyManager>
+#include <osgPresentation/PropertyManager.hpp>
 
 #include <osg/core/io_utils.hpp>
 

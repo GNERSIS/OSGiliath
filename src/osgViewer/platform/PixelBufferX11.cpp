@@ -7,10 +7,10 @@
  * Burns.
  */
 
-#include <osgViewer/api/X11/PixelBufferX11>
+#include <osgViewer/api/X11/PixelBufferX11.hpp>
 
 #include <osg/rendering/GLExtensions.hpp>
-#include <osgViewer/api/X11/GraphicsWindowX11>
+#include <osgViewer/api/X11/GraphicsWindowX11.hpp>
 #include <unistd.h>
 #include <X11/Xlib.h>
 

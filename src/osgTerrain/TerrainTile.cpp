@@ -2,12 +2,12 @@
  * Single terrain tile with elevation and imagery layers.
  * Generates mesh geometry from heightfield data.
  */
-#include <osgTerrain/TerrainTile>
+#include <osgTerrain/TerrainTile.hpp>
 
 #include <osg/traversal/ClusterCullingCallback.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgTerrain/GeometryTechnique>
-#include <osgTerrain/Terrain>
+#include <osgTerrain/GeometryTechnique.hpp>
+#include <osgTerrain/Terrain.hpp>
 
 using namespace osg;
 using namespace osgTerrain;

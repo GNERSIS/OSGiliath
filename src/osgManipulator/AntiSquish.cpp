@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/AntiSquish>
+#include <osgManipulator/AntiSquish.hpp>
 
 #include <osg/maths/compat.hpp>
 

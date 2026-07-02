@@ -2,12 +2,12 @@
  * Popup overlay widget. Appears above the scene for
  * transient menus and tooltip displays.
  */
-#include <osgUI/Popup>
+#include <osgUI/Popup.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

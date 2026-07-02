@@ -1,12 +1,12 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * Utility functions for osgViewer: SingleScreen.
  */
-#include <osgViewer/config/AcrossAllScreens>
+#include <osgViewer/config/AcrossAllScreens.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
-#include <osgViewer/config/SingleScreen>
+#include <osgViewer/config/SingleScreen.hpp>
 #include <osgViewer/core/Renderer.hpp>
 #include <osgViewer/core/View.hpp>
 #include <osgViewer/platform/GraphicsWindow.hpp>

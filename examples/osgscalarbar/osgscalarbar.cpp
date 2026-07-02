@@ -16,9 +16,9 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgSim/ColorRange>
-#include <osgSim/ScalarBar>
-#include <osgSim/ScalarsToColors>
+#include <osgSim/ColorRange.hpp>
+#include <osgSim/ScalarBar.hpp>
+#include <osgSim/ScalarsToColors.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <sstream>

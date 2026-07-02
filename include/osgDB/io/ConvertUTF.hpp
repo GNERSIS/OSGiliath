@@ -5,7 +5,7 @@
 #pragma once
 
 #include <osg/Config>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <string>
 
 #if defined( __CYGWIN__ ) || defined( __ANDROID__ )

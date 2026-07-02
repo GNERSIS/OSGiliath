@@ -1,10 +1,10 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Input>
+#include <osgWidget/Input.hpp>
 
 #include <iterator>
 #include <osg/core/io_utils.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 #ifdef _WIN32
     #include <windows.h>

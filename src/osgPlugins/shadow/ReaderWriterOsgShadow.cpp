@@ -7,10 +7,10 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/registry/ReaderWriter.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgShadow/ShadowedScene>
-#include <osgShadow/ShadowMap>
-#include <osgShadow/ShadowTexture>
-#include <osgShadow/ViewDependentShadowMap>
+#include <osgShadow/ShadowedScene.hpp>
+#include <osgShadow/ShadowMap.hpp>
+#include <osgShadow/ShadowTexture.hpp>
+#include <osgShadow/ViewDependentShadowMap.hpp>
 #include <stdio.h>
 
 #define EXTENSION_NAME "osgShadow"

@@ -1,13 +1,13 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * AnimtkViewerGUI example application
  */
-#include "AnimtkViewer"
-#include "AnimtkViewerGUI"
+#include "AnimtkViewer.hpp"
+#include "AnimtkViewerGUI.hpp"
 
 #include <osg/maths/compat.hpp>
 #include <osg/Version>
 #include <osgAnimation/core/EaseMotion.hpp>
-#include <osgWidget/WindowManager>
+#include <osgWidget/WindowManager.hpp>
 
 const std::string IMAGE_PATH = "osgWidget/";
 

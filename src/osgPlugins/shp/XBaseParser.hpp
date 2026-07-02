@@ -3,7 +3,7 @@
 #include "ESRIType.hpp"
 
 #include <osg/core/ref_ptr.hpp>
-#include <osgSim/ShapeAttribute>
+#include <osgSim/ShapeAttribute.hpp>
 #include <string>
 #include <vector>
 

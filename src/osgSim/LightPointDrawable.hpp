@@ -14,7 +14,7 @@
 #include <osg/state/ColorMask.hpp>
 #include <osg/state/Depth.hpp>
 #include <osg/state/Point.hpp>
-#include <osgSim/Export>
+#include <osgSim/Export.hpp>
 #include <vector>
 
 namespace osgSim

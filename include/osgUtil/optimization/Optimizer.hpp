@@ -9,7 +9,7 @@
 #include <osg/nodes/Transform.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 #include <set>
 
 namespace osgUtil

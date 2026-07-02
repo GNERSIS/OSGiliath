@@ -1,4 +1,4 @@
-#include <osgParticle/ParticleProcessor>
+#include <osgParticle/ParticleProcessor.hpp>
 
 #include <osg/core/CopyOp.hpp>
 #include <osg/core/Notify.hpp>

@@ -6,7 +6,7 @@
     #pragma warning( disable : 4'786 )
 #endif
 
-#include <osgSim/ImpostorSprite>
+#include <osgSim/ImpostorSprite.hpp>
 
 #include <float.h>
 #include <math.h>

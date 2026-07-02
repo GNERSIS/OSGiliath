@@ -2,7 +2,7 @@
  * Named shape attribute value container. Stores typed
  * attributes attached to geometry for simulation databases.
  */
-#include <osgSim/ShapeAttribute>
+#include <osgSim/ShapeAttribute.hpp>
 
 #include <memory.h>
 #include <stdlib.h>

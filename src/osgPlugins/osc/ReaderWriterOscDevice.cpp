@@ -46,7 +46,7 @@
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgPresentation/PropertyManager>
+#include <osgPresentation/PropertyManager.hpp>
 
 class ReaderWriterOsc : public osgDB::ReaderWriter
 {

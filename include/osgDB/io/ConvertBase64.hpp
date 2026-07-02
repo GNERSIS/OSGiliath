@@ -10,7 +10,7 @@
 #pragma once
 
 #include <iostream>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <string>
 #include <vector>
 

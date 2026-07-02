@@ -8,7 +8,7 @@
 #include <osg/maths/compat.hpp>
 #include <osg/nodes/Group.hpp>
 #include <osg/textures/TransferFunction.hpp>
-#include <osgUI/Widget>
+#include <osgUI/Widget.hpp>
 
 namespace osgUI
 {

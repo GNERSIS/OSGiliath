@@ -2,14 +2,14 @@
  * Tabbed container widget. Manages multiple pages with
  * a tab bar for switching between content panels.
  */
-#include <osgUI/TabWidget>
+#include <osgUI/TabWidget.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/core/ValueObject.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

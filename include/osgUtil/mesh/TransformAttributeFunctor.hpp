@@ -6,7 +6,7 @@
 
 #include <osg/core/Notify.hpp>
 #include <osg/geometry/Drawable.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

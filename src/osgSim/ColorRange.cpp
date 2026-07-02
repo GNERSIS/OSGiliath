@@ -1,4 +1,4 @@
-#include <osgSim/ColorRange>
+#include <osgSim/ColorRange.hpp>
 
 using namespace osgSim;
 

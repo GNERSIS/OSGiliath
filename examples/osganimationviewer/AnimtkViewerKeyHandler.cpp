@@ -1,7 +1,7 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
  * AnimtkViewerKeyHandler example application
  */
-#include "AnimtkViewerKeyHandler"
+#include "AnimtkViewerKeyHandler.hpp"
 
 AnimtkKeyEventHandler::AnimtkKeyEventHandler()
 {

@@ -10,7 +10,7 @@ SET(LIB_NAME osgUtil)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
     # top-level
-    ${HEADER_PATH}/Export
+    ${HEADER_PATH}/Export.hpp
 
     # culling
     ${HEADER_PATH}/culling/CullVisitor.hpp

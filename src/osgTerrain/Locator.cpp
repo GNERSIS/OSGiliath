@@ -2,7 +2,7 @@
  * Geographic coordinate locator. Transforms between local tile
  * coordinates and geographic (lat/lon) coordinates.
  */
-#include <osgTerrain/Locator>
+#include <osgTerrain/Locator.hpp>
 
 #include <list>
 #include <osg/core/Notify.hpp>

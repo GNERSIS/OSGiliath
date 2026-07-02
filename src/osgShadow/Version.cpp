@@ -2,7 +2,7 @@
  * Library version query for osgShadow.
  * Returns version strings matching the core osg library.
  */
-#include <osgShadow/Version>
+#include <osgShadow/Version.hpp>
 
 #include <osg/Version>
 

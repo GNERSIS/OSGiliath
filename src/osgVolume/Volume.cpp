@@ -2,7 +2,7 @@
  * Root node for volume rendering. Manages VolumeTiles
  * and coordinates volume data display.
  */
-#include <osgVolume/Volume>
+#include <osgVolume/Volume.hpp>
 
 using namespace osgVolume;
 

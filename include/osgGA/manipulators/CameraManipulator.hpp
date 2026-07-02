@@ -10,7 +10,7 @@
 #include <osgGA/events/GUIActionAdapter.hpp>
 #include <osgGA/events/GUIEventAdapter.hpp>
 #include <osgGA/events/GUIEventHandler.hpp>
-#include <osgGA/Export>
+#include <osgGA/Export.hpp>
 #include <osgUtil/culling/SceneView.hpp>
 
 namespace osgGA

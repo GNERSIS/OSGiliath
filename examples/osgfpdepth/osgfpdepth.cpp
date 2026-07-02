@@ -20,7 +20,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgGA/events/GUIEventHandler.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Renderer.hpp>
 #include <osgViewer/core/Viewer.hpp>

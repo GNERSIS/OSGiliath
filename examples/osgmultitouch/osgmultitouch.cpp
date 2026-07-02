@@ -16,7 +16,7 @@
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/manipulators/MultiTouchTrackballManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/CompositeViewer.hpp>
 #include <osgViewer/core/Viewer.hpp>

@@ -4,7 +4,7 @@
  */
 // osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
 
-#include <osgManipulator/TranslatePlaneDragger>
+#include <osgManipulator/TranslatePlaneDragger.hpp>
 
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/ShapeDrawable.hpp>

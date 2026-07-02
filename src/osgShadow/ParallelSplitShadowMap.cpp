@@ -20,7 +20,7 @@
 /* #####################################################################################################
  */
 
-#include <osgShadow/ParallelSplitShadowMap>
+#include <osgShadow/ParallelSplitShadowMap.hpp>
 
 #include <iostream>
 #include <osg/core/io_utils.hpp>
@@ -35,7 +35,7 @@
 #include <osg/textures/Texture1D.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 #include <sstream>
 using namespace osgShadow;
 

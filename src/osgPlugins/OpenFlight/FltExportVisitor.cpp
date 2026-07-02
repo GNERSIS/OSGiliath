@@ -38,10 +38,10 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgSim/DOFTransform>
-#include <osgSim/LightPointNode>
-#include <osgSim/MultiSwitch>
-#include <osgSim/ObjectRecordData>
+#include <osgSim/DOFTransform.hpp>
+#include <osgSim/LightPointNode.hpp>
+#include <osgSim/MultiSwitch.hpp>
+#include <osgSim/ObjectRecordData.hpp>
 
 #ifdef _MSC_VER
     // Disable this warning. It's OK for us to use 'this' in initializer list,

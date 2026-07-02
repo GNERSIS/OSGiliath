@@ -15,7 +15,7 @@
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/registry/Registry.hpp>
-#include <osgSim/LightPointNode>
+#include <osgSim/LightPointNode.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 

@@ -2,7 +2,7 @@
  * Single light point definition with position, color, intensity,
  * and sector parameters for directional visibility.
  */
-#include <osgSim/LightPoint>
+#include <osgSim/LightPoint.hpp>
 
 using namespace osgSim;
 

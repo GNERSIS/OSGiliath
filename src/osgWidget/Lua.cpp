@@ -1,10 +1,10 @@
 // -*-c++-*- osgWidget - Code by: Jeremy Moles (cubicool) 2007-2008
 
-#include <osgWidget/Lua>
+#include <osgWidget/Lua.hpp>
 
 #include <osgDB/io/FileUtils.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 // If you want to build with LUA, include it--otherwise, typedef some of the data types
 // so that we don't pollute our code too much with conditional includes.

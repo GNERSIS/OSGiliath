@@ -1,8 +1,8 @@
-#include <osgFX/SpecularHighlights>
+#include <osgFX/SpecularHighlights.hpp>
 
 #include <osg/core/Inherit.hpp>
 #include <osg/textures/TextureCubeMap.hpp>
-#include <osgFX/Registry>
+#include <osgFX/Registry.hpp>
 #include <osgUtil/utils/HighlightMapGenerator.hpp>
 
 using namespace osgFX;

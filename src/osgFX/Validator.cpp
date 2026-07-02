@@ -1,7 +1,7 @@
-#include <osgFX/Validator>
+#include <osgFX/Validator.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgFX/Effect>
+#include <osgFX/Effect.hpp>
 
 using namespace osgFX;
 

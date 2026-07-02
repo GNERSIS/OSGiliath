@@ -17,25 +17,25 @@ ENDIF()
 SET(LIB_NAME osgShadow)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/ShadowMap
-    ${HEADER_PATH}/ShadowTechnique
-    ${HEADER_PATH}/ShadowTexture
-    ${HEADER_PATH}/ShadowedScene
-    ${HEADER_PATH}/ShadowSettings
-    ${HEADER_PATH}/SoftShadowMap
-    ${HEADER_PATH}/ParallelSplitShadowMap
-    ${HEADER_PATH}/Version
-    ${HEADER_PATH}/ConvexPolyhedron
-    ${HEADER_PATH}/DebugShadowMap
-    ${HEADER_PATH}/LightSpacePerspectiveShadowMap
-    ${HEADER_PATH}/MinimalCullBoundsShadowMap
-    ${HEADER_PATH}/MinimalDrawBoundsShadowMap
-    ${HEADER_PATH}/MinimalShadowMap
-    ${HEADER_PATH}/ProjectionShadowMap
-    ${HEADER_PATH}/StandardShadowMap
-    ${HEADER_PATH}/ViewDependentShadowTechnique
-    ${HEADER_PATH}/ViewDependentShadowMap
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/ShadowMap.hpp
+    ${HEADER_PATH}/ShadowTechnique.hpp
+    ${HEADER_PATH}/ShadowTexture.hpp
+    ${HEADER_PATH}/ShadowedScene.hpp
+    ${HEADER_PATH}/ShadowSettings.hpp
+    ${HEADER_PATH}/SoftShadowMap.hpp
+    ${HEADER_PATH}/ParallelSplitShadowMap.hpp
+    ${HEADER_PATH}/Version.hpp
+    ${HEADER_PATH}/ConvexPolyhedron.hpp
+    ${HEADER_PATH}/DebugShadowMap.hpp
+    ${HEADER_PATH}/LightSpacePerspectiveShadowMap.hpp
+    ${HEADER_PATH}/MinimalCullBoundsShadowMap.hpp
+    ${HEADER_PATH}/MinimalDrawBoundsShadowMap.hpp
+    ${HEADER_PATH}/MinimalShadowMap.hpp
+    ${HEADER_PATH}/ProjectionShadowMap.hpp
+    ${HEADER_PATH}/StandardShadowMap.hpp
+    ${HEADER_PATH}/ViewDependentShadowTechnique.hpp
+    ${HEADER_PATH}/ViewDependentShadowMap.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

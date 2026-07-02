@@ -2,7 +2,7 @@
  * Library version query for osgFX.
  * Returns version strings matching the core osg library.
  */
-#include <osgFX/Version>
+#include <osgFX/Version.hpp>
 
 #include <osg/Version>
 

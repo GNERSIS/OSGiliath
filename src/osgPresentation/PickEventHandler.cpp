@@ -2,13 +2,13 @@
  * Pick (click) event handler for interactive slide elements.
  * Routes click events to embedded URLs, animations, or scripts.
  */
-#include <osgPresentation/PickEventHandler>
+#include <osgPresentation/PickEventHandler.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/core/os_utils.hpp>
 #include <osgDB/io/FileUtils.hpp>
-#include <osgPresentation/SlideEventHandler>
+#include <osgPresentation/SlideEventHandler.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <stdlib.h>
 

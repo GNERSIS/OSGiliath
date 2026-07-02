@@ -1,0 +1,136 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Anisotropic lighting effect using a lookup texture.
+ * Simulates brushed-metal and hair-like anisotropic highlights.
+ */
+// osgFX - Copyright (C) 2003 Marco Jez
+
+#pragma once
+
+#include <osg/core/ref_ptr.hpp>
+#include <osg/textures/Texture2D.hpp>
+#include <osgFX/Effect.hpp>
+#include <osgFX/Export.hpp>
+
+namespace osgFX
+{
+
+    /**
+     This single-pass effect implements a sort of anisotropic
+     lighting that replaces the standard OpenGL lighting model.
+     The final color of vertices is not computed directly, it is
+     the result of a texture lookup on a user-supplied lighting
+     image map. A vertex program is used to compute the s and t
+     texture coordinates as follows: s = (N dot H) ; t = (N dot L)
+     where N is the vertex normal, L is the light-to-vertex vector,
+     H is the half-way vector. This is a good example of how you
+     can use the State::getInitialViewMatrix() method to retrieve
+     the view matrix and perform view-dependant effects without
+     fakes of any kind.
+     This effect requires the ARB_vertex_program extension.
+     */
+    class OSGFX_EXPORT AnisotropicLighting
+        : public osg::Inherit<Effect, AnisotropicLighting>
+    {
+        public:
+
+            AnisotropicLighting();
+            AnisotropicLighting( const AnisotropicLighting& copy,
+                                 const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            META_Effect(
+                osgFX,
+                AnisotropicLighting,
+
+                "Anisotropic Lighting",
+
+                "This single-pass effect implements a sort of anisotropic "
+                "lighting that replaces the standard OpenGL lighting model.\n"
+                "The final color of vertices is not computed directly, it is "
+                "the result of a texture lookup on a user-supplied lighting "
+                "image map. A vertex program is used to compute the s and t "
+                "texture coordinates as follows: s = (N dot H) ; t = (N dot L) "
+                "where N is the vertex normal, L is the light-to-vertex vector, "
+                "H is the half-way vector. This is a good example of how you "
+                "can use the State::getInitialViewMatrix() method to retrieve "
+                "the view matrix and perform view-dependant effects without "
+                "fakes of any kind.\n"
+                "This effect requires the ARB_vertex_program extension.",
+
+                "Marco Jez"
+            );
+
+            /** get the lighting map */
+            inline osg::Image*
+            getLightingMap();
+
+            /** get the const lighting map */
+            inline const osg::Image*
+            getLightingMap() const;
+
+            /** set the lighting map */
+            inline void
+            setLightingMap( osg::Image* image );
+
+            /** get the OpenGL light number */
+            inline int
+            getLightNumber() const;
+
+            /** set the OpenGL light number that will be used in lighting computations */
+            inline void
+            setLightNumber( int n );
+
+        protected:
+
+            virtual ~AnisotropicLighting()
+            {
+            }
+
+            AnisotropicLighting&
+            operator=( const AnisotropicLighting& )
+            {
+                return *this;
+            }
+
+            bool
+            define_techniques();
+
+        private:
+
+            int                          _lightnum;
+            osg::ref_ptr<osg::Texture2D> _texture;
+    };
+
+    // INLINE METHODS
+
+    inline osg::Image*
+    AnisotropicLighting::getLightingMap()
+    {
+        return _texture->getImage();
+    }
+
+    inline const osg::Image*
+    AnisotropicLighting::getLightingMap() const
+    {
+        return _texture->getImage();
+    }
+
+    inline void
+    AnisotropicLighting::setLightingMap( osg::Image* image )
+    {
+        _texture->setImage( image );
+    }
+
+    inline int
+    AnisotropicLighting::getLightNumber() const
+    {
+        return _lightnum;
+    }
+
+    inline void
+    AnisotropicLighting::setLightNumber( int n )
+    {
+        _lightnum = n;
+        dirtyTechniques();
+    }
+
+}

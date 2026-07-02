@@ -2,7 +2,7 @@
  * Point-light rendering node for airport/runway lights.
  * Renders large numbers of attenuated light points efficiently.
  */
-#include <osgSim/LightPointNode>
+#include <osgSim/LightPointNode.hpp>
 
 #include "LightPointDrawable.hpp"
 #include "LightPointSpriteDrawable.hpp"
@@ -12,7 +12,7 @@
 #include <osg/maths/Matrix.hpp>
 #include <osg/state/BlendFunc.hpp>
 #include <osg/state/Material.hpp>
-#include <osgSim/LightPointSystem>
+#include <osgSim/LightPointSystem.hpp>
 #include <osgUtil/culling/CullVisitor.hpp>
 #include <typeinfo>
 

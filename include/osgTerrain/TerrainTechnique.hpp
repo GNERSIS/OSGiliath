@@ -1,0 +1,137 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Abstract rendering technique for terrain tiles.
+ * Defines the interface for mesh generation from elevation data.
+ */
+#pragma once
+
+#include <osg/core/Inherit.hpp>
+#include <osg/core/Object.hpp>
+#include <osgTerrain/Export.hpp>
+#include <osgUtil/culling/CullVisitor.hpp>
+#include <osgUtil/culling/UpdateVisitor.hpp>
+
+namespace osgTerrain
+{
+
+    class TerrainTile;
+
+    class OSGTERRAIN_EXPORT TerrainNeighbours
+    {
+        public:
+
+            TerrainNeighbours();
+            ~TerrainNeighbours();
+
+            void
+            clear();
+            void
+            addNeighbour( TerrainTile* tile );
+            void
+            removeNeighbour( TerrainTile* tile );
+            bool
+            containsNeighbour( TerrainTile* tile ) const;
+
+        protected:
+
+            TerrainNeighbours( const TerrainNeighbours& /*tn*/ )
+            {
+            }
+
+            TerrainNeighbours&
+            operator=( const TerrainNeighbours& /*rhs*/ )
+            {
+                return *this;
+            }
+
+            typedef std::set<TerrainTile*> Neighbours;
+
+            mutable std::mutex             _neighboursMutex;
+            Neighbours                     _neighbours;
+    };
+
+    class OSGTERRAIN_EXPORT TerrainTechnique
+        : public osg::Inherit<osg::Object, TerrainTechnique>,
+          public osg::Observer
+    {
+        public:
+
+            TerrainTechnique();
+
+            /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+            TerrainTechnique( const TerrainTechnique&,
+                              const osg::CopyOp& copyop = osg::CopyOp::SHALLOW_COPY );
+
+            OSG_REGISTER_TYPE( osgTerrain,
+                               TerrainTechnique )
+
+            virtual void
+            setTerrainTile( TerrainTile* tile );
+
+            TerrainTile*
+            getTerrainTile()
+            {
+                return _terrainTile;
+            }
+
+            const TerrainTile*
+            getTerrainTile() const
+            {
+                return _terrainTile;
+            }
+
+            virtual void
+            init( int  dirtyMask,
+                  bool assumeMultiThreaded );
+
+            virtual void
+            update( osgUtil::UpdateVisitor* nv );
+
+            virtual void
+            cull( osgUtil::CullVisitor* nv );
+
+            /** Clean scene graph from any terrain technique specific nodes.*/
+            virtual void
+            cleanSceneGraph();
+
+            /** Traverse the terrain subgraph.*/
+            virtual void
+            traverse( osg::NodeVisitor& nv );
+
+            /** If State is non-zero, this function releases any associated OpenGL
+             * objects for the specified graphics context. Otherwise, releases OpenGL
+             * objects for all graphics contexts. */
+            virtual void
+            releaseGLObjects( osg::State* = 0 ) const
+            {
+            }
+
+            virtual void
+            addNeighbour( TerrainTile* tile )
+            {
+                _neighbours.addNeighbour( tile );
+            }
+
+            virtual void
+            removeNeighbour( TerrainTile* tile )
+            {
+                _neighbours.removeNeighbour( tile );
+            }
+
+            virtual bool
+            containsNeighbour( TerrainTile* tile )
+            {
+                return _neighbours.containsNeighbour( tile );
+            }
+
+        protected:
+
+            virtual ~TerrainTechnique();
+
+            friend class osgTerrain::TerrainTile;
+
+            TerrainTile*      _terrainTile;
+
+            TerrainNeighbours _neighbours;
+    };
+
+}

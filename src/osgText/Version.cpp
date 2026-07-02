@@ -2,7 +2,7 @@
  * Library version query for osgText.
  * Returns version strings matching the core osg library.
  */
-#include <osgText/Version>
+#include <osgText/Version.hpp>
 
 #include <osg/Version>
 

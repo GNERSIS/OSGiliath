@@ -3,7 +3,7 @@
 #include <osg/nodes/Group.hpp>
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/textures/Texture2D.hpp>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ShadowedScene.hpp>
 
 struct Pipeline
 {

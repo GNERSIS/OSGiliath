@@ -2,7 +2,7 @@
  * Builds slide show presentations from script descriptions.
  * Creates scene graph slides with text, images, models, and transitions.
  */
-#include <osgPresentation/SlideShowConstructor>
+#include <osgPresentation/SlideShowConstructor.hpp>
 
 #include <algorithm>
 #include <osg/core/Inherit.hpp>
@@ -26,22 +26,22 @@
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
 #include <osgDB/serialization/Input.hpp>
-#include <osgFX/SpecularHighlights>
-#include <osgManipulator/TabBoxDragger>
-#include <osgManipulator/TabBoxTrackballDragger>
-#include <osgManipulator/TrackballDragger>
-#include <osgPresentation/AnimationMaterial>
-#include <osgPresentation/KeyEventHandler>
-#include <osgPresentation/PickEventHandler>
-#include <osgText/Text>
-#include <osgUI/Widget>
+#include <osgFX/SpecularHighlights.hpp>
+#include <osgManipulator/TabBoxDragger.hpp>
+#include <osgManipulator/TabBoxTrackballDragger.hpp>
+#include <osgManipulator/TrackballDragger.hpp>
+#include <osgPresentation/AnimationMaterial.hpp>
+#include <osgPresentation/KeyEventHandler.hpp>
+#include <osgPresentation/PickEventHandler.hpp>
+#include <osgText/Text.hpp>
+#include <osgUI/Widget.hpp>
 #include <osgUtil/utils/TransformCallback.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgVolume/MultipassTechnique>
-#include <osgVolume/RayTracedTechnique>
-#include <osgVolume/Volume>
-#include <osgVolume/VolumeScene>
-#include <osgWidget/PdfReader>
+#include <osgVolume/MultipassTechnique.hpp>
+#include <osgVolume/RayTracedTechnique.hpp>
+#include <osgVolume/Volume.hpp>
+#include <osgVolume/VolumeScene.hpp>
+#include <osgWidget/PdfReader.hpp>
 #include <sstream>
 
 using namespace osgPresentation;

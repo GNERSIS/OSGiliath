@@ -1,7 +1,7 @@
 #pragma once
 
 #include <osg/nodes/Node.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 // Callback for handling the SoShuttle node
 class ShuttleCallback : public osg::NodeCallback

@@ -2,7 +2,7 @@
  * Extruded 3D text drawable with depth. Renders text as solid
  * geometry with front face, back face, and side walls.
  */
-#include <osgText/Text3D>
+#include <osgText/Text3D.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/maths/compat.hpp>

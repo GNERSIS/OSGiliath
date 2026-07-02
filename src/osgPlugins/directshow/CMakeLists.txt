@@ -57,7 +57,7 @@ SET(TARGET_SRC
 )
 
 SET(TARGET_H
-  DirectShowTexture
+  DirectShowTexture.hpp
 )
 SET(TARGET_LIBRARIES_VARS DIRECTSHOW_LIBRARY )
 

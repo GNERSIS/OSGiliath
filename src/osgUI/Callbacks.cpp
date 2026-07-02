@@ -2,13 +2,13 @@
  * Callback interfaces for UI widget events.
  * Provides slots for pressed, released, and value-changed.
  */
-#include <osgUI/Callbacks>
+#include <osgUI/Callbacks.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/ValueObject.hpp>
 #include <osg/nodes/MatrixTransform.hpp>
-#include <osgUI/Dialog>
-#include <osgUI/Widget>
+#include <osgUI/Dialog.hpp>
+#include <osgUI/Widget.hpp>
 
 using namespace osgUI;
 

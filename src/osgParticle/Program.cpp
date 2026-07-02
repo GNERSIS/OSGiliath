@@ -1,7 +1,7 @@
-#include <osgParticle/Program>
+#include <osgParticle/Program.hpp>
 
 #include <osg/core/CopyOp.hpp>
-#include <osgParticle/ParticleProcessor>
+#include <osgParticle/ParticleProcessor.hpp>
 
 osgParticle::Program::Program() :
     ParticleProcessor()

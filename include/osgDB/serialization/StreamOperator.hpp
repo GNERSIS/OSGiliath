@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <osg/core/Referenced.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <osgDB/serialization/DataTypes.hpp>
 #include <sstream>
 

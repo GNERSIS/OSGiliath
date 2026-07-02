@@ -5,7 +5,7 @@
 #pragma once
 
 #include <osg/nodes/View.hpp>
-#include <osgGA/Export>
+#include <osgGA/Export.hpp>
 #include <osgUtil/intersection/LineSegmentIntersector.hpp>
 
 namespace osgGA

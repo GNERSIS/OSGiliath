@@ -1,4 +1,4 @@
-#include <osgParticle/ParticleSystem>
+#include <osgParticle/ParticleSystem.hpp>
 
 #include <osg/core/CopyOp.hpp>
 #include <osg/core/io_utils.hpp>

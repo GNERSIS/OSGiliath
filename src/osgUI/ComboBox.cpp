@@ -2,14 +2,14 @@
  * Drop-down selection widget. Presents a list of items
  * with single-selection and change notification.
  */
-#include <osgUI/ComboBox>
+#include <osgUI/ComboBox.hpp>
 
 #include <osg/core/io_utils.hpp>
 #include <osg/core/Notify.hpp>
 #include <osg/core/ValueObject.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

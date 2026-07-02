@@ -7,9 +7,9 @@
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/ViewerEventHandlers>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/ViewerEventHandlers.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 const unsigned int MASK_2D = 0XF0'00'00'00;
 const unsigned int MASK_3D = 0X0F'00'00'00;

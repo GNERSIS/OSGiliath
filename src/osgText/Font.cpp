@@ -2,7 +2,7 @@
  * Font resource managing glyph textures and metrics via FreeType.
  * Caches rendered glyphs in texture atlases for efficient reuse.
  */
-#include <osgText/Font>
+#include <osgText/Font.hpp>
 
 #include <mutex>
 #include <osg/core/ApplicationUsage.hpp>
@@ -12,7 +12,7 @@
 #include <osgDB/io/FileNameUtils.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <string.h>
 
 #ifdef WITH_FONTCONFIG

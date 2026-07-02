@@ -20,10 +20,10 @@
 #include <osg/nodes/ProxyNode.hpp>
 #include <osg/nodes/Sequence.hpp>
 #include <osg/nodes/Switch.hpp>
-#include <osgSim/DOFTransform>
-#include <osgSim/LightPointNode>
-#include <osgSim/MultiSwitch>
-#include <osgSim/ObjectRecordData>
+#include <osgSim/DOFTransform.hpp>
+#include <osgSim/LightPointNode.hpp>
+#include <osgSim/MultiSwitch.hpp>
+#include <osgSim/ObjectRecordData.hpp>
 #include <stdlib.h>
 
 // FIXME: This header was copied verbatim from the importer, with the only change

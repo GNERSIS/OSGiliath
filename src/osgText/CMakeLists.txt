@@ -11,18 +11,18 @@ ENDIF()
 SET(LIB_NAME osgText)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/Font
-    ${HEADER_PATH}/Font3D
-    ${HEADER_PATH}/FadeText
-    ${HEADER_PATH}/Glyph
-    ${HEADER_PATH}/KerningType
-    ${HEADER_PATH}/String
-    ${HEADER_PATH}/Style
-    ${HEADER_PATH}/TextBase
-    ${HEADER_PATH}/Text
-    ${HEADER_PATH}/Text3D
-    ${HEADER_PATH}/Version
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/Font.hpp
+    ${HEADER_PATH}/Font3D.hpp
+    ${HEADER_PATH}/FadeText.hpp
+    ${HEADER_PATH}/Glyph.hpp
+    ${HEADER_PATH}/KerningType.hpp
+    ${HEADER_PATH}/String.hpp
+    ${HEADER_PATH}/Style.hpp
+    ${HEADER_PATH}/TextBase.hpp
+    ${HEADER_PATH}/Text.hpp
+    ${HEADER_PATH}/Text3D.hpp
+    ${HEADER_PATH}/Version.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

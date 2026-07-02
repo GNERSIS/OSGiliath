@@ -1,0 +1,155 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Geographic position (latitude, longitude) container.
+ * Simple struct for geo-referencing scene elements.
+ */
+#pragma once
+
+#include <osg/core/Referenced.hpp>
+#include <osg/maths/Math.hpp>
+#include <ostream>
+
+namespace osgSim
+{
+
+    /** Stores a double precision geographic location, latitude and longitude.
+        Derived from Referenced so it can be used as an osg::Object userData.
+    */
+
+    class GeographicLocation : public osg::Referenced
+    {
+        public:
+
+            GeographicLocation()
+            {
+                _v[0] = 0.;
+                _v[1] = 0.;
+            }
+
+            GeographicLocation( double lat,
+                                double lon )
+            {
+                _v[0] = lat;
+                _v[1] = lon;
+            }
+
+            inline bool
+            operator==( const GeographicLocation& v ) const
+            {
+                return _v[0] == v._v[0] && _v[1] == v._v[1];
+            }
+
+            inline bool
+            operator!=( const GeographicLocation& v ) const
+            {
+                return _v[0] != v._v[0] || _v[1] != v._v[1];
+            }
+
+            inline bool
+            operator<( const GeographicLocation& v ) const
+            {
+                if( _v[0] < v._v[0] )
+                {
+                    return true;
+                }
+                else if( _v[0] > v._v[0] )
+                {
+                    return false;
+                }
+                else if( _v[1] < v._v[1] )
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            inline double*
+            ptr()
+            {
+                return _v;
+            }
+
+            inline const double*
+            ptr() const
+            {
+                return _v;
+            }
+
+            inline void
+            set( double lat,
+                 double lon )
+            {
+                _v[0] = lat;
+                _v[1] = lon;
+            }
+
+            inline double&
+            latitude()
+            {
+                return _v[0];
+            }
+
+            inline double&
+            longitude()
+            {
+                return _v[1];
+            }
+
+            inline double
+            latitude() const
+            {
+                return _v[0];
+            }
+
+            inline double
+            longitude() const
+            {
+                return _v[1];
+            }
+
+            inline bool
+            valid() const
+            {
+                return !isNaN();
+            }
+
+            inline bool
+            isNaN() const
+            {
+                return osg::isNaN( _v[0] ) || osg::isNaN( _v[1] );
+            }
+
+            /// binary vector add
+            inline const GeographicLocation
+            operator+( const GeographicLocation& rhs ) const
+            {
+                return GeographicLocation( _v[0] + rhs._v[0], _v[1] + rhs._v[1] );
+            }
+
+            /// binary vector subtract
+            inline const GeographicLocation
+            operator-( const GeographicLocation& rhs ) const
+            {
+                return GeographicLocation( _v[0] - rhs._v[0], _v[1] - rhs._v[1] );
+            }
+
+            friend inline std::ostream&
+            operator<<( std::ostream&             output,
+                        const GeographicLocation& loc )
+            {
+                output << loc._v[0] << " " << loc._v[1];
+                return output;    // to enable cascading
+            }
+
+        private:
+
+            // Note the convention is to store lat in _v[0] and lon in _v[1].
+            // This is contrary to typical X-Y convention. Who decided lat should come
+            //   before lon anyway? I'd like a word with him...
+            double _v[2];
+
+    };    // end of class GeographicLocation
+
+}    // end of namespace osgSim

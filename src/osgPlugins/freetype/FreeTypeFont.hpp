@@ -6,7 +6,7 @@
 #pragma once
 
 #include <ft2build.h>
-#include <osgText/Font>
+#include <osgText/Font.hpp>
 #include FT_FREETYPE_H
 
 class FreeTypeFont : public osgText::Font::FontImplementation

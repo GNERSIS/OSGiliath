@@ -4,10 +4,10 @@
 #include <iostream>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Label>
-#include <osgWidget/Util>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Label.hpp>
+#include <osgWidget/Util.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 // For now this is just an example, but osgWidget::Menu will later be it's own Window.
 // I just wanted to get this out there so that people could see it was possible.

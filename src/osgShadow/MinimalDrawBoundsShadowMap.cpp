@@ -2,7 +2,7 @@
  * Shadow map using draw-pass bounds for frustum optimization.
  * Tighter shadow projection from GPU-side draw results.
  */
-#include <osgShadow/MinimalDrawBoundsShadowMap>
+#include <osgShadow/MinimalDrawBoundsShadowMap.hpp>
 
 #include <iostream>
 #include <osg/images/Image.hpp>
@@ -12,8 +12,8 @@
 #include <osg/state/BlendEquation.hpp>
 #include <osg/state/Depth.hpp>
 #include <osg/state/PolygonOffset.hpp>
-#include <osgShadow/ConvexPolyhedron>
-#include <osgShadow/ShadowedScene>
+#include <osgShadow/ConvexPolyhedron.hpp>
+#include <osgShadow/ShadowedScene.hpp>
 #include <osgUtil/culling/RenderLeaf.hpp>
 #include <string.h>
 

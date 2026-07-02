@@ -15,11 +15,11 @@
 #include <osg/state/BlendFunc.hpp>
 #include <osgDB/io/ReadFile.hpp>
 #include <osgDB/io/WriteFile.hpp>
-#include <osgFX/Effect>
-#include <osgFX/Registry>
+#include <osgFX/Effect.hpp>
+#include <osgFX/Registry.hpp>
 #include <osgGA/events/GUIActionAdapter.hpp>
 #include <osgGA/events/GUIEventAdapter.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <string>

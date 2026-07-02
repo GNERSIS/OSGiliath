@@ -3,8 +3,8 @@
  * horizontal and vertical alignment within a container.
  */
 #include <osg/nodes/Geode.hpp>
-#include <osgText/Text>
-#include <osgUI/Style>
+#include <osgText/Text.hpp>
+#include <osgUI/Style.hpp>
 
 using namespace osgUI;
 

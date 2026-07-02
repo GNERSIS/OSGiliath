@@ -8,12 +8,12 @@
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
-#include <osgWidget/Box>
-#include <osgWidget/Canvas>
-#include <osgWidget/Label>
-#include <osgWidget/Util>
-#include <osgWidget/ViewerEventHandlers>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Box.hpp>
+#include <osgWidget/Canvas.hpp>
+#include <osgWidget/Label.hpp>
+#include <osgWidget/Util.hpp>
+#include <osgWidget/ViewerEventHandlers.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 const unsigned int MASK_2D = 0XF0'00'00'00;
 

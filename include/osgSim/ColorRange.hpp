@@ -1,0 +1,64 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Color range mapping for scalar data visualization.
+ * Extends ScalarsToColors with named color scales.
+ */
+#pragma once
+
+#include <osgSim/Export.hpp>
+#include <osgSim/ScalarsToColors.hpp>
+#include <vector>
+
+namespace osgSim
+{
+
+    /**
+    ColorRange is a ScalarsToColors object to define a color spectrum
+    for a scalar range. An optional vector of colors may be passed in at
+    construction time. The range of colors will be mapped to the scalar range,
+    and interpolation between the colors will be performed as necessary.
+    By default, the color range will run Red-Yellow-Green-Cyan-Blue.
+    */
+    class OSGSIM_EXPORT ColorRange : public ScalarsToColors
+    {
+        public:
+
+            /** Constructor for a ColorRange with a default list of colors set to
+            Red-Yellow-Green-Blue-Cyan
+            @param min      minimum scalar value
+            @param max      maximum scalar value
+            */
+            ColorRange( float min,
+                        float max );
+
+            /** Constructor for a ColorRange
+            @param min      minimum scalar value
+            @param max      maximum scalar value
+            @param colors   optional range of colors,
+            */
+            ColorRange( float                         min,
+                        float                         max,
+                        const std::vector<osg::vec4>& colors );
+
+            /** Set the range of colors. */
+            void
+            setColors( const std::vector<osg::vec4>& colors );
+
+            /** Get the range of colors */
+            const std::vector<osg::vec4>&
+            getColors() const
+            {
+                return _colors;
+            }
+
+            /** Get the color for a given scalar value. */
+            osg::vec4
+            getColor( float scalar ) const;
+
+        private:
+
+            // Default assignment and copy construction are OK.
+
+            std::vector<osg::vec4> _colors;
+    };
+
+}

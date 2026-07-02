@@ -2,12 +2,12 @@
  * Clickable push button widget. Emits pressed/released
  * events for user interaction in 3D UI.
  */
-#include <osgUI/PushButton>
+#include <osgUI/PushButton.hpp>
 
 #include <osg/core/Notify.hpp>
-#include <osgText/Font>
-#include <osgText/String>
-#include <osgText/Text>
+#include <osgText/Font.hpp>
+#include <osgText/String.hpp>
+#include <osgText/Text.hpp>
 
 using namespace osgUI;
 

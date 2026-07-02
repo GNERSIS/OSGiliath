@@ -2,11 +2,11 @@
  * Volume rendering properties (transfer function, sample density,
  * transparency, IsoSurface value) controlling appearance.
  */
-#include <osgVolume/Property>
+#include <osgVolume/Property.hpp>
 
-#include <osgVolume/RayTracedTechnique>
-#include <osgVolume/VolumeSettings>
-#include <osgVolume/VolumeTile>
+#include <osgVolume/RayTracedTechnique.hpp>
+#include <osgVolume/VolumeSettings.hpp>
+#include <osgVolume/VolumeTile.hpp>
 
 using namespace osgVolume;
 

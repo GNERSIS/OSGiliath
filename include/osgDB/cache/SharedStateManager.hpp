@@ -8,7 +8,7 @@
 #include <osg/core/Inherit.hpp>
 #include <osg/nodes/Geode.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <set>
 
 namespace osgDB

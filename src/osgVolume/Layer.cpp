@@ -2,7 +2,7 @@
  * Abstract volume data layer providing 3D image access.
  * Wraps Image/ImageSequence with locator and property binding.
  */
-#include <osgVolume/Layer>
+#include <osgVolume/Layer.hpp>
 
 #include <osg/core/Endian.hpp>
 #include <osg/core/io_utils.hpp>

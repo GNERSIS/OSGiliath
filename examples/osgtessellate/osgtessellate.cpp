@@ -17,7 +17,7 @@
 #include <osg/nodes/Projection.hpp>
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 #include <osgUtil/mesh/Tessellator.hpp>    // to tessellate multiple contours
 #include <osgUtil/optimization/Optimizer.hpp>
 #include <osgViewer/core/Viewer.hpp>

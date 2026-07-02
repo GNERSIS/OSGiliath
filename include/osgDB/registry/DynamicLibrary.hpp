@@ -5,7 +5,7 @@
 #pragma once
 
 #include <osg/core/Referenced.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 #include <string>
 
 namespace osgDB

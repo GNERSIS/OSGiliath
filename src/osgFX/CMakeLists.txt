@@ -8,19 +8,19 @@ ENDIF()
 SET(LIB_NAME osgFX)
 SET(HEADER_PATH ${OSGiliath_SOURCE_DIR}/include/${LIB_NAME})
 SET(TARGET_H
-    ${HEADER_PATH}/AnisotropicLighting
-    ${HEADER_PATH}/BumpMapping
-    ${HEADER_PATH}/Cartoon
-    ${HEADER_PATH}/Effect
-    ${HEADER_PATH}/Export
-    ${HEADER_PATH}/MultiTextureControl
-    ${HEADER_PATH}/Outline
-    ${HEADER_PATH}/Registry
-    ${HEADER_PATH}/Scribe
-    ${HEADER_PATH}/SpecularHighlights
-    ${HEADER_PATH}/Technique
-    ${HEADER_PATH}/Validator
-    ${HEADER_PATH}/Version
+    ${HEADER_PATH}/AnisotropicLighting.hpp
+    ${HEADER_PATH}/BumpMapping.hpp
+    ${HEADER_PATH}/Cartoon.hpp
+    ${HEADER_PATH}/Effect.hpp
+    ${HEADER_PATH}/Export.hpp
+    ${HEADER_PATH}/MultiTextureControl.hpp
+    ${HEADER_PATH}/Outline.hpp
+    ${HEADER_PATH}/Registry.hpp
+    ${HEADER_PATH}/Scribe.hpp
+    ${HEADER_PATH}/SpecularHighlights.hpp
+    ${HEADER_PATH}/Technique.hpp
+    ${HEADER_PATH}/Validator.hpp
+    ${HEADER_PATH}/Version.hpp
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

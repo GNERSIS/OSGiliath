@@ -1,0 +1,387 @@
+/* OSGiliath — OpenSceneGraph fork. See LICENSE.txt.
+ * Projects 2D screen coordinates onto 3D lines, planes, and
+ * cylinders for dragger hit calculation.
+ */
+// osgManipulator - Copyright (C) 2007 Fugro-Jason B.V.
+
+#pragma once
+
+#include <osg/traversal/LineSegment.hpp>
+#include <osgManipulator/Dragger.hpp>
+#include <osgManipulator/Export.hpp>
+#include <osgUtil/culling/SceneView.hpp>
+
+namespace osgManipulator
+{
+
+    /**
+     * Base class for Projectors. Projectors maps 2D cursor motions to 3D motions.
+     */
+    class OSGMANIPULATOR_EXPORT Projector : public osg::Referenced
+    {
+        public:
+
+            Projector();
+
+            /**
+             * Calculates the object/world coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto some shape or
+             * geometry (implemented in derived classes). SceneView in used for i
+             * projecting window coordinates into object coordinates and vice versa.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const = 0;
+
+            /**
+             * Sets the matrix for transforming the projector's local coordinate
+             * system to the world/object coordinate system.
+             */
+            void
+            setLocalToWorld( const osg::dmat4& localToWorld )
+            {
+                _localToWorld      = localToWorld;
+                _worldToLocalDirty = true;
+            }
+
+            /**
+             * Gets the matrix for transforming the projector's local coordinate
+             * system to the world/object coordinate system.
+             */
+            inline const osg::dmat4&
+            getLocalToWorld() const
+            {
+                return _localToWorld;
+            }
+
+            /**
+             * Gets the matrix for transforming the world/object coordinate
+             * system to the command's local coordinate system.
+             */
+            inline const osg::dmat4&
+            getWorldToLocal() const
+            {
+                if( _worldToLocalDirty )
+                {
+                    _worldToLocal      = osg::inverse( _localToWorld );
+                    _worldToLocalDirty = false;
+                }
+                return _worldToLocal;
+            }
+
+        protected:
+
+            virtual ~Projector();
+
+            osg::dmat4         _localToWorld;
+            mutable osg::dmat4 _worldToLocal;
+
+            mutable bool       _worldToLocalDirty;
+    };
+
+    /**
+     * LineProjector projects points onto the closest point on the given line.
+     */
+    class OSGMANIPULATOR_EXPORT LineProjector : public Projector
+    {
+        public:
+
+            LineProjector();
+
+            LineProjector( const osg::LineSegment::vec_type& s,
+                           const osg::LineSegment::vec_type& e );
+
+            inline void
+            setLine( const osg::LineSegment::vec_type& s,
+                     const osg::LineSegment::vec_type& e )
+            {
+                _line->start() = s;
+                _line->end()   = e;
+            }
+
+            inline const osg::LineSegment::vec_type&
+            getLineStart() const
+            {
+                return _line->start();
+            }
+
+            inline osg::LineSegment::vec_type&
+            getLineStart()
+            {
+                return _line->start();
+            }
+
+            inline const osg::LineSegment::vec_type&
+            getLineEnd() const
+            {
+                return _line->end();
+            }
+
+            inline osg::LineSegment::vec_type&
+            getLineEnd()
+            {
+                return _line->end();
+            }
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given line.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+        protected:
+
+            virtual ~LineProjector();
+
+            osg::ref_ptr<osg::LineSegment> _line;
+    };
+
+    /**
+     * PlaneProjector projects points onto the given line.
+     */
+    class OSGMANIPULATOR_EXPORT PlaneProjector : public Projector
+    {
+        public:
+
+            PlaneProjector();
+
+            PlaneProjector( const osg::Plane& plane );
+
+            inline void
+            setPlane( const osg::Plane& plane )
+            {
+                _plane = plane;
+            }
+
+            inline const osg::Plane&
+            getPlane() const
+            {
+                return _plane;
+            }
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given plane.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+        protected:
+
+            virtual ~PlaneProjector();
+
+            osg::Plane _plane;
+    };
+
+    /**
+     * SphereProjector projects points onto the given sphere.
+     */
+    class OSGMANIPULATOR_EXPORT SphereProjector : public Projector
+    {
+        public:
+
+            SphereProjector();
+
+            SphereProjector( osg::Sphere* sphere );
+
+            inline void
+            setSphere( osg::Sphere* sphere )
+            {
+                _sphere = sphere;
+            }
+
+            inline const osg::Sphere*
+            getSphere() const
+            {
+                return _sphere.get();
+            }
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given sphere.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+            /**
+             * Returns true is the point is in front of the cylinder given the eye
+             * direction.
+             */
+            bool
+            isPointInFront( const PointerInfo& pi,
+                            const osg::dmat4&  localToWorld ) const;
+
+            void
+            setFront( bool front )
+            {
+                _front = front;
+            }
+
+        protected:
+
+            virtual ~SphereProjector();
+
+            osg::ref_ptr<osg::Sphere> _sphere;
+            bool                      _front;
+    };
+
+    /**
+     * SpherePlaneProjector projects points onto a sphere, failing which it project
+     * onto a plane oriented to the viewing direction.
+     */
+    class OSGMANIPULATOR_EXPORT SpherePlaneProjector : public SphereProjector
+    {
+        public:
+
+            SpherePlaneProjector();
+
+            SpherePlaneProjector( osg::Sphere* sphere );
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given sphere.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+            /**
+             * Returns true if the previous projection was on the sphere and false
+             * if the projection was on the plane.
+             */
+            bool
+            isProjectionOnSphere() const
+            {
+                return _onSphere;
+            }
+
+            osg::quat
+            getRotation( const osg::dvec3& p1,
+                         bool              p1OnSphere,
+                         const osg::dvec3& p2,
+                         bool              p2OnSphere,
+                         float             radialFactor = 0.0F ) const;
+
+        protected:
+
+            virtual ~SpherePlaneProjector();
+
+            mutable osg::Plane _plane;
+            mutable bool       _onSphere;
+    };
+
+    /**
+     * CylinderProjector projects points onto the given cylinder.
+     */
+    class OSGMANIPULATOR_EXPORT CylinderProjector : public Projector
+    {
+        public:
+
+            CylinderProjector();
+
+            CylinderProjector( osg::Cylinder* cylinder );
+
+            inline void
+            setCylinder( osg::Cylinder* cylinder )
+            {
+                _cylinder     = cylinder;
+                _cylinderAxis = osg::dvec3( 0.0, 0.0, 1.0 ) *
+                                osg::rotate( osg::dquat( cylinder->getRotation() ) );
+                _cylinderAxis = osg::normalize( _cylinderAxis );
+            }
+
+            inline const osg::Cylinder*
+            getCylinder() const
+            {
+                return _cylinder.get();
+            }
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given plane.
+             * Returns true on successful projection.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+            /**
+             * Returns true is the point is in front of the cylinder given the eye
+             * direction.
+             */
+            bool
+            isPointInFront( const PointerInfo& pi,
+                            const osg::dmat4&  localToWorld ) const;
+
+            void
+            setFront( bool front )
+            {
+                _front = front;
+            }
+
+        protected:
+
+            virtual ~CylinderProjector();
+
+            osg::ref_ptr<osg::Cylinder> _cylinder;
+            osg::dvec3                  _cylinderAxis;
+            bool                        _front;
+    };
+
+    /**
+     * CylinderPlaneProjector projects a point onto a plane relative to the
+     * given cylinder.  For most cases, the plane will be parallel to the
+     * cylinder axis oriented towards the eyepoint.  When the eyepoint and
+     * cylinder axis are close to parallel, then it will project onto a plane
+     * perpendicular to the cylinder.
+     */
+    class OSGMANIPULATOR_EXPORT CylinderPlaneProjector : public CylinderProjector
+    {
+        public:
+
+            CylinderPlaneProjector();
+
+            CylinderPlaneProjector( osg::Cylinder* cylinder );
+
+            /**
+             * Calculates the object coordinates (projectedPoint) of a window
+             * coordinate (pointToProject) when projected onto the given plane.
+             * Returns true on successful projection.
+             * \param[in] pi Incoming intersection information
+             * \param[out] projectedPoint Point located on the given plane
+             * \return bool Whether the projection onto the plane was successful.
+             */
+            virtual bool
+            project( const PointerInfo& pi,
+                     osg::dvec3&        projectedPoint ) const;
+
+            /**
+             * Generates a rotation about the cylinder axis based upon the incoming
+             * projected points on the plane computed from project().
+             * \param[in] p1 Initial projection point
+             * \param[in] p2 Second projection point
+             * \return osg::quat Rotation about cylinder axis
+             */
+            osg::quat
+            getRotation( const osg::dvec3& p1,
+                         const osg::dvec3& p2 ) const;
+
+        protected:
+
+            virtual ~CylinderPlaneProjector();
+
+            mutable osg::Plane _plane;
+            mutable osg::dvec3 _planeLineStart, _planeLineEnd;
+            mutable bool       _parallelPlane;
+    };
+
+}

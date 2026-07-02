@@ -3,7 +3,7 @@
  */
 #include "Frame.hpp"
 
-#include <osgText/Text>
+#include <osgText/Text.hpp>
 
 namespace osgfxbrowser
 {

@@ -25,7 +25,7 @@
 #include <osg/nodes/Billboard.hpp>
 #include <osg/nodes/CameraView.hpp>
 #include <osg/nodes/Sequence.hpp>
-#include <osgSim/MultiSwitch>
+#include <osgSim/MultiSwitch.hpp>
 
 #ifdef COLLADA_DOM_2_4_OR_LATER
     #include <dom/domAny.h>

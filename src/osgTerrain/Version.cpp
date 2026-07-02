@@ -2,7 +2,7 @@
  * Library version query for osgTerrain.
  * Returns version strings matching the core osg library.
  */
-#include <osgTerrain/Version>
+#include <osgTerrain/Version.hpp>
 
 #include <osg/Version>
 

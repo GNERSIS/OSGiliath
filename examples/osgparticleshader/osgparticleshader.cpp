@@ -11,14 +11,14 @@
 #include <osgDB/io/WriteFile.hpp>
 #include <osgGA/handlers/StateSetManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgParticle/AccelOperator>
-#include <osgParticle/BounceOperator>
-#include <osgParticle/DampingOperator>
-#include <osgParticle/ModularEmitter>
-#include <osgParticle/ModularProgram>
-#include <osgParticle/ParticleSystem>
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/SinkOperator>
+#include <osgParticle/AccelOperator.hpp>
+#include <osgParticle/BounceOperator.hpp>
+#include <osgParticle/DampingOperator.hpp>
+#include <osgParticle/ModularEmitter.hpp>
+#include <osgParticle/ModularProgram.hpp>
+#include <osgParticle/ParticleSystem.hpp>
+#include <osgParticle/ParticleSystemUpdater.hpp>
+#include <osgParticle/SinkOperator.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <osgViewer/handlers/ViewerEventHandlers.hpp>
 

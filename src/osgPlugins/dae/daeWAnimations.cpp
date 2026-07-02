@@ -28,7 +28,7 @@
 #include <osgAnimation/core/AnimationManagerBase.hpp>
 #include <osgAnimation/transform/UpdateMatrixTransform.hpp>
 #include <osgDB/io/ConvertUTF.hpp>
-#include <osgSim/MultiSwitch>
+#include <osgSim/MultiSwitch.hpp>
 
 using namespace osgDAE;
 

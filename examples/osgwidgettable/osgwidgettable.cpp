@@ -3,9 +3,9 @@
 
 #include <osg/rendering/HeadlessCapture.hpp>
 #include <osgDB/io/ReadFile.hpp>
-#include <osgWidget/Table>
-#include <osgWidget/Util>
-#include <osgWidget/WindowManager>
+#include <osgWidget/Table.hpp>
+#include <osgWidget/Util.hpp>
+#include <osgWidget/WindowManager.hpp>
 
 const unsigned int MASK_2D = 0XF0'00'00'00;
 

@@ -6,7 +6,7 @@
 
 #include <fstream>
 #include <osg/core/Export.hpp>
-#include <osgDB/Export>
+#include <osgDB/Export.hpp>
 
 namespace osgDB
 {

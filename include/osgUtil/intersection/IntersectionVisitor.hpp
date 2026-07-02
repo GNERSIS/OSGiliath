@@ -8,7 +8,7 @@
 #include <osg/core/Inherit.hpp>
 #include <osg/geometry/Drawable.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
-#include <osgUtil/Export>
+#include <osgUtil/Export.hpp>
 
 namespace osgUtil
 {

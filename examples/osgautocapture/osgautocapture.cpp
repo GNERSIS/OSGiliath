@@ -19,8 +19,8 @@
 #include <osgGA/manipulators/KeySwitchMatrixManipulator.hpp>
 #include <osgGA/manipulators/TerrainManipulator.hpp>
 #include <osgGA/manipulators/TrackballManipulator.hpp>
-#include <osgTerrain/GeometryTechnique>
-#include <osgTerrain/Terrain>
+#include <osgTerrain/GeometryTechnique.hpp>
+#include <osgTerrain/Terrain.hpp>
 #include <osgUtil/intersection/IntersectionVisitor.hpp>
 #include <osgUtil/utils/GLObjectsVisitor.hpp>
 #include <osgViewer/core/Renderer.hpp>
