@@ -32,9 +32,9 @@ namespace
 
     constexpr double defaultSunAzimuthDeg   = 75.0;
     constexpr double defaultSunElevationDeg = 52.0;
-    constexpr float  defaultSunIntensity    = 5.0F;
-    constexpr float  defaultAmbientLevel    = 0.85F;
-    constexpr float  defaultExposure        = 2.8F;
+    constexpr float  defaultSunIntensity    = 3.2F;
+    constexpr float  defaultAmbientLevel    = 0.7F;
+    constexpr float  defaultExposure        = 1.5F;
     constexpr int    defaultCameraIndex     = 0;
 
     struct CameraPreset

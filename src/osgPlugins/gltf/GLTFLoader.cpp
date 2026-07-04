@@ -785,6 +785,8 @@ GLTFLoader::loadTextures()
             osgTex->setWrap( osg::Texture2D::WRAP_T, osg::Texture::REPEAT );
         }
 
+        osgTex->setMaxAnisotropy( 16.0f );
+
         _textures.push_back( osgTex );
     }
 }
