@@ -9,6 +9,7 @@
 #include <osg/state/BlendFunc.hpp>
 #include <osg/state/CullFace.hpp>
 #include <osg/state/Material.hpp>
+#include <osg/state/Program.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osg/traversal/AnimationPath.hpp>
 #include <osgDB/io/ReadFile.hpp>
@@ -42,6 +43,9 @@ class GLTFLoader
         // Loaded materials (cached as StateSets)
         std::vector<osg::ref_ptr<osg::StateSet>>                    _materials;
 
+        // Shared PBR material program
+        osg::ref_ptr<osg::Program>                                  _pbrProgram;
+
         // Node index -> MatrixTransform mapping for animation targeting
         std::unordered_map<int, osg::ref_ptr<osg::MatrixTransform>> _nodeTransformMap;
 
@@ -66,6 +70,8 @@ class GLTFLoader
         loadMaterials();
         void
         loadAnimations();
+        osg::Program*
+        getPbrProgram();
         osg::ref_ptr<osg::Node>
         buildScene();
 

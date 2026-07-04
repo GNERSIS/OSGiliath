@@ -5,12 +5,256 @@
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
+#include <osg/state/Shader.hpp>
+#include <osg/state/Uniform.hpp>
+#include <osgUtil/optimization/TangentSpaceGenerator.hpp>
 #include <sstream>
 
 using json = nlohmann::json;
 
 namespace
 {
+    constexpr char pbrVertexShader[] = R"glsl(
+#version 460 core
+
+layout(location = 0) in vec4 osg_Vertex;
+layout(location = 2) in vec3 osg_Normal;
+layout(location = 6) in vec4 osg_Tangent;
+layout(location = 8) in vec4 osg_MultiTexCoord0;
+
+uniform mat4 osg_ModelViewProjectionMatrix;
+uniform mat4 osg_ModelViewMatrix;
+uniform mat3 osg_NormalMatrix;
+
+out vec3 v_position;
+out vec3 v_normal;
+out vec3 v_tangent;
+out vec3 v_bitangent;
+out vec2 v_texcoord0;
+
+vec3 safeNormalize(vec3 value, vec3 fallback)
+{
+    float lengthSquared = dot(value, value);
+    return (lengthSquared > 1e-10) ? value * inversesqrt(lengthSquared) : fallback;
+}
+
+vec3 fallbackTangent(vec3 normal)
+{
+    vec3 up = (abs(normal.z) < 0.999) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+    return safeNormalize(cross(up, normal), vec3(1.0, 0.0, 0.0));
+}
+
+void main()
+{
+    v_position = (osg_ModelViewMatrix * osg_Vertex).xyz;
+
+    vec3 normal = safeNormalize(osg_NormalMatrix * osg_Normal, vec3(0.0, 0.0, 1.0));
+    vec3 tangent = osg_NormalMatrix * osg_Tangent.xyz;
+    tangent = tangent - normal * dot(normal, tangent);
+    tangent = safeNormalize(tangent, fallbackTangent(normal));
+
+    float handedness = (osg_Tangent.w < 0.0) ? -1.0 : 1.0;
+    vec3 bitangent = safeNormalize(cross(normal, tangent), vec3(0.0, 1.0, 0.0)) * handedness;
+
+    v_normal = normal;
+    v_tangent = tangent;
+    v_bitangent = bitangent;
+    v_texcoord0 = osg_MultiTexCoord0.xy;
+
+    gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+}
+)glsl";
+
+    constexpr char pbrFragmentShader[] = R"glsl(
+#version 460 core
+
+const float PI = 3.14159265358979323846;
+
+struct osg_LightSourceParameters {
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+    vec3 spotDirection;
+    float spotExponent;
+    float spotCutoff;
+    float spotCosCutoff;
+    float constantAttenuation;
+    float linearAttenuation;
+    float quadraticAttenuation;
+};
+uniform osg_LightSourceParameters osg_LightSource;
+
+uniform vec4 osg_LightModel_ambient;
+uniform bool osg_LightingEnabled;
+
+uniform sampler2D uBaseColorMap;
+uniform sampler2D uMetallicRoughnessMap;
+uniform sampler2D uNormalMap;
+uniform sampler2D uOcclusionMap;
+uniform sampler2D uEmissiveMap;
+
+uniform vec4 uBaseColorFactor;
+uniform float uMetallicFactor;
+uniform float uRoughnessFactor;
+uniform float uNormalScale;
+uniform float uOcclusionStrength;
+uniform vec3 uEmissiveFactor;
+uniform float uAlphaCutoff;
+
+uniform bool uHasBaseColorMap;
+uniform bool uHasMetallicRoughnessMap;
+uniform bool uHasNormalMap;
+uniform bool uHasOcclusionMap;
+uniform bool uHasEmissiveMap;
+uniform bool uAlphaMask;
+
+in vec3 v_position;
+in vec3 v_normal;
+in vec3 v_tangent;
+in vec3 v_bitangent;
+in vec2 v_texcoord0;
+
+out vec4 osg_FragColor;
+
+vec3 safeNormalize(vec3 value, vec3 fallback)
+{
+    float lengthSquared = dot(value, value);
+    return (lengthSquared > 1e-10) ? value * inversesqrt(lengthSquared) : fallback;
+}
+
+vec3 fallbackTangent(vec3 normal)
+{
+    vec3 up = (abs(normal.z) < 0.999) ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+    return safeNormalize(cross(up, normal), vec3(1.0, 0.0, 0.0));
+}
+
+float distributionGGX(vec3 normal, vec3 halfway, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float nDotH = max(dot(normal, halfway), 0.0);
+    float nDotH2 = nDotH * nDotH;
+    float denom = (nDotH2 * (a2 - 1.0) + 1.0);
+    return a2 / max(PI * denom * denom, 1e-7);
+}
+
+float geometrySchlickGGX(float nDotV, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    return nDotV / max(nDotV * (1.0 - k) + k, 1e-7);
+}
+
+float geometrySmith(vec3 normal, vec3 viewDir, vec3 lightDir, float roughness)
+{
+    float nDotV = max(dot(normal, viewDir), 0.0);
+    float nDotL = max(dot(normal, lightDir), 0.0);
+    return geometrySchlickGGX(nDotV, roughness) * geometrySchlickGGX(nDotL, roughness);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 f0)
+{
+    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 getNormal()
+{
+    vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
+    if (!uHasNormalMap) {
+        return geometricNormal;
+    }
+
+    vec3 tangent = safeNormalize(v_tangent, fallbackTangent(geometricNormal));
+    vec3 bitangent = safeNormalize(v_bitangent, cross(geometricNormal, tangent));
+    mat3 tbn = mat3(tangent, bitangent, geometricNormal);
+
+    vec3 tangentNormal = texture(uNormalMap, v_texcoord0).xyz * 2.0 - 1.0;
+    tangentNormal.xy *= uNormalScale;
+    tangentNormal = safeNormalize(tangentNormal, vec3(0.0, 0.0, 1.0));
+    return safeNormalize(tbn * tangentNormal, geometricNormal);
+}
+
+void main()
+{
+    vec4 baseColor = uBaseColorFactor;
+    if (uHasBaseColorMap) {
+        baseColor *= texture(uBaseColorMap, v_texcoord0);
+    }
+
+    if (uAlphaMask && baseColor.a < uAlphaCutoff) {
+        discard;
+    }
+
+    float metallic = clamp(uMetallicFactor, 0.0, 1.0);
+    float roughness = clamp(uRoughnessFactor, 0.04, 1.0);
+    if (uHasMetallicRoughnessMap) {
+        vec4 metallicRoughness = texture(uMetallicRoughnessMap, v_texcoord0);
+        roughness = clamp(metallicRoughness.g * uRoughnessFactor, 0.04, 1.0);
+        metallic = clamp(metallicRoughness.b * uMetallicFactor, 0.0, 1.0);
+    }
+
+    float ao = 1.0;
+    if (uHasOcclusionMap) {
+        float occlusion = texture(uOcclusionMap, v_texcoord0).r;
+        ao = mix(1.0, occlusion, clamp(uOcclusionStrength, 0.0, 1.0));
+    }
+
+    vec3 emissive = uEmissiveFactor;
+    if (uHasEmissiveMap) {
+        emissive *= texture(uEmissiveMap, v_texcoord0).rgb;
+    }
+
+    vec3 albedo = baseColor.rgb;
+    vec3 normal = getNormal();
+    vec3 viewDir = safeNormalize(-v_position, vec3(0.0, 0.0, 1.0));
+
+    vec3 ambient = albedo * ao * osg_LightModel_ambient.rgb;
+    vec3 color = ambient + emissive;
+
+    if (osg_LightingEnabled) {
+        vec3 lightDir;
+        float attenuation = 1.0;
+        if (osg_LightSource.position.w == 0.0) {
+            lightDir = safeNormalize(osg_LightSource.position.xyz, vec3(0.0, 0.0, 1.0));
+        } else {
+            vec3 lightVector = osg_LightSource.position.xyz - v_position;
+            float lightDistance = length(lightVector);
+            lightDir = (lightDistance > 1e-5) ? lightVector / lightDistance : vec3(0.0, 0.0, 1.0);
+            attenuation = 1.0 / max(osg_LightSource.constantAttenuation +
+                                    osg_LightSource.linearAttenuation * lightDistance +
+                                    osg_LightSource.quadraticAttenuation * lightDistance * lightDistance,
+                                    1e-5);
+            if (osg_LightSource.spotCutoff < 180.0) {
+                float spotDot = dot(-lightDir, safeNormalize(osg_LightSource.spotDirection, vec3(0.0, 0.0, -1.0)));
+                attenuation *= (spotDot >= osg_LightSource.spotCosCutoff) ? pow(spotDot, osg_LightSource.spotExponent) : 0.0;
+            }
+        }
+
+        float nDotL = max(dot(normal, lightDir), 0.0);
+        if (nDotL > 0.0) {
+            vec3 halfway = safeNormalize(viewDir + lightDir, normal);
+            float nDotV = max(dot(normal, viewDir), 0.0);
+            float hDotV = max(dot(halfway, viewDir), 0.0);
+
+            vec3 f0 = mix(vec3(0.04), albedo, metallic);
+            vec3 fresnel = fresnelSchlick(hDotV, f0);
+            float distribution = distributionGGX(normal, halfway, roughness);
+            float geometry = geometrySmith(normal, viewDir, lightDir, roughness);
+
+            vec3 numerator = distribution * geometry * fresnel;
+            float denominator = max(4.0 * nDotV * nDotL, 1e-5);
+            vec3 specular = numerator / denominator;
+
+            vec3 diffuse = (vec3(1.0) - fresnel) * (1.0 - metallic) * albedo / PI;
+            vec3 radiance = osg_LightSource.diffuse.rgb * attenuation;
+            color += (diffuse + specular) * radiance * nDotL;
+        }
+    }
+
+    osg_FragColor = vec4(color, baseColor.a);
+}
+)glsl";
 
     // Base64 decoding table
     static const std::array<int,
@@ -87,6 +331,118 @@ namespace
     glCount( size_t count ) noexcept
     {
         return static_cast<GLsizei>( count );
+    }
+
+    osg::vec4
+    readVec4( const json& object,
+              const char* key,
+              const osg::vec4& fallback )
+    {
+        if( !object.contains( key ) )
+        {
+            return fallback;
+        }
+
+        const auto& value = object[key];
+        if( !value.is_array() || value.size() < 4 )
+        {
+            return fallback;
+        }
+
+        return osg::vec4( value[0].get<float>(),
+                          value[1].get<float>(),
+                          value[2].get<float>(),
+                          value[3].get<float>() );
+    }
+
+    osg::vec3
+    readVec3( const json& object,
+              const char* key,
+              const osg::vec3& fallback )
+    {
+        if( !object.contains( key ) )
+        {
+            return fallback;
+        }
+
+        const auto& value = object[key];
+        if( !value.is_array() || value.size() < 3 )
+        {
+            return fallback;
+        }
+
+        return osg::vec3( value[0].get<float>(),
+                          value[1].get<float>(),
+                          value[2].get<float>() );
+    }
+
+    void
+    warnUnsupportedTexCoord( const json& textureInfo,
+                             const char* label )
+    {
+        const int texCoord = textureInfo.value( "texCoord", 0 );
+        if( texCoord != 0 )
+        {
+            OSG_WARN << "GLTFLoader: " << label << " uses TEXCOORD_" << texCoord
+                     << "; only TEXCOORD_0 is currently supported" << std::endl;
+        }
+    }
+
+    bool
+    bindTextureInfo( osg::StateSet&                                  stateSet,
+                     const std::vector<osg::ref_ptr<osg::Texture2D>>& textures,
+                     const json&                                      textureInfo,
+                     unsigned int                                     unit,
+                     const char*                                      label )
+    {
+        warnUnsupportedTexCoord( textureInfo, label );
+
+        if( !textureInfo.contains( "index" ) )
+        {
+            return false;
+        }
+
+        const int textureIndexValue = textureInfo["index"].get<int>();
+        if( !validIndex( textureIndexValue, textures.size() ) )
+        {
+            OSG_WARN << "GLTFLoader: " << label << " texture index "
+                     << textureIndexValue << " is out of range" << std::endl;
+            return false;
+        }
+
+        const size_t textureIndex = jsonIndex( textureIndexValue );
+        if( !textures[textureIndex].valid() )
+        {
+            OSG_WARN << "GLTFLoader: " << label << " texture index "
+                     << textureIndexValue << " did not load a texture" << std::endl;
+            return false;
+        }
+
+        stateSet.setTextureAttributeAndModes( unit,
+                                              textures[textureIndex].get(),
+                                              osg::StateAttribute::ON );
+        return true;
+    }
+
+    bool
+    primitiveMaterialHasNormalTexture( const json& document,
+                                       const json& primitive )
+    {
+        if( !primitive.contains( "material" ) || !document.contains( "materials" ) )
+        {
+            return false;
+        }
+
+        const int materialIndexValue = primitive["material"].get<int>();
+        const auto& materials = document["materials"];
+        if( !validIndex( materialIndexValue, materials.size() ) )
+        {
+            return false;
+        }
+
+        const auto& material = materials[jsonIndex( materialIndexValue )];
+        return material.contains( "normalTexture" ) &&
+               material["normalTexture"].contains( "index" );
     }
 
 }    // anonymous namespace
@@ -438,38 +794,90 @@ GLTFLoader::loadMaterials()
     for( const auto& mat : _json["materials"] )
     {
         osg::ref_ptr<osg::StateSet> ss = new osg::StateSet;
-
+        const json*                 pbr = nullptr;
         if( mat.contains( "pbrMetallicRoughness" ) )
         {
-            const auto&                 pbr = mat["pbrMetallicRoughness"];
+            pbr = &mat["pbrMetallicRoughness"];
+        }
 
-            // Base color factor -> Material diffuse
-            osg::ref_ptr<osg::Material> osgMat = new osg::Material;
-            if( pbr.contains( "baseColorFactor" ) )
-            {
-                auto      c = pbr["baseColorFactor"];
-                osg::vec4 color( c[0].get<float>(),
-                                 c[1].get<float>(),
-                                 c[2].get<float>(),
-                                 c[3].get<float>() );
-                osgMat->setDiffuse( osg::Material::FRONT_AND_BACK, color );
-                osgMat->setAmbient( osg::Material::FRONT_AND_BACK, color * 0.2F );
-            }
-            ss->setAttributeAndModes( osgMat );
+        osg::vec4 baseColorFactor( 1.0F, 1.0F, 1.0F, 1.0F );
+        float     metallicFactor  = 1.0F;
+        float     roughnessFactor = 1.0F;
 
-            // Base color texture
-            if( pbr.contains( "baseColorTexture" ) )
-            {
-                int texIdx = pbr["baseColorTexture"]["index"].get<int>();
-                if( validIndex( texIdx, _textures.size() ) )
-                {
-                    const size_t textureIndex = jsonIndex( texIdx );
-                    if( _textures[textureIndex].valid() )
-                    {
-                        ss->setTextureAttributeAndModes( 0, _textures[textureIndex] );
-                    }
-                }
-            }
+        if( pbr )
+        {
+            baseColorFactor = readVec4(
+                *pbr,
+                "baseColorFactor",
+                osg::vec4( 1.0F, 1.0F, 1.0F, 1.0F )
+            );
+            metallicFactor = pbr->value( "metallicFactor", 1.0F );
+            roughnessFactor = pbr->value( "roughnessFactor", 1.0F );
+        }
+
+        osg::ref_ptr<osg::Material> osgMat = new osg::Material;
+        osgMat->setDiffuse( osg::Material::FRONT_AND_BACK, baseColorFactor );
+        osgMat->setAmbient( osg::Material::FRONT_AND_BACK, baseColorFactor * 0.2F );
+        ss->setAttributeAndModes( osgMat.get(), osg::StateAttribute::ON );
+
+        bool hasBaseColorMap = false;
+        if( pbr && pbr->contains( "baseColorTexture" ) )
+        {
+            hasBaseColorMap = bindTextureInfo( *ss,
+                                               _textures,
+                                               ( *pbr )["baseColorTexture"],
+                                               0U,
+                                               "baseColorTexture" );
+        }
+
+        bool hasMetallicRoughnessMap = false;
+        if( pbr && pbr->contains( "metallicRoughnessTexture" ) )
+        {
+            hasMetallicRoughnessMap =
+                bindTextureInfo( *ss,
+                                 _textures,
+                                 ( *pbr )["metallicRoughnessTexture"],
+                                 1U,
+                                 "metallicRoughnessTexture" );
+        }
+
+        float normalScale = 1.0F;
+        bool  hasNormalMap = false;
+        if( mat.contains( "normalTexture" ) )
+        {
+            const auto& normalTexture = mat["normalTexture"];
+            normalScale = normalTexture.value( "scale", 1.0F );
+            hasNormalMap = bindTextureInfo( *ss,
+                                            _textures,
+                                            normalTexture,
+                                            2U,
+                                            "normalTexture" );
+        }
+
+        float occlusionStrength = 1.0F;
+        bool  hasOcclusionMap = false;
+        if( mat.contains( "occlusionTexture" ) )
+        {
+            const auto& occlusionTexture = mat["occlusionTexture"];
+            occlusionStrength = occlusionTexture.value( "strength", 1.0F );
+            hasOcclusionMap = bindTextureInfo( *ss,
+                                               _textures,
+                                               occlusionTexture,
+                                               3U,
+                                               "occlusionTexture" );
+        }
+
+        osg::vec3 emissiveFactor = readVec3( mat,
+                                             "emissiveFactor",
+                                             osg::vec3( 0.0F, 0.0F, 0.0F ) );
+        bool      hasEmissiveMap = false;
+        if( mat.contains( "emissiveTexture" ) )
+        {
+            hasEmissiveMap = bindTextureInfo( *ss,
+                                              _textures,
+                                              mat["emissiveTexture"],
+                                              4U,
+                                              "emissiveTexture" );
         }
 
         // Double-sided -> disable backface culling
@@ -480,15 +888,64 @@ GLTFLoader::loadMaterials()
 
         // Alpha blending
         std::string alphaMode = mat.value( "alphaMode", "OPAQUE" );
+        bool        alphaMask = false;
+        float       alphaCutoff = mat.value( "alphaCutoff", 0.5F );
         if( alphaMode == "BLEND" )
         {
             ss->setAttributeAndModes( new osg::BlendFunc( GL_SRC_ALPHA,
                                                           GL_ONE_MINUS_SRC_ALPHA ) );
             ss->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
         }
+        else if( alphaMode == "MASK" )
+        {
+            alphaMask = true;
+        }
+
+        ss->addUniform( new osg::Uniform( "uBaseColorMap", 0 ) );
+        ss->addUniform( new osg::Uniform( "uMetallicRoughnessMap", 1 ) );
+        ss->addUniform( new osg::Uniform( "uNormalMap", 2 ) );
+        ss->addUniform( new osg::Uniform( "uOcclusionMap", 3 ) );
+        ss->addUniform( new osg::Uniform( "uEmissiveMap", 4 ) );
+
+        ss->addUniform( new osg::Uniform( "uBaseColorFactor", baseColorFactor ) );
+        ss->addUniform( new osg::Uniform( "uMetallicFactor", metallicFactor ) );
+        ss->addUniform( new osg::Uniform( "uRoughnessFactor", roughnessFactor ) );
+        ss->addUniform( new osg::Uniform( "uNormalScale", normalScale ) );
+        ss->addUniform( new osg::Uniform( "uOcclusionStrength", occlusionStrength ) );
+        ss->addUniform( new osg::Uniform( "uEmissiveFactor", emissiveFactor ) );
+        ss->addUniform( new osg::Uniform( "uAlphaCutoff", alphaCutoff ) );
+
+        ss->addUniform( new osg::Uniform( "uHasBaseColorMap", hasBaseColorMap ) );
+        ss->addUniform( new osg::Uniform( "uHasMetallicRoughnessMap",
+                                          hasMetallicRoughnessMap ) );
+        ss->addUniform( new osg::Uniform( "uHasNormalMap", hasNormalMap ) );
+        ss->addUniform( new osg::Uniform( "uHasOcclusionMap", hasOcclusionMap ) );
+        ss->addUniform( new osg::Uniform( "uHasEmissiveMap", hasEmissiveMap ) );
+        ss->addUniform( new osg::Uniform( "uAlphaMask", alphaMask ) );
+
+        ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );
 
         _materials.push_back( ss );
     }
+}
+
+osg::Program*
+GLTFLoader::getPbrProgram()
+{
+    if( !_pbrProgram.valid() )
+    {
+        _pbrProgram = new osg::Program;
+        _pbrProgram->setName( "GLTF PBR metallic-roughness" );
+        _pbrProgram->addShader(
+            new osg::Shader( osg::Shader::VERTEX, pbrVertexShader )
+        );
+        _pbrProgram->addShader(
+            new osg::Shader( osg::Shader::FRAGMENT, pbrFragmentShader )
+        );
+        _pbrProgram->addBindAttribLocation( "osg_Tangent", 6U );
+    }
+
+    return _pbrProgram.get();
 }
 
 const uint8_t*
@@ -626,6 +1083,28 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
         }
     }
 
+    bool hasTangentArray = false;
+    if( attrs.contains( "TANGENT" ) )
+    {
+        size_t         count;
+        int            compType, type;
+        size_t         stride;
+        const uint8_t* data =
+            getAccessorData( attrs["TANGENT"].get<int>(), count, compType, type, stride );
+        if( data && type == 4 && compType == 5'126 )
+        {
+            osg::ref_ptr<osg::Vec4Array> arr =
+                new osg::Vec4Array( arrayCount( count ) );
+            for( size_t i = 0; i < count; ++i )
+            {
+                ( *arr )[i] = *reinterpret_cast<const osg::vec4*>( data + i * stride );
+            }
+            arr->setNormalize( false );
+            geom->setVertexAttribArray( 6, arr.get(), osg::Array::BIND_PER_VERTEX );
+            hasTangentArray = true;
+        }
+    }
+
     // TEXCOORD_0
     // glTF uses top-left origin (V=0 at top), OpenGL uses bottom-left (V=0 at bottom).
     // Flip V coordinate: v = 1.0 - v
@@ -692,10 +1171,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
         }
     }
 
-    // No COLOR_0: leave color array unset.
-    // Geometry::drawImplementation sets osg_ColorMaterial=0 when no color array,
-    // which makes the shader use osg_FrontMaterial.diffuse from the Material attribute.
-    // The Material is set from baseColorFactor in loadMaterials().
+    // No COLOR_0: leave color array unset. PBR base color comes from material
+    // uniforms; the osg::Material binding remains for compatibility with other paths.
 
     // Indices
     if( primitive.contains( "indices" ) )
@@ -797,6 +1274,33 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             geom->addPrimitiveSet(
                 new osg::DrawArrays( glMode, 0, glCount( verts->size() ) )
             );
+        }
+    }
+
+    if( primitiveMaterialHasNormalTexture( _json, primitive ) && !hasTangentArray )
+    {
+        if( geom->getVertexArray() && geom->getNormalArray() &&
+            geom->getTexCoordArray( 0 ) && geom->getNumPrimitiveSets() > 0U )
+        {
+            osg::ref_ptr<osgUtil::TangentSpaceGenerator> tangentGenerator =
+                new osgUtil::TangentSpaceGenerator;
+            tangentGenerator->generate( geom.get(), 0 );
+            osg::Vec4Array* tangents = tangentGenerator->getTangentArray();
+            if( tangents && tangents->getNumElements() > 0U )
+            {
+                tangents->setNormalize( false );
+                geom->setVertexAttribArray( 6,
+                                            tangents,
+                                            osg::Array::BIND_PER_VERTEX );
+                hasTangentArray = true;
+            }
+        }
+
+        if( !hasTangentArray )
+        {
+            OSG_WARN << "GLTFLoader: normal-mapped primitive has no usable tangent "
+                        "basis"
+                     << std::endl;
         }
     }
 
