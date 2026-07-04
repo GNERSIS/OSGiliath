@@ -101,7 +101,6 @@ uniform float uNormalScale;
 uniform float uOcclusionStrength;
 uniform vec3 uEmissiveFactor;
 uniform float uAlphaCutoff;
-uniform float uExposure;
 
 uniform bool uHasBaseColorMap;
 uniform bool uHasMetallicRoughnessMap;
@@ -253,11 +252,7 @@ void main()
         }
     }
 
-    vec3 c = color * uExposure;
-    c = (c * (2.51 * c + 0.03)) / (c * (2.43 * c + 0.59) + 0.14);
-    c = clamp(c, 0.0, 1.0);
-    c = pow(c, vec3(1.0 / 2.2));
-    osg_FragColor = vec4(c, baseColor.a);
+    osg_FragColor = vec4(color, baseColor.a);
 }
 )glsl";
 
@@ -486,12 +481,6 @@ GLTFLoader::load( const std::string&                  filename,
     loadTextures();
     loadMaterials();
     auto scene = buildScene();
-    if( scene.valid() )
-    {
-        scene->getOrCreateStateSet()->addUniform(
-            new osg::Uniform( "uExposure", 1.0F )
-        );
-    }
     loadAnimations();
     return scene;
 }
