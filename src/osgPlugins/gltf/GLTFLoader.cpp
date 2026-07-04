@@ -101,6 +101,7 @@ uniform float uNormalScale;
 uniform float uOcclusionStrength;
 uniform vec3 uEmissiveFactor;
 uniform float uAlphaCutoff;
+uniform float uExposure;
 
 uniform bool uHasBaseColorMap;
 uniform bool uHasMetallicRoughnessMap;
@@ -252,7 +253,11 @@ void main()
         }
     }
 
-    osg_FragColor = vec4(color, baseColor.a);
+    vec3 c = color * uExposure;
+    c = (c * (2.51 * c + 0.03)) / (c * (2.43 * c + 0.59) + 0.14);
+    c = clamp(c, 0.0, 1.0);
+    c = pow(c, vec3(1.0 / 2.2));
+    osg_FragColor = vec4(c, baseColor.a);
 }
 )glsl";
 
@@ -393,7 +398,8 @@ void main()
                      const std::vector<osg::ref_ptr<osg::Texture2D>>& textures,
                      const json&                                      textureInfo,
                      unsigned int                                     unit,
-                     const char*                                      label )
+                     const char*                                      label,
+                     bool                                             useSRGB )
     {
         warnUnsupportedTexCoord( textureInfo, label );
 
@@ -416,6 +422,11 @@ void main()
             OSG_WARN << "GLTFLoader: " << label << " texture index "
                      << textureIndexValue << " did not load a texture" << std::endl;
             return false;
+        }
+
+        if( useSRGB )
+        {
+            textures[textureIndex]->setInternalFormat( GL_SRGB8_ALPHA8 );
         }
 
         stateSet.setTextureAttributeAndModes( unit,
@@ -475,6 +486,12 @@ GLTFLoader::load( const std::string&                  filename,
     loadTextures();
     loadMaterials();
     auto scene = buildScene();
+    if( scene.valid() )
+    {
+        scene->getOrCreateStateSet()->addUniform(
+            new osg::Uniform( "uExposure", 1.0F )
+        );
+    }
     loadAnimations();
     return scene;
 }
@@ -827,7 +844,8 @@ GLTFLoader::loadMaterials()
                                                _textures,
                                                ( *pbr )["baseColorTexture"],
                                                0U,
-                                               "baseColorTexture" );
+                                               "baseColorTexture",
+                                               true );
         }
 
         bool hasMetallicRoughnessMap = false;
@@ -838,7 +856,8 @@ GLTFLoader::loadMaterials()
                                  _textures,
                                  ( *pbr )["metallicRoughnessTexture"],
                                  1U,
-                                 "metallicRoughnessTexture" );
+                                 "metallicRoughnessTexture",
+                                 false );
         }
 
         float normalScale = 1.0F;
@@ -851,7 +870,8 @@ GLTFLoader::loadMaterials()
                                             _textures,
                                             normalTexture,
                                             2U,
-                                            "normalTexture" );
+                                            "normalTexture",
+                                            false );
         }
 
         float occlusionStrength = 1.0F;
@@ -864,7 +884,8 @@ GLTFLoader::loadMaterials()
                                                _textures,
                                                occlusionTexture,
                                                3U,
-                                               "occlusionTexture" );
+                                               "occlusionTexture",
+                                               false );
         }
 
         osg::vec3 emissiveFactor = readVec3( mat,
@@ -877,7 +898,8 @@ GLTFLoader::loadMaterials()
                                               _textures,
                                               mat["emissiveTexture"],
                                               4U,
-                                              "emissiveTexture" );
+                                              "emissiveTexture",
+                                              true );
         }
 
         // Double-sided -> disable backface culling
