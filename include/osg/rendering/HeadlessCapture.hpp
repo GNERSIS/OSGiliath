@@ -114,97 +114,39 @@ namespace osg
                 bool
                 realizeImplementation() override
                 {
+                    if( _realized )
+                    {
+                        return true;
+                    }
+
                     // Query EGL devices
                     auto eglQueryDevicesEXT = ( PFNEGLQUERYDEVICESEXTPROC )
                         eglGetProcAddress( "eglQueryDevicesEXT" );
                     auto eglGetPlatformDisplayEXT = ( PFNEGLGETPLATFORMDISPLAYEXTPROC )
                         eglGetProcAddress( "eglGetPlatformDisplayEXT" );
-                    if( !eglQueryDevicesEXT || !eglGetPlatformDisplayEXT )
+                    if( eglQueryDevicesEXT && eglGetPlatformDisplayEXT )
                     {
-                        return false;
+                        EGLDeviceEXT devices[4];
+                        EGLint       numDevices = 0;
+                        eglQueryDevicesEXT( 4, devices, &numDevices );
+                        if( numDevices > 0 &&
+                            realizeDisplay( eglGetPlatformDisplayEXT(
+                                EGL_PLATFORM_DEVICE_EXT, devices[0], nullptr ) ) )
+                        {
+                            return true;
+                        }
                     }
 
-                    EGLDeviceEXT devices[4];
-                    EGLint       numDevices = 0;
-                    eglQueryDevicesEXT( 4, devices, &numDevices );
-                    if( numDevices == 0 )
+#ifdef EGL_PLATFORM_SURFACELESS_MESA
+                    if( eglGetPlatformDisplayEXT &&
+                        realizeDisplay( eglGetPlatformDisplayEXT(
+                            EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr ) ) )
                     {
-                        return false;
+                        return true;
                     }
+#endif
 
-                    _eglDisplay = eglGetPlatformDisplayEXT( EGL_PLATFORM_DEVICE_EXT,
-                                                            devices[0],
-                                                            nullptr );
-                    if( _eglDisplay == EGL_NO_DISPLAY )
-                    {
-                        return false;
-                    }
-
-                    EGLint major, minor;
-                    if( !eglInitialize( _eglDisplay, &major, &minor ) )
-                    {
-                        return false;
-                    }
-                    if( !eglBindAPI( EGL_OPENGL_API ) )
-                    {
-                        return false;
-                    }
-
-                    EGLint cfgAttribs[] = {
-                        EGL_SURFACE_TYPE,
-                        EGL_PBUFFER_BIT,
-                        EGL_RENDERABLE_TYPE,
-                        EGL_OPENGL_BIT,
-                        EGL_RED_SIZE,
-                        8,
-                        EGL_GREEN_SIZE,
-                        8,
-                        EGL_BLUE_SIZE,
-                        8,
-                        EGL_ALPHA_SIZE,
-                        8,
-                        EGL_DEPTH_SIZE,
-                        24,
-                        EGL_NONE
-                    };
-                    EGLConfig cfg;
-                    EGLint    numCfg;
-                    eglChooseConfig( _eglDisplay, cfgAttribs, &cfg, 1, &numCfg );
-                    if( numCfg == 0 )
-                    {
-                        return false;
-                    }
-
-                    EGLint ctxAttribs[] = {
-                        EGL_CONTEXT_MAJOR_VERSION,
-                        4,
-                        EGL_CONTEXT_MINOR_VERSION,
-                        6,
-                        EGL_CONTEXT_OPENGL_PROFILE_MASK,
-                        EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-                        EGL_NONE
-                    };
-                    _eglContext =
-                        eglCreateContext( _eglDisplay, cfg, EGL_NO_CONTEXT, ctxAttribs );
-                    if( _eglContext == EGL_NO_CONTEXT )
-                    {
-                        return false;
-                    }
-
-                    EGLint pbAttribs[] =
-                        { EGL_WIDTH, _width, EGL_HEIGHT, _height, EGL_NONE };
-                    _eglSurface = eglCreatePbufferSurface( _eglDisplay, cfg, pbAttribs );
-                    if( _eglSurface == EGL_NO_SURFACE )
-                    {
-                        return false;
-                    }
-
-                    // Make context current immediately so eglGetProcAddress
-                    // returns valid function pointers during GL extension init
-                    eglMakeCurrent( _eglDisplay, _eglSurface, _eglSurface, _eglContext );
-
-                    _realized = true;
-                    return true;
+                    return realizeDisplay( eglGetDisplay( EGL_DEFAULT_DISPLAY ) );
                 }
 
                 bool
@@ -274,6 +216,105 @@ namespace osg
 
             private:
 
+                bool
+                realizeDisplay( EGLDisplay display )
+                {
+                    if( display == EGL_NO_DISPLAY )
+                    {
+                        return false;
+                    }
+
+                    closeImplementation();
+                    _eglDisplay = display;
+
+                    EGLint major, minor;
+                    if( !eglInitialize( _eglDisplay, &major, &minor ) )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+                    if( !eglBindAPI( EGL_OPENGL_API ) )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+
+                    EGLint cfgAttribs[] = {
+                        EGL_SURFACE_TYPE,
+                        EGL_PBUFFER_BIT,
+                        EGL_RENDERABLE_TYPE,
+                        EGL_OPENGL_BIT,
+                        EGL_RED_SIZE,
+                        8,
+                        EGL_GREEN_SIZE,
+                        8,
+                        EGL_BLUE_SIZE,
+                        8,
+                        EGL_ALPHA_SIZE,
+                        8,
+                        EGL_DEPTH_SIZE,
+                        24,
+                        EGL_NONE
+                    };
+                    EGLConfig cfg;
+                    EGLint    numCfg = 0;
+                    eglChooseConfig( _eglDisplay, cfgAttribs, &cfg, 1, &numCfg );
+                    if( numCfg == 0 )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+
+                    _eglContext = createContext( cfg, 4, 6 );
+                    if( _eglContext == EGL_NO_CONTEXT )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+
+                    EGLint pbAttribs[] =
+                        { EGL_WIDTH, _width, EGL_HEIGHT, _height, EGL_NONE };
+                    _eglSurface = eglCreatePbufferSurface( _eglDisplay, cfg, pbAttribs );
+                    if( _eglSurface == EGL_NO_SURFACE )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+
+                    // Make context current immediately so eglGetProcAddress
+                    // returns valid function pointers during GL extension init.
+                    if( !eglMakeCurrent( _eglDisplay,
+                                         _eglSurface,
+                                         _eglSurface,
+                                         _eglContext ) )
+                    {
+                        closeImplementation();
+                        return false;
+                    }
+
+                    _realized = true;
+                    return true;
+                }
+
+                EGLContext
+                createContext( EGLConfig cfg,
+                               EGLint    major,
+                               EGLint    minor )
+                {
+                    EGLint ctxAttribs[] = {
+                        EGL_CONTEXT_MAJOR_VERSION,
+                        major,
+                        EGL_CONTEXT_MINOR_VERSION,
+                        minor,
+                        EGL_CONTEXT_OPENGL_PROFILE_MASK,
+                        EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+                        EGL_NONE
+                    };
+                    return eglCreateContext(
+                        _eglDisplay, cfg, EGL_NO_CONTEXT, ctxAttribs
+                    );
+                }
+
                 EGLDisplay _eglDisplay;
                 EGLContext _eglContext;
                 EGLSurface _eglSurface;
@@ -309,33 +350,40 @@ namespace osg
 
         osg::ref_ptr<osg::Image>                   image = new osg::Image;
 
-        // X11 window with override_redirect + no XMapWindow.
-        // The window exists for its GL context but is never shown.
-        osg::ref_ptr<osg::GraphicsContext::Traits> traits =
-            new osg::GraphicsContext::Traits;
-        traits->x                = 0;
-        traits->y                = 0;
-        traits->width            = width;
-        traits->height           = height;
-        traits->doubleBuffer     = true;
-        traits->windowDecoration = false;
-        traits->headless         = true;
-        traits->readDISPLAY();
-        traits->setUndefinedScreenDetailsToDefaultScreen();
-
         osgViewer::Viewer viewer;
         viewer.setThreadingModel( osgViewer::Viewer::SingleThreaded );
 
-        osg::ref_ptr<osg::GraphicsContext> gc =
-            osg::GraphicsContext::createGraphicsContext( traits.get() );
-        if( !gc.valid() || !gc->valid() )
         {
-            std::cerr << "headlessCapture: failed to create graphics context"
-                      << std::endl;
-            _Exit( 1 );
+            // X11 window with override_redirect + no XMapWindow.
+            // The window exists for its GL context but is never shown.
+            osg::ref_ptr<osg::GraphicsContext::Traits> traits =
+                new osg::GraphicsContext::Traits;
+            traits->x                = 0;
+            traits->y                = 0;
+            traits->width            = width;
+            traits->height           = height;
+            traits->doubleBuffer     = true;
+            traits->windowDecoration = false;
+            traits->headless         = true;
+            traits->readDISPLAY();
+            traits->setUndefinedScreenDetailsToDefaultScreen();
+
+            osg::ref_ptr<osg::GraphicsContext> gc =
+                osg::GraphicsContext::createGraphicsContext( traits.get() );
+            if( !gc.valid() || !gc->valid() )
+            {
+                gc = new detail::EGLHeadlessContext( width, height );
+                if( !gc->realize() || !gc->valid() )
+                {
+                    std::cerr << "headlessCapture: failed to create graphics context"
+                              << std::endl;
+                    _Exit( 1 );
+                }
+            }
+
+            viewer.getCamera()->setGraphicsContext( gc.get() );
         }
 
-        viewer.getCamera()->setGraphicsContext( gc.get() );
         viewer.getCamera()->setViewport( new osg::Viewport( 0, 0, width, height ) );
         viewer.getCamera()->setDrawBuffer( GL_BACK );
         viewer.getCamera()->setReadBuffer( GL_BACK );

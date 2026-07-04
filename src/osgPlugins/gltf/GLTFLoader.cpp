@@ -21,12 +21,12 @@ namespace
         t.fill( -1 );
         for( int i = 0; i < 26; ++i )
         {
-            t['A' + i] = i;
-            t['a' + i] = i + 26;
+            t[static_cast<size_t>( 'A' + i )] = i;
+            t[static_cast<size_t>( 'a' + i )] = i + 26;
         }
         for( int i = 0; i < 10; ++i )
         {
-            t['0' + i] = i + 52;
+            t[static_cast<size_t>( '0' + i )] = i + 52;
         }
         t['+'] = 62;
         t['/'] = 63;
@@ -42,13 +42,14 @@ namespace
         out.reserve( input.size() * 3 / 4 );
 
         int val = 0, bits = -8;
-        for( unsigned char c : input )
+        for( char ch : input )
         {
+            auto c = static_cast<unsigned char>( ch );
             if( table[c] == -1 )
             {
                 continue;    // skip whitespace/invalid
             }
-            if( c == '=' )
+            if( c == static_cast<unsigned char>( '=' ) )
             {
                 break;
             }
@@ -61,6 +62,31 @@ namespace
             }
         }
         return out;
+    }
+
+    bool
+    validIndex( int    index,
+                size_t size ) noexcept
+    {
+        return index >= 0 && static_cast<size_t>( index ) < size;
+    }
+
+    size_t
+    jsonIndex( int index ) noexcept
+    {
+        return static_cast<size_t>( index );
+    }
+
+    unsigned int
+    arrayCount( size_t count ) noexcept
+    {
+        return static_cast<unsigned int>( count );
+    }
+
+    GLsizei
+    glCount( size_t count ) noexcept
+    {
+        return static_cast<GLsizei>( count );
     }
 
 }    // anonymous namespace
@@ -233,7 +259,8 @@ GLTFLoader::loadBuffers()
                 {
                     size_t               byteLength = buf["byteLength"].get<size_t>();
                     std::vector<uint8_t> data( byteLength );
-                    f.read( reinterpret_cast<char*>( data.data() ), byteLength );
+                    f.read( reinterpret_cast<char*>( data.data() ),
+                            static_cast<std::streamsize>( byteLength ) );
                     _buffers.push_back( std::move( data ) );
                 }
                 else
@@ -276,14 +303,15 @@ GLTFLoader::loadImages()
         {
             // Image embedded in buffer
             int         bvIdx  = img["bufferView"].get<int>();
-            const auto& bv     = _json["bufferViews"][bvIdx];
+            const auto& bv     = _json["bufferViews"][jsonIndex( bvIdx )];
             int         bufIdx = bv["buffer"].get<int>();
-            size_t      offset = bv.value( "byteOffset", 0 );
+            size_t      offset = bv.value( "byteOffset", size_t{ 0 } );
             size_t      length = bv["byteLength"].get<size_t>();
 
-            if( bufIdx < static_cast<int>( _buffers.size() ) )
+            if( validIndex( bufIdx, _buffers.size() ) )
             {
-                const uint8_t* data     = _buffers[bufIdx].data() + offset;
+                const size_t   bufferIndex = jsonIndex( bufIdx );
+                const uint8_t* data        = _buffers[bufferIndex].data() + offset;
                 std::string    mimeType = img.value( "mimeType", "image/png" );
                 std::string    ext      = ( mimeType == "image/jpeg" ) ? "jpg" : "png";
 
@@ -321,9 +349,14 @@ GLTFLoader::loadTextures()
         if( tex.contains( "source" ) )
         {
             int imgIdx = tex["source"].get<int>();
-            if( imgIdx < static_cast<int>( _images.size() ) && _images[imgIdx].valid() )
+            if( validIndex( imgIdx, _images.size() ) )
             {
-                osgTex->setImage( _images[imgIdx] );
+                const size_t imageIndex = jsonIndex( imgIdx );
+                if( _images[imageIndex].valid() )
+                {
+                    osgTex->setImage( _images[imageIndex] );
+                    osgTex->setUseHardwareMipMapGeneration( true );
+                }
             }
         }
 
@@ -331,7 +364,7 @@ GLTFLoader::loadTextures()
         if( tex.contains( "sampler" ) && _json.contains( "samplers" ) )
         {
             int         sampIdx = tex["sampler"].get<int>();
-            const auto& samp    = _json["samplers"][sampIdx];
+            const auto& samp    = _json["samplers"][jsonIndex( sampIdx )];
 
             if( samp.contains( "minFilter" ) )
             {
@@ -428,11 +461,13 @@ GLTFLoader::loadMaterials()
             if( pbr.contains( "baseColorTexture" ) )
             {
                 int texIdx = pbr["baseColorTexture"]["index"].get<int>();
-                if( texIdx <
-                    static_cast<int>( _textures.size() ) &&
-                    _textures[texIdx].valid() )
+                if( validIndex( texIdx, _textures.size() ) )
                 {
-                    ss->setTextureAttributeAndModes( 0, _textures[texIdx] );
+                    const size_t textureIndex = jsonIndex( texIdx );
+                    if( _textures[textureIndex].valid() )
+                    {
+                        ss->setTextureAttributeAndModes( 0, _textures[textureIndex] );
+                    }
                 }
             }
         }
@@ -463,7 +498,7 @@ GLTFLoader::getAccessorData( int     accessorIdx,
                              int&    type,
                              size_t& stride ) const
 {
-    const auto& acc = _json["accessors"][accessorIdx];
+    const auto& acc = _json["accessors"][jsonIndex( accessorIdx )];
     count           = acc["count"].get<size_t>();
     componentType   = acc["componentType"].get<int>();
 
@@ -496,10 +531,10 @@ GLTFLoader::getAccessorData( int     accessorIdx,
     }
 
     int         bvIdx     = acc["bufferView"].get<int>();
-    const auto& bv        = _json["bufferViews"][bvIdx];
+    const auto& bv        = _json["bufferViews"][jsonIndex( bvIdx )];
     int         bufIdx    = bv["buffer"].get<int>();
-    size_t      bvOffset  = bv.value( "byteOffset", 0 );
-    size_t      accOffset = acc.value( "byteOffset", 0 );
+    size_t      bvOffset  = bv.value( "byteOffset", size_t{ 0 } );
+    size_t      accOffset = acc.value( "byteOffset", size_t{ 0 } );
 
     // Compute stride
     size_t      componentSize = 4;    // default float
@@ -518,16 +553,22 @@ GLTFLoader::getAccessorData( int     accessorIdx,
             componentSize = 4;
             break;
     }
-    size_t defaultStride = componentSize * type;
+    size_t defaultStride = componentSize * static_cast<size_t>( type );
     stride =
         bv.contains( "byteStride" ) ? bv["byteStride"].get<size_t>() : defaultStride;
 
-    if( bufIdx >= static_cast<int>( _buffers.size() ) || _buffers[bufIdx].empty() )
+    if( !validIndex( bufIdx, _buffers.size() ) )
     {
         return nullptr;
     }
 
-    return _buffers[bufIdx].data() + bvOffset + accOffset;
+    const size_t bufferIndex = jsonIndex( bufIdx );
+    if( _buffers[bufferIndex].empty() )
+    {
+        return nullptr;
+    }
+
+    return _buffers[bufferIndex].data() + bvOffset + accOffset;
 }
 
 osg::ref_ptr<osg::Geometry>
@@ -555,7 +596,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
                                                stride );
         if( data && type == 3 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec3Array> arr = new osg::Vec3Array( count );
+            osg::ref_ptr<osg::Vec3Array> arr =
+                new osg::Vec3Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 ( *arr )[i] = *reinterpret_cast<const osg::vec3*>( data + i * stride );
@@ -574,7 +616,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             getAccessorData( attrs["NORMAL"].get<int>(), count, compType, type, stride );
         if( data && type == 3 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec3Array> arr = new osg::Vec3Array( count );
+            osg::ref_ptr<osg::Vec3Array> arr =
+                new osg::Vec3Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 ( *arr )[i] = *reinterpret_cast<const osg::vec3*>( data + i * stride );
@@ -598,7 +641,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
                                                stride );
         if( data && type == 2 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec2Array> arr = new osg::Vec2Array( count );
+            osg::ref_ptr<osg::Vec2Array> arr =
+                new osg::Vec2Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 const osg::vec2& uv =
@@ -624,7 +668,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
         {
             if( type == 4 )
             {
-                osg::ref_ptr<osg::Vec4Array> arr = new osg::Vec4Array( count );
+                osg::ref_ptr<osg::Vec4Array> arr =
+                    new osg::Vec4Array( arrayCount( count ) );
                 for( size_t i = 0; i < count; ++i )
                 {
                     ( *arr )[i] =
@@ -634,7 +679,8 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             }
             else if( type == 3 )
             {
-                osg::ref_ptr<osg::Vec4Array> arr = new osg::Vec4Array( count );
+                osg::ref_ptr<osg::Vec4Array> arr =
+                    new osg::Vec4Array( arrayCount( count ) );
                 for( size_t i = 0; i < count; ++i )
                 {
                     const osg::vec3& v =
@@ -694,7 +740,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             if( compType == 5'123 )
             {    // UNSIGNED_SHORT
                 osg::ref_ptr<osg::DrawElementsUShort> de =
-                    new osg::DrawElementsUShort( glMode, count );
+                    new osg::DrawElementsUShort( glMode, arrayCount( count ) );
                 const uint16_t* idx = reinterpret_cast<const uint16_t*>( data );
                 for( size_t i = 0; i < count; ++i )
                 {
@@ -705,7 +751,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             else if( compType == 5'125 )
             {    // UNSIGNED_INT
                 osg::ref_ptr<osg::DrawElementsUInt> de =
-                    new osg::DrawElementsUInt( glMode, count );
+                    new osg::DrawElementsUInt( glMode, arrayCount( count ) );
                 const uint32_t* idx = reinterpret_cast<const uint32_t*>( data );
                 for( size_t i = 0; i < count; ++i )
                 {
@@ -716,7 +762,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             else if( compType == 5'121 )
             {    // UNSIGNED_BYTE
                 osg::ref_ptr<osg::DrawElementsUByte> de =
-                    new osg::DrawElementsUByte( glMode, count );
+                    new osg::DrawElementsUByte( glMode, arrayCount( count ) );
                 for( size_t i = 0; i < count; ++i )
                 {
                     ( *de )[i] = data[i];
@@ -748,7 +794,9 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
                     glMode = GL_TRIANGLE_STRIP;
                     break;
             }
-            geom->addPrimitiveSet( new osg::DrawArrays( glMode, 0, verts->size() ) );
+            geom->addPrimitiveSet(
+                new osg::DrawArrays( glMode, 0, glCount( verts->size() ) )
+            );
         }
     }
 
@@ -756,11 +804,13 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
     if( primitive.contains( "material" ) )
     {
         int matIdx = primitive["material"].get<int>();
-        if( matIdx <
-            static_cast<int>( _materials.size() ) &&
-            _materials[matIdx].valid() )
+        if( validIndex( matIdx, _materials.size() ) )
         {
-            geom->setStateSet( _materials[matIdx] );
+            const size_t materialIndex = jsonIndex( matIdx );
+            if( _materials[materialIndex].valid() )
+            {
+                geom->setStateSet( _materials[materialIndex] );
+            }
         }
     }
 
@@ -770,7 +820,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
 osg::ref_ptr<osg::Node>
 GLTFLoader::buildNode( int nodeIdx )
 {
-    const auto&              node = _json["nodes"][nodeIdx];
+    const auto&              node = _json["nodes"][jsonIndex( nodeIdx )];
 
     osg::ref_ptr<osg::Group> group;
 
@@ -822,10 +872,10 @@ GLTFLoader::buildNode( int nodeIdx )
             {
                 auto r = node["rotation"];
                 // glTF: x, y, z, w
-                R.set( r[0].get<double>(),
-                       r[1].get<double>(),
-                       r[2].get<double>(),
-                       r[3].get<double>() );
+                R.set( static_cast<osg::quat::value_type>( r[0].get<double>() ),
+                       static_cast<osg::quat::value_type>( r[1].get<double>() ),
+                       static_cast<osg::quat::value_type>( r[2].get<double>() ),
+                       static_cast<osg::quat::value_type>( r[3].get<double>() ) );
             }
             if( node.contains( "scale" ) )
             {
@@ -856,7 +906,7 @@ GLTFLoader::buildNode( int nodeIdx )
     if( node.contains( "mesh" ) )
     {
         int         meshIdx = node["mesh"].get<int>();
-        const auto& mesh    = _json["meshes"][meshIdx];
+        const auto& mesh    = _json["meshes"][jsonIndex( meshIdx )];
         for( const auto& prim : mesh["primitives"] )
         {
             osg::ref_ptr<osg::Geometry> geom = buildPrimitive( prim );
@@ -893,7 +943,7 @@ GLTFLoader::buildScene()
 
     // Use default scene or first scene
     int                      sceneIdx = _json.value( "scene", 0 );
-    const auto&              scene    = _json["scenes"][sceneIdx];
+    const auto&              scene    = _json["scenes"][jsonIndex( sceneIdx )];
 
     osg::ref_ptr<osg::Group> root     = new osg::Group;
     if( scene.contains( "name" ) )
@@ -976,7 +1026,7 @@ GLTFLoader::loadAnimations()
             continue;
         }
 
-        const auto& sampler       = samplers[samplerIdx];
+        const auto& sampler       = samplers[jsonIndex( samplerIdx )];
         std::string interpolation = sampler.value( "interpolation", "LINEAR" );
 
         // Skip CUBICSPLINE — only handle LINEAR and STEP
