@@ -24,9 +24,9 @@ namespace sponza
 
     constexpr double       defaultSunAzimuthDeg      = 14.0;
     constexpr double       defaultSunElevationDeg    = 62.0;
-    constexpr float        defaultSunIntensity       = 3.5F;
+    constexpr float        defaultSunIntensity       = 5.0F;
     constexpr float        defaultAmbientLevel       = 0.7F;
-    constexpr float        defaultExposure           = 2.2F;
+    constexpr float        defaultExposure           = 3.2F;
     constexpr float        defaultIblIntensity       = 1.0F;
     constexpr float        defaultIblDiffuse         = 1.0F;
     constexpr float        defaultIblSpecular        = 0.12F;
@@ -55,7 +55,7 @@ namespace sponza
     constexpr float        defaultGlassReflection    = 1.0F;
     constexpr bool         defaultVisBakeEnabled     = true;
     constexpr int          defaultVisBakeRays        = 48;
-    constexpr float        defaultVisBakeStrength    = 0.85F;
+    constexpr float        defaultVisBakeStrength    = 0.55F;
     constexpr float        defaultVisBakePower       = 1.0F;
     constexpr float        defaultVisBakeDistance    = 10.0F;
 
