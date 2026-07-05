@@ -9,6 +9,8 @@
 namespace
 {
 
+    constexpr float t12EnvRotationDefault = 0.436332315F;
+
     void
     configureSponzaUsage( osg::ArgumentParser& arguments )
     {
@@ -119,7 +121,13 @@ namespace sponza
     {
         configureSponzaUsage( arguments );
 
-        options.headless = arguments.read( "--headless", options.headlessOutput );
+        // sampleEnv maps u = atan(z, x) / 2pi + 0.5 + rotation / 2pi.
+        // Positive rotation makes an env feature appear at a lower world
+        // azimuth, so 35.8deg env sun -> 10.8deg analytic sun is +25deg.
+        options.envRotation = t12EnvRotationDefault;
+        options.tonemapMode = TonemapMode::Hill;
+
+        options.headless    = arguments.read( "--headless", options.headlessOutput );
 
         arguments.read( "--camera-index", options.cameraIndex );
         if( options.cameraIndex <
