@@ -781,6 +781,9 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uDoubleSidedMaterial",
                                           doubleSidedMaterial ) );
         ss->addUniform( new osg::Uniform( "uUseShIrradiance", false ) );
+        ss->addUniform( new osg::Uniform( "uHasVisBake", false ) );
+        ss->addUniform( new osg::Uniform( "uVisStrength", 0.0F ) );
+        ss->addUniform( new osg::Uniform( "uVisPower", 1.0F ) );
 
         ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );
 
@@ -800,6 +803,7 @@ GLTFLoader::getPbrProgram()
         _pbrProgram->addShader( new osg::Shader( osg::Shader::FRAGMENT,
                                                  pbrFragmentShader ) );
         _pbrProgram->addBindAttribLocation( "osg_Tangent", 6U );
+        _pbrProgram->addBindAttribLocation( "osg_VisBake", 7U );
     }
 
     return _pbrProgram.get();

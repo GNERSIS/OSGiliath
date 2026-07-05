@@ -8,5 +8,6 @@ set(TARGET_SRC
     MainPass.cpp
     SsaoPass.cpp
     TonemapPass.cpp
-    SponzaLighting.cpp)
+    SponzaLighting.cpp
+    SponzaVisibilityBake.cpp)
 setup_example(osgsponza)

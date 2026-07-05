@@ -53,6 +53,11 @@ namespace sponza
     constexpr float        defaultBounceStrength     = 0.45F;
     constexpr float        defaultExposureTrim       = 1.0F;
     constexpr float        defaultGlassReflection    = 1.0F;
+    constexpr bool         defaultVisBakeEnabled     = true;
+    constexpr int          defaultVisBakeRays        = 48;
+    constexpr float        defaultVisBakeStrength    = 0.85F;
+    constexpr float        defaultVisBakePower       = 1.0F;
+    constexpr float        defaultVisBakeDistance    = 10.0F;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
@@ -108,6 +113,12 @@ namespace sponza
             osg::vec3      bounceColor        = defaultBounceColor;
             float          exposureTrim       = defaultExposureTrim;
             float          glassReflection    = defaultGlassReflection;
+            bool           visBakeEnabled     = defaultVisBakeEnabled;
+            int            visBakeRays        = defaultVisBakeRays;
+            float          visBakeStrength    = defaultVisBakeStrength;
+            float          visBakePower       = defaultVisBakePower;
+            float          visBakeDistance    = defaultVisBakeDistance;
+            bool           visBakeRefresh     = false;
 
             std::string    modelPath          = "NewSponza_Main_glTF_003.gltf";
     };

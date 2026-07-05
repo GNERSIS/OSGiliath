@@ -6,6 +6,7 @@
 #include "SponzaLighting.hpp"
 #include "SponzaOptions.hpp"
 #include "SponzaTargets.hpp"
+#include "SponzaVisibilityBake.hpp"
 #include "SsaoPass.hpp"
 #include "TonemapPass.hpp"
 
@@ -38,6 +39,8 @@ main( int    argc,
         std::cerr << "Failed to load " << options.modelPath << std::endl;
         return 1;
     }
+
+    sponza::applyVisibilityBake( model.get(), options );
 
     const osg::dmat4 rttView          = sponza::makeViewMatrix( options.camera );
     const osg::dmat4 projectionMatrix = sponza::makeProjectionMatrix( options.camera );
