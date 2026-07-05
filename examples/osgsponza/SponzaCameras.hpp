@@ -6,6 +6,13 @@
 #include <osg/maths/MatrixTemplate.hpp>
 #include <osg/maths/vec3.hpp>
 
+namespace osg
+{
+
+    class ArgumentParser;
+
+}
+
 namespace sponza
 {
 
@@ -16,6 +23,7 @@ namespace sponza
             osg::dvec3  forward;
             osg::dvec3  up;
             double      fovDeg;
+            float       exposureTrim = 1.0F;
     };
 
     struct CameraSettings
@@ -23,13 +31,19 @@ namespace sponza
             osg::dvec3 eye;
             osg::dvec3 center;
             osg::dvec3 up;
-            double     fovDeg = 0.0;
+            double     fovDeg       = 0.0;
+            float      exposureTrim = 1.0F;
     };
 
     extern const std::array<CameraPreset, 6> cameraPresets;
 
     CameraSettings
     makeCameraSettings( const CameraPreset& preset );
+
+    float
+    readExposureTrimArgument( osg::ArgumentParser&  arguments,
+                              const CameraSettings& camera,
+                              float&                exposureTrim );
 
     osg::dmat4
     makeViewMatrix( const CameraSettings& camera );

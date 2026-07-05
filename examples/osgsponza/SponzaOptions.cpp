@@ -161,7 +161,8 @@ namespace sponza
         arguments.read( "--shadow-bias", options.shadowBias );
         arguments.read( "--shadow-normal-offset", options.shadowNormalOffset );
         arguments.read( "--bounce-strength", options.bounceStrength );
-        arguments.read( "--exposure-trim", options.exposureTrim );
+        options.exposure *=
+            readExposureTrimArgument( arguments, options.camera, options.exposureTrim );
 
         std::string ssaoMode = "on";
         if( arguments.read( "--ssao", ssaoMode ) )
