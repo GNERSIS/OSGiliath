@@ -48,7 +48,7 @@ namespace sponza
     constexpr float        defaultShadowNormalOffset = 0.02F;
     constexpr bool         defaultShadowCastGlass    = false;
     constexpr bool         defaultSkyEnabled         = true;
-    constexpr float        defaultSkyGain            = 1.0F;
+    constexpr float        defaultSkyGain            = 3.4F;
     constexpr bool         defaultIblShEnabled       = true;
     constexpr float        defaultBounceStrength     = 0.45F;
     constexpr float        defaultExposureTrim       = 1.0F;
@@ -57,7 +57,7 @@ namespace sponza
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
     inline const osg::vec3 defaultWhiteBalance{ 1.0F, 1.0F, 1.0F };
-    inline const osg::vec3 defaultBounceColor{ 0.55F, 0.50F, 0.42F };
+    inline const osg::vec3 defaultBounceColor{ 0.60F, 0.49F, 0.37F };
 
     enum class TonemapMode
     {
