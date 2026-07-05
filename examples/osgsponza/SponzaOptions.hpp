@@ -26,7 +26,7 @@ namespace sponza
     constexpr double       defaultSunElevationDeg    = 68.0;
     constexpr float        defaultSunIntensity       = 3.5F;
     constexpr float        defaultAmbientLevel       = 0.7F;
-    constexpr float        defaultExposure           = 2.45F;
+    constexpr float        defaultExposure           = 2.2F;
     constexpr float        defaultIblIntensity       = 1.0F;
     constexpr float        defaultIblDiffuse         = 1.0F;
     constexpr float        defaultIblSpecular        = 0.12F;
