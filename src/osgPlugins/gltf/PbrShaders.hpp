@@ -98,6 +98,8 @@ uniform float uEnvClamp;
 uniform float uIblIntensity;
 uniform float uIblDiffuse;
 uniform float uIblSpecular;
+uniform float uGlassReflectance;
+uniform float uDarkMetalLift;
 uniform float uEnvRotation;
 uniform vec3 uIrradianceSH[9];
 uniform vec3 uBounceRadiance;
@@ -116,6 +118,7 @@ uniform bool uAlphaMask;
 uniform bool uHasEnv;
 uniform bool uUseShIrradiance;
 uniform bool uHasShadow;
+uniform bool uDoubleSidedMaterial;
 
 in vec3 v_position;
 in vec3 v_normal;
@@ -253,9 +256,13 @@ float sunShadow(vec3 viewPos, vec3 geometricNormal)
     return visibility / float(shadowTapCount);
 }
 
-vec3 getNormal()
+vec3 faceOrientedNormal(vec3 normal)
 {
-    vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
+    return (uDoubleSidedMaterial && !gl_FrontFacing) ? -normal : normal;
+}
+
+vec3 getNormal(vec3 geometricNormal)
+{
     if (!uHasNormalMap) {
         return geometricNormal;
     }
@@ -301,8 +308,8 @@ void main()
     }
 
     vec3 albedo = baseColor.rgb;
-    vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
-    vec3 normal = getNormal();
+    vec3 geometricNormal = faceOrientedNormal(safeNormalize(v_normal, vec3(0.0, 0.0, 1.0)));
+    vec3 normal = getNormal(geometricNormal);
     vec3 viewDir = safeNormalize(-v_position, vec3(0.0, 0.0, 1.0));
 
     vec3 geometricNormalWorld = uViewToWorldRot * geometricNormal;
@@ -332,14 +339,26 @@ void main()
         vec3 iblDiffuse = irradiance * albedo * (1.0 - metallic);
 
         float nDotV = max(dot(normal, viewDir), 1e-3);
-        float specularLod = max(roughness * uEnvMaxLod, uEnvMaxLod * 0.35);
+        float glassReflection = max(uGlassReflectance, 0.0);
+        float glassBlend = clamp(glassReflection, 0.0, 1.0);
+        float regularSpecularLod = max(roughness * uEnvMaxLod, uEnvMaxLod * 0.35);
+        float specularLod = mix(regularSpecularLod, roughness * uEnvMaxLod, glassBlend);
         vec3 prefiltered = sampleEnvClamped(reflectionWorld, specularLod);
         vec3 f0 = mix(vec3(0.04), albedo, metallic);
         vec2 ab = envBRDFApprox(roughness, nDotV);
         vec3 iblSpecular = prefiltered * (f0 * ab.x + ab.y);
-        iblSpecular *= 1.0 - smoothstep(0.6, 0.8, roughness);
+        float roughSpecularFade = 1.0 - smoothstep(0.6, 0.8, roughness);
+        iblSpecular *= mix(roughSpecularFade, 1.0, glassBlend);
 
-        ambient = (iblDiffuse * uIblDiffuse + iblSpecular * uIblSpecular) * ao;
+        float roughMetal = metallic * smoothstep(0.35, 0.75, roughness);
+        vec3 darkMetalFill = max(irradiance, osg_LightModel_ambient.rgb)
+            * albedo
+            * roughMetal
+            * (0.35 * max(uDarkMetalLift, 0.0));
+
+        ambient = (iblDiffuse * uIblDiffuse
+                   + iblSpecular * mix(uIblSpecular, glassReflection, glassBlend)
+                   + darkMetalFill) * ao;
         ambient *= uIblIntensity;
         if (any(isnan(ambient)) || any(isinf(ambient))) {
             ambient = vec3(0.0);

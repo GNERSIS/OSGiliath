@@ -1,13 +1,17 @@
 #include "GLTFLoader.hpp"
 #include "PbrShaders.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <osg/core/Notify.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/state/Shader.hpp>
 #include <osg/state/Uniform.hpp>
+#include <osgDB/registry/Options.hpp>
 #include <osgUtil/optimization/TangentSpaceGenerator.hpp>
 #include <sstream>
 
@@ -175,6 +179,52 @@ namespace
             uniform->setElement( i, osg::vec3( 0.0F, 0.0F, 0.0F ) );
         }
         return uniform;
+    }
+
+    std::string
+    lowerAscii( std::string value )
+    {
+        std::transform( value.begin(),
+                        value.end(),
+                        value.begin(),
+                        []( unsigned char c )
+                        {
+                            return static_cast<char>( std::tolower( c ) );
+                        } );
+        return value;
+    }
+
+    bool
+    isGlassMaterialName( const std::string& name )
+    {
+        return lowerAscii( name ).find( "glass" ) != std::string::npos;
+    }
+
+    bool
+    isDarkMetalLiftMaterialName( const std::string& name )
+    {
+        return lowerAscii( name ) == "metal_door";
+    }
+
+    float
+    readPluginFloatOption( const osgDB::ReaderWriter::Options* options,
+                           const char*                         key,
+                           float                               fallback )
+    {
+        if( options == nullptr )
+        {
+            return fallback;
+        }
+
+        const std::string value = options->getPluginStringData( key );
+        if( value.empty() )
+        {
+            return fallback;
+        }
+
+        char*       parseEnd = nullptr;
+        const float parsed   = std::strtof( value.c_str(), &parseEnd );
+        return parseEnd == value.c_str() ? fallback : parsed;
     }
 
     bool
@@ -575,13 +625,18 @@ GLTFLoader::loadMaterials()
         return;
     }
 
+    const float glassReflection =
+        readPluginFloatOption( _options, "sponzaGlassReflection", 1.0F );
+
     for( const auto& mat : _json["materials"] )
     {
         osg::ref_ptr<osg::StateSet> ss  = new osg::StateSet;
         const json*                 pbr = nullptr;
+        std::string                 materialName;
         if( mat.contains( "name" ) )
         {
-            ss->setName( mat["name"].get<std::string>() );
+            materialName = mat["name"].get<std::string>();
+            ss->setName( materialName );
         }
 
         if( mat.contains( "pbrMetallicRoughness" ) )
@@ -670,8 +725,8 @@ GLTFLoader::loadMaterials()
                                               true );
         }
 
-        // Double-sided -> disable backface culling
-        if( mat.value( "doubleSided", false ) )
+        const bool doubleSidedMaterial = mat.value( "doubleSided", false );
+        if( doubleSidedMaterial )
         {
             ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
         }
@@ -707,6 +762,14 @@ GLTFLoader::loadMaterials()
         ss->addUniform( createZeroIrradianceShUniform() );
         ss->addUniform( new osg::Uniform( "uBounceRadiance",
                                           osg::vec3( 0.0F, 0.0F, 0.0F ) ) );
+        ss->addUniform( new osg::Uniform( "uGlassReflectance",
+                                          isGlassMaterialName( materialName )
+                                              ? glassReflection
+                                              : 0.0F ) );
+        ss->addUniform(
+            new osg::Uniform( "uDarkMetalLift",
+                              isDarkMetalLiftMaterialName( materialName ) ? 1.0F : 0.0F )
+        );
 
         ss->addUniform( new osg::Uniform( "uHasBaseColorMap", hasBaseColorMap ) );
         ss->addUniform( new osg::Uniform( "uHasMetallicRoughnessMap",
@@ -715,6 +778,8 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uHasOcclusionMap", hasOcclusionMap ) );
         ss->addUniform( new osg::Uniform( "uHasEmissiveMap", hasEmissiveMap ) );
         ss->addUniform( new osg::Uniform( "uAlphaMask", alphaMask ) );
+        ss->addUniform( new osg::Uniform( "uDoubleSidedMaterial",
+                                          doubleSidedMaterial ) );
         ss->addUniform( new osg::Uniform( "uUseShIrradiance", false ) );
 
         ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );

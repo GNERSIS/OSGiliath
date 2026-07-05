@@ -5,6 +5,8 @@
 #include <iostream>
 #include <osg/core/ApplicationUsage.hpp>
 #include <osg/core/ArgumentParser.hpp>
+#include <osgDB/registry/Options.hpp>
+#include <osgDB/registry/Registry.hpp>
 
 namespace
 {
@@ -114,6 +116,22 @@ namespace
         }
     }
 
+    void
+    publishPluginOptions( const sponza::SponzaOptions& options )
+    {
+        osgDB::Options* registryOptions = osgDB::Registry::instance()->getOptions();
+        if( registryOptions == nullptr )
+        {
+            registryOptions = new osgDB::Options;
+            osgDB::Registry::instance()->setOptions( registryOptions );
+        }
+
+        registryOptions->setPluginStringData(
+            "sponzaGlassReflection",
+            std::to_string( options.glassReflection )
+        );
+    }
+
 }
 
 namespace sponza
@@ -207,6 +225,8 @@ namespace sponza
             readColorArgument( arguments, "--white-balance", defaultWhiteBalance );
         options.bounceColor =
             readColorArgument( arguments, "--bounce-color", defaultBounceColor );
+        arguments.read( "--sky-gain", options.skyGain );
+        arguments.read( "--glass-reflection", options.glassReflection );
 
         for( int i = 1; i < arguments.argc(); ++i )
         {
@@ -216,6 +236,8 @@ namespace sponza
                 break;
             }
         }
+
+        publishPluginOptions( options );
 
         return true;
     }

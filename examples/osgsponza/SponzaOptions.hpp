@@ -48,9 +48,11 @@ namespace sponza
     constexpr float        defaultShadowNormalOffset = 0.02F;
     constexpr bool         defaultShadowCastGlass    = false;
     constexpr bool         defaultSkyEnabled         = true;
+    constexpr float        defaultSkyGain            = 1.0F;
     constexpr bool         defaultIblShEnabled       = true;
     constexpr float        defaultBounceStrength     = 0.45F;
     constexpr float        defaultExposureTrim       = 1.0F;
+    constexpr float        defaultGlassReflection    = 1.0F;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
@@ -98,12 +100,14 @@ namespace sponza
             float          shadowNormalOffset = defaultShadowNormalOffset;
             bool           shadowCastGlass    = defaultShadowCastGlass;
             bool           skyEnabled         = defaultSkyEnabled;
+            float          skyGain            = defaultSkyGain;
             TonemapMode    tonemapMode        = TonemapMode::Narkowicz;
             osg::vec3      whiteBalance       = defaultWhiteBalance;
             bool           iblShEnabled       = defaultIblShEnabled;
             float          bounceStrength     = defaultBounceStrength;
             osg::vec3      bounceColor        = defaultBounceColor;
             float          exposureTrim       = defaultExposureTrim;
+            float          glassReflection    = defaultGlassReflection;
 
             std::string    modelPath          = "NewSponza_Main_glTF_003.gltf";
     };
