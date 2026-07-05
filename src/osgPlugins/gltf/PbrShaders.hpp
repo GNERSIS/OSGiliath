@@ -99,6 +99,8 @@ uniform float uIblIntensity;
 uniform float uIblDiffuse;
 uniform float uIblSpecular;
 uniform float uEnvRotation;
+uniform vec3 uIrradianceSH[9];
+uniform vec3 uBounceRadiance;
 uniform mat4 uShadowMatrix;
 uniform float uShadowSoftness;
 uniform float uShadowBias;
@@ -112,6 +114,7 @@ uniform bool uHasOcclusionMap;
 uniform bool uHasEmissiveMap;
 uniform bool uAlphaMask;
 uniform bool uHasEnv;
+uniform bool uUseShIrradiance;
 uniform bool uHasShadow;
 
 in vec3 v_position;
@@ -120,7 +123,8 @@ in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texcoord0;
 
-out vec4 osg_FragColor;
+layout(location = 0) out vec4 osg_FragColor;
+layout(location = 1) out vec4 osg_IndirectColor;
 
 vec3 safeNormalize(vec3 value, vec3 fallback)
 {
@@ -171,8 +175,27 @@ vec3 sampleEnv(vec3 dirWorld, float lod)
     float lon = (abs(d.x) + abs(d.z) < 1e-5) ? 0.0 : atan(d.z, d.x);
     float u = lon / (2.0 * PI) + 0.5 + uEnvRotation / (2.0 * PI);
     float v = acos(clamp(d.y, -1.0, 1.0)) / PI;
-    vec3 c = textureLod(uEnvMap, vec2(u, v), lod).rgb;
-    return min(c, vec3(uEnvClamp));
+    return textureLod(uEnvMap, vec2(u, v), lod).rgb;
+}
+
+vec3 sampleEnvClamped(vec3 dirWorld, float lod)
+{
+    return min(sampleEnv(dirWorld, lod), vec3(uEnvClamp));
+}
+
+vec3 evaluateIrradianceSH(vec3 dirWorld)
+{
+    vec3 d = safeNormalize(dirWorld, vec3(0.0, 1.0, 0.0));
+    return
+        uIrradianceSH[0] * 0.28209479177387814 +
+        uIrradianceSH[1] * (0.4886025119029199 * d.y) +
+        uIrradianceSH[2] * (0.4886025119029199 * d.z) +
+        uIrradianceSH[3] * (0.4886025119029199 * d.x) +
+        uIrradianceSH[4] * (1.0925484305920792 * d.x * d.y) +
+        uIrradianceSH[5] * (1.0925484305920792 * d.y * d.z) +
+        uIrradianceSH[6] * (0.31539156525252005 * (3.0 * d.y * d.y - 1.0)) +
+        uIrradianceSH[7] * (1.0925484305920792 * d.x * d.z) +
+        uIrradianceSH[8] * (0.5462742152960396 * (d.x * d.x - d.z * d.z));
 }
 
 vec2 envBRDFApprox(float rough, float ndv)
@@ -282,36 +305,39 @@ void main()
     vec3 normal = getNormal();
     vec3 viewDir = safeNormalize(-v_position, vec3(0.0, 0.0, 1.0));
 
+    vec3 geometricNormalWorld = uViewToWorldRot * geometricNormal;
+    geometricNormalWorld = (length(geometricNormalWorld) > 1e-6)
+        ? normalize(geometricNormalWorld)
+        : vec3(0.0, 1.0, 0.0);
+
+    vec3 normalWorld = uViewToWorldRot * normal;
+    normalWorld = (length(normalWorld) > 1e-6)
+        ? normalize(normalWorld)
+        : geometricNormalWorld;
+
+    vec3 viewWorld = uViewToWorldRot * viewDir;
+    viewWorld = (length(viewWorld) > 1e-6) ? normalize(viewWorld) : vec3(0.0, 0.0, 1.0);
+
+    vec3 reflectionWorld = reflect(-viewWorld, normalWorld);
+    reflectionWorld = (length(reflectionWorld) > 1e-6)
+        ? normalize(reflectionWorld)
+        : normalWorld;
+
     vec3 flatAmbient = albedo * ao * osg_LightModel_ambient.rgb;
     vec3 ambient = flatAmbient;
     if (uHasEnv) {
-        vec3 geometricNormalWorld = uViewToWorldRot * geometricNormal;
-        geometricNormalWorld = (length(geometricNormalWorld) > 1e-6)
-            ? normalize(geometricNormalWorld)
-            : vec3(0.0, 1.0, 0.0);
-
-        vec3 normalWorld = uViewToWorldRot * normal;
-        normalWorld = (length(normalWorld) > 1e-6)
-            ? normalize(normalWorld)
-            : geometricNormalWorld;
-
-        vec3 viewWorld = uViewToWorldRot * viewDir;
-        viewWorld = (length(viewWorld) > 1e-6) ? normalize(viewWorld) : vec3(0.0, 0.0, 1.0);
-
-        vec3 reflectionWorld = reflect(-viewWorld, normalWorld);
-        reflectionWorld = (length(reflectionWorld) > 1e-6)
-            ? normalize(reflectionWorld)
-            : normalWorld;
-
-        vec3 irradiance = sampleEnv(normalWorld, uEnvMaxLod - 2.0);
+        vec3 irradiance = uUseShIrradiance
+            ? evaluateIrradianceSH(normalWorld)
+            : sampleEnvClamped(normalWorld, uEnvMaxLod - 2.0);
         vec3 iblDiffuse = irradiance * albedo * (1.0 - metallic);
 
         float nDotV = max(dot(normal, viewDir), 1e-3);
         float specularLod = max(roughness * uEnvMaxLod, uEnvMaxLod * 0.35);
-        vec3 prefiltered = sampleEnv(reflectionWorld, specularLod);
+        vec3 prefiltered = sampleEnvClamped(reflectionWorld, specularLod);
         vec3 f0 = mix(vec3(0.04), albedo, metallic);
         vec2 ab = envBRDFApprox(roughness, nDotV);
         vec3 iblSpecular = prefiltered * (f0 * ab.x + ab.y);
+        iblSpecular *= 1.0 - smoothstep(0.6, 0.8, roughness);
 
         ambient = (iblDiffuse * uIblDiffuse + iblSpecular * uIblSpecular) * ao;
         ambient *= uIblIntensity;
@@ -320,7 +346,13 @@ void main()
         }
         ambient = max(ambient, vec3(0.0));
     }
-    vec3 color = ambient + emissive;
+
+    vec3 bounce = uBounceRadiance * clamp(0.5 - 0.5 * normalWorld.y, 0.0, 1.0);
+    ambient += bounce * albedo * (1.0 - metallic) * ao;
+    ambient = max(ambient, vec3(0.0));
+
+    vec3 indirectColor = ambient;
+    vec3 directColor = emissive;
 
     if (osg_LightingEnabled) {
         vec3 lightDir;
@@ -353,7 +385,7 @@ void main()
             float geometry = geometrySmith(normal, viewDir, lightDir, roughness);
 
             vec3 numerator = distribution * geometry * fresnel;
-            float denominator = max(4.0 * nDotV * nDotL, 1e-5);
+            float denominator = max(4.0 * nDotV * nDotL, 1e-3);
             vec3 specular = numerator / denominator;
 
             vec3 diffuse = (vec3(1.0) - fresnel) * (1.0 - metallic) * albedo / PI;
@@ -361,11 +393,12 @@ void main()
             float shadow = (uHasShadow && osg_LightSource.position.w == 0.0)
                 ? sunShadow(v_position, geometricNormal)
                 : 1.0;
-            color += (diffuse + specular) * radiance * nDotL * shadow;
+            directColor += (diffuse + specular) * radiance * nDotL * shadow;
         }
     }
 
-    osg_FragColor = vec4(color, baseColor.a);
+    osg_FragColor = vec4(directColor, baseColor.a);
+    osg_IndirectColor = vec4(indirectColor, baseColor.a);
 }
 )glsl";
 

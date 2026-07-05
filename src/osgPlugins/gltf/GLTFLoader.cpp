@@ -162,6 +162,21 @@ namespace
         }
     }
 
+    osg::ref_ptr<osg::Uniform>
+    createZeroIrradianceShUniform()
+    {
+        constexpr unsigned int     coefficientCount = 9U;
+        osg::ref_ptr<osg::Uniform> uniform =
+            new osg::Uniform( osg::Uniform::FLOAT_VEC3,
+                              "uIrradianceSH",
+                              static_cast<int>( coefficientCount ) );
+        for( unsigned int i = 0; i < coefficientCount; ++i )
+        {
+            uniform->setElement( i, osg::vec3( 0.0F, 0.0F, 0.0F ) );
+        }
+        return uniform;
+    }
+
     bool
     bindTextureInfo( osg::StateSet&                                   stateSet,
                      const std::vector<osg::ref_ptr<osg::Texture2D>>& textures,
@@ -684,6 +699,9 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uOcclusionStrength", occlusionStrength ) );
         ss->addUniform( new osg::Uniform( "uEmissiveFactor", emissiveFactor ) );
         ss->addUniform( new osg::Uniform( "uAlphaCutoff", alphaCutoff ) );
+        ss->addUniform( createZeroIrradianceShUniform() );
+        ss->addUniform( new osg::Uniform( "uBounceRadiance",
+                                          osg::vec3( 0.0F, 0.0F, 0.0F ) ) );
 
         ss->addUniform( new osg::Uniform( "uHasBaseColorMap", hasBaseColorMap ) );
         ss->addUniform( new osg::Uniform( "uHasMetallicRoughnessMap",
@@ -692,6 +710,7 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uHasOcclusionMap", hasOcclusionMap ) );
         ss->addUniform( new osg::Uniform( "uHasEmissiveMap", hasEmissiveMap ) );
         ss->addUniform( new osg::Uniform( "uAlphaMask", alphaMask ) );
+        ss->addUniform( new osg::Uniform( "uUseShIrradiance", false ) );
 
         ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );
 

@@ -18,6 +18,7 @@ namespace
 #version 460 core
 
 uniform sampler2D uHdr;
+uniform sampler2D uIndirect;
 uniform sampler2D uAo;
 uniform sampler2D uDepth;
 uniform sampler2D uEnvMap;
@@ -138,9 +139,10 @@ void main()
     if (skyPixel) {
         hdr = sampleSky(skyRayWorld(), 1.0);
     } else {
+        vec3 indirect = texture(uIndirect, vUV).rgb;
         float ao = texture(uAo, vUV).r;
         ao = mix(1.0, ao, uAoStrength);
-        hdr *= ao;
+        hdr += ao * indirect;
     }
 
     vec3 c = hdr * uWhiteBalance * uExposure;
@@ -200,7 +202,11 @@ namespace sponza
                                                    frame.envTexture.get(),
                                                    osg::StateAttribute::ON );
         }
+        stateSet->setTextureAttributeAndModes( 4,
+                                               targets.indirectColor.get(),
+                                               osg::StateAttribute::ON );
         stateSet->addUniform( new osg::Uniform( "uHdr", 0 ) );
+        stateSet->addUniform( new osg::Uniform( "uIndirect", 4 ) );
         stateSet->addUniform( new osg::Uniform( "uAo", 1 ) );
         stateSet->addUniform( new osg::Uniform( "uDepth", 2 ) );
         stateSet->addUniform( new osg::Uniform( "uEnvMap", 3 ) );

@@ -24,6 +24,12 @@ namespace sponza
     }
 
     osg::ref_ptr<osg::Texture2D>
+    createIndirectColorTexture()
+    {
+        return createHdrColorTexture();
+    }
+
+    osg::ref_ptr<osg::Texture2D>
     createSceneDepthTexture()
     {
         osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
@@ -77,6 +83,7 @@ namespace sponza
     {
         return SponzaTargets{
             createHdrColorTexture(),
+            createIndirectColorTexture(),
             createSceneDepthTexture(),
             createAoTexture()
         };
