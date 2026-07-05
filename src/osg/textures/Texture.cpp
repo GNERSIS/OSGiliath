@@ -21,11 +21,11 @@
 // Apple-specific GL constants removed (not in GL 4.6 Core Profile)
 
 #ifndef GL_TEXTURE_MAX_ANISOTROPY
-    #define GL_TEXTURE_MAX_ANISOTROPY 0x84FE
+    #define GL_TEXTURE_MAX_ANISOTROPY 0X84'FE
 #endif
 
 #ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY
-    #define GL_MAX_TEXTURE_MAX_ANISOTROPY 0x84FF
+    #define GL_MAX_TEXTURE_MAX_ANISOTROPY 0X84'FF
 #endif
 
 #if 0
@@ -38,6 +38,7 @@ namespace osg
 {
     namespace
     {
+
         bool
         requiresMipmapLevels( Texture::FilterMode filter )
         {
@@ -48,9 +49,8 @@ namespace osg
         computeMipmapLevels( GLsizei width,
                              GLsizei height )
         {
-            return static_cast<GLsizei>(
-                Image::computeNumberOfMipmapLevels( width, height )
-            );
+            return static_cast<GLsizei>( Image::computeNumberOfMipmapLevels( width,
+                                                                             height ) );
         }
 
         void
@@ -71,6 +71,7 @@ namespace osg
                                                    textureObject.getTexture() );
             }
         }
+
     }
 
     ApplicationUsageProxy Texture_e0( ApplicationUsage::ENVIRONMENTAL_VARIABLE,
@@ -2745,7 +2746,8 @@ namespace osg
 
         // Art: I think anisotropic filtering is not supported by the integer textures
         if( extensions->isTextureFilterAnisotropicSupported &&
-            _maxAnisotropy > 1.0F &&
+            _maxAnisotropy >
+            1.0F &&
             _internalFormatType !=
             SIGNED_INTEGER &&
             _internalFormatType != UNSIGNED_INTEGER )
@@ -3240,12 +3242,13 @@ namespace osg
             if( !compressed_image )
             {
                 numMipmapLevels = useHardwareMipMapGeneration
-                                      ? computeMipmapLevels( inwidth, inheight )
-                                      : 1;
+                                    ? computeMipmapLevels( inwidth, inheight )
+                                    : 1;
 
                 GLenum texStorageSizedInternalFormat =
                     useHardwareMipMapGeneration &&
-                            getTextureTarget() == GL_TEXTURE_2D &&
+                            getTextureTarget() ==
+                            GL_TEXTURE_2D &&
                             extensions->isTextureStorageEnabled &&
                             ( _borderWidth == 0 )
                         ? selectSizedInternalFormat( image )
@@ -3283,8 +3286,8 @@ namespace osg
             else if( extensions->isCompressedTexImage2DSupported() )
             {
                 numMipmapLevels = useHardwareMipMapGeneration
-                                      ? computeMipmapLevels( inwidth, inheight )
-                                      : 1;
+                                    ? computeMipmapLevels( inwidth, inheight )
+                                    : 1;
 
                 GLint blockSize, size;
                 getCompressedSize( static_cast<GLenum>( _internalFormat ),
@@ -3296,7 +3299,8 @@ namespace osg
 
                 GLenum texStorageSizedInternalFormat =
                     useHardwareMipMapGeneration &&
-                            getTextureTarget() == GL_TEXTURE_2D &&
+                            getTextureTarget() ==
+                            GL_TEXTURE_2D &&
                             extensions->isTextureStorageEnabled &&
                             ( _borderWidth == 0 )
                         ? selectSizedInternalFormat( image )

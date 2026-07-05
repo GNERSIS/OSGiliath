@@ -62,10 +62,11 @@ namespace
         if( depth == 0 )
         {
             osg::ref_ptr<osg::Geode> geode = osg::Geode::create();
-            geode->addDrawable( osg::createTexturedQuadGeometry(
-                osg::vec3( 0.0F, 0.0F, 0.0F ),
-                osg::vec3( kQuadSize, 0.0F, 0.0F ),
-                osg::vec3( 0.0F, kQuadSize, 0.0F ) ) );
+            geode->addDrawable(
+                osg::createTexturedQuadGeometry( osg::vec3( 0.0F, 0.0F, 0.0F ),
+                                                 osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                                 osg::vec3( 0.0F, kQuadSize, 0.0F ) )
+            );
             node->addChild( geode.get() );
             return node;
         }
@@ -80,8 +81,8 @@ namespace
     void
     BM_NodeVisitorTraverse( benchmark::State& state )
     {
-        const auto               depth = static_cast<std::size_t>( state.range( 0 ) );
-        osg::ref_ptr<osg::Group> root  = buildBalancedTree( depth );
+        const auto               depth   = static_cast<std::size_t>( state.range( 0 ) );
+        osg::ref_ptr<osg::Group> root    = buildBalancedTree( depth );
 
         std::size_t              visited = 0;
         for( auto _ : state )
@@ -94,14 +95,15 @@ namespace
         state.SetItemsProcessed( static_cast<std::int64_t>( state.iterations() ) *
                                  static_cast<std::int64_t>( visited ) );
     }
+
     BENCHMARK( BM_NodeVisitorTraverse )->Arg( 3 )->Arg( 4 )->Arg( 5 );
 
     /// Const-visitor sweep for comparison with the mutable path.
     void
     BM_ConstNodeVisitorTraverse( benchmark::State& state )
     {
-        const auto               depth = static_cast<std::size_t>( state.range( 0 ) );
-        osg::ref_ptr<osg::Group> root  = buildBalancedTree( depth );
+        const auto               depth   = static_cast<std::size_t>( state.range( 0 ) );
+        osg::ref_ptr<osg::Group> root    = buildBalancedTree( depth );
 
         std::size_t              visited = 0;
         for( auto _ : state )
@@ -114,6 +116,7 @@ namespace
         state.SetItemsProcessed( static_cast<std::int64_t>( state.iterations() ) *
                                  static_cast<std::int64_t>( visited ) );
     }
+
     BENCHMARK( BM_ConstNodeVisitorTraverse )->Arg( 3 )->Arg( 4 )->Arg( 5 );
 
 }    // namespace

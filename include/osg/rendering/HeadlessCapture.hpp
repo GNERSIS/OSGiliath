@@ -129,9 +129,13 @@ namespace osg
                         EGLDeviceEXT devices[4];
                         EGLint       numDevices = 0;
                         eglQueryDevicesEXT( 4, devices, &numDevices );
-                        if( numDevices > 0 &&
-                            realizeDisplay( eglGetPlatformDisplayEXT(
-                                EGL_PLATFORM_DEVICE_EXT, devices[0], nullptr ) ) )
+                        if( numDevices >
+                            0 &&
+                            realizeDisplay(
+                                eglGetPlatformDisplayEXT( EGL_PLATFORM_DEVICE_EXT,
+                                                          devices[0],
+                                                          nullptr )
+                            ) )
                         {
                             return true;
                         }
@@ -139,8 +143,11 @@ namespace osg
 
 #ifdef EGL_PLATFORM_SURFACELESS_MESA
                     if( eglGetPlatformDisplayEXT &&
-                        realizeDisplay( eglGetPlatformDisplayEXT(
-                            EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr ) ) )
+                        realizeDisplay(
+                            eglGetPlatformDisplayEXT( EGL_PLATFORM_SURFACELESS_MESA,
+                                                      EGL_DEFAULT_DISPLAY,
+                                                      nullptr )
+                        ) )
                     {
                         return true;
                     }
@@ -310,9 +317,10 @@ namespace osg
                         EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
                         EGL_NONE
                     };
-                    return eglCreateContext(
-                        _eglDisplay, cfg, EGL_NO_CONTEXT, ctxAttribs
-                    );
+                    return eglCreateContext( _eglDisplay,
+                                             cfg,
+                                             EGL_NO_CONTEXT,
+                                             ctxAttribs );
                 }
 
                 EGLDisplay _eglDisplay;
@@ -348,9 +356,9 @@ namespace osg
             _Exit( 1 );
         }
 
-        osg::ref_ptr<osg::Image>                   image = new osg::Image;
+        osg::ref_ptr<osg::Image> image = new osg::Image;
 
-        osgViewer::Viewer viewer;
+        osgViewer::Viewer        viewer;
         viewer.setThreadingModel( osgViewer::Viewer::SingleThreaded );
 
         {
