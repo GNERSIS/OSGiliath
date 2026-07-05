@@ -28,6 +28,26 @@ namespace
             "--shadow-cast-glass <on|off>",
             "Let named Sponza glass materials cast into the shadow map."
         );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bake <on|off>",
+            "Enable load-time per-vertex hemisphere visibility bake."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bake-rays <count>",
+            "Hemisphere rays per vertex for the visibility bake."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bake-strength <value>",
+            "Blend strength for baked visibility on indirect light."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bake-power <value>",
+            "Power curve for baked visibility on indirect light."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bake-refresh",
+            "Ignore any existing visibility bake cache and rebuild it."
+        );
     }
 
     bool
@@ -227,6 +247,20 @@ namespace sponza
             readColorArgument( arguments, "--bounce-color", defaultBounceColor );
         arguments.read( "--sky-gain", options.skyGain );
         arguments.read( "--glass-reflection", options.glassReflection );
+        if( !readOnOffArgument( arguments, "--vis-bake", options.visBakeEnabled ) )
+        {
+            return false;
+        }
+        arguments.read( "--vis-bake-rays", options.visBakeRays );
+        arguments.read( "--vis-bake-strength", options.visBakeStrength );
+        arguments.read( "--vis-bake-power", options.visBakePower );
+        arguments.read( "--vis-bake-distance", options.visBakeDistance );
+        options.visBakeRefresh = arguments.read( "--vis-bake-refresh" );
+        if( options.visBakeRays <= 0 )
+        {
+            std::cerr << "--vis-bake-rays must be greater than 0" << std::endl;
+            return false;
+        }
 
         for( int i = 1; i < arguments.argc(); ++i )
         {
