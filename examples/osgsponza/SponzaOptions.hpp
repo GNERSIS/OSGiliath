@@ -28,7 +28,7 @@ namespace sponza
     constexpr float        defaultAmbientLevel       = 0.7F;
     constexpr float        defaultExposure           = 1.3F;
     constexpr float        defaultIblIntensity       = 1.0F;
-    constexpr float        defaultIblDiffuse         = 0.5F;
+    constexpr float        defaultIblDiffuse         = 1.0F;
     constexpr float        defaultIblSpecular        = 0.12F;
     constexpr float        defaultIblClamp           = 20.0F;
     constexpr float        defaultEnvRotation        = 0.0F;
@@ -50,7 +50,7 @@ namespace sponza
     constexpr float        defaultExposureTrim       = 1.0F;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
-    inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.6F, 0.75F };
+    inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
     inline const osg::vec3 defaultWhiteBalance{ 1.0F, 1.0F, 1.0F };
     inline const osg::vec3 defaultBounceColor{ 0.62F, 0.48F, 0.35F };
 
