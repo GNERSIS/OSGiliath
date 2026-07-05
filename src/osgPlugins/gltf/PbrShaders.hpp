@@ -8,6 +8,7 @@ namespace
 #version 460 core
 
 layout(location = 0) in vec4 osg_Vertex;
+layout(location = 1) in vec3 osg_RadianceBake;
 layout(location = 2) in vec3 osg_Normal;
 layout(location = 6) in vec4 osg_Tangent;
 layout(location = 7) in vec4 osg_VisBake;
@@ -22,6 +23,7 @@ out vec3 v_normal;
 out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec2 v_texcoord0;
+out vec3 vBakedIrradiance;
 out vec3 vBentNormalWorld;
 out float vVisBake;
 
@@ -53,6 +55,7 @@ void main()
     v_tangent = tangent;
     v_bitangent = bitangent;
     v_texcoord0 = osg_MultiTexCoord0.xy;
+    vBakedIrradiance = osg_RadianceBake;
     vBentNormalWorld = safeNormalize(osg_VisBake.xyz, vec3(0.0, 1.0, 0.0));
     vVisBake = osg_VisBake.w;
 
@@ -111,6 +114,7 @@ uniform float uVisPower;
 uniform float uVisBentStrength;
 uniform vec3 uIrradianceSH[9];
 uniform vec3 uBounceRadiance;
+uniform float uRadianceScale;
 uniform mat4 uShadowMatrix;
 uniform float uShadowSoftness;
 uniform float uShadowBias;
@@ -125,6 +129,7 @@ uniform bool uHasEmissiveMap;
 uniform bool uAlphaMask;
 uniform bool uHasEnv;
 uniform bool uUseShIrradiance;
+uniform bool uUseRadianceBake;
 uniform bool uHasShadow;
 uniform bool uHasVisBake;
 uniform bool uDoubleSidedMaterial;
@@ -134,6 +139,7 @@ in vec3 v_normal;
 in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texcoord0;
+in vec3 vBakedIrradiance;
 in vec3 vBentNormalWorld;
 in float vVisBake;
 
@@ -372,7 +378,9 @@ void main()
         vec3 irradiance = uUseShIrradiance
             ? evaluateIrradianceSH(irradianceNormalWorld)
             : sampleEnvClamped(irradianceNormalWorld, uEnvMaxLod - 2.0);
-        vec3 iblDiffuse = irradiance * albedo * (1.0 - metallic);
+        vec3 iblDiffuse = uUseRadianceBake
+            ? vBakedIrradiance * uRadianceScale * albedo * (1.0 - metallic)
+            : irradiance * albedo * (1.0 - metallic);
 
         float nDotV = max(dot(normal, viewDir), 1e-3);
         float glassReflection = max(uGlassReflectance, 0.0);
@@ -392,20 +400,29 @@ void main()
             * roughMetal
             * (0.35 * max(uDarkMetalLift, 0.0));
 
-        ambient = (iblDiffuse * uIblDiffuse
-                   + iblSpecular * mix(uIblSpecular, glassReflection, glassBlend)
-                   + darkMetalFill) * ao;
-        ambient *= uIblIntensity * indirectVisibility;
+        if (uUseRadianceBake) {
+            ambient = (iblDiffuse * uIblDiffuse
+                       + iblSpecular * mix(uIblSpecular, glassReflection, glassBlend) * indirectVisibility
+                       + darkMetalFill) * ao;
+            ambient *= uIblIntensity;
+        } else {
+            ambient = (iblDiffuse * uIblDiffuse
+                       + iblSpecular * mix(uIblSpecular, glassReflection, glassBlend)
+                       + darkMetalFill) * ao;
+            ambient *= uIblIntensity * indirectVisibility;
+        }
         if (any(isnan(ambient)) || any(isinf(ambient))) {
             ambient = vec3(0.0);
         }
         ambient = max(ambient, vec3(0.0));
     }
 
-    vec3 bounceNormalWorld =
-        (uHasVisBake && uVisBentStrength > 0.0) ? geometricNormalWorld : normalWorld;
-    vec3 bounce = uBounceRadiance * clamp(0.5 - 0.5 * bounceNormalWorld.y, 0.0, 1.0);
-    ambient += bounce * albedo * (1.0 - metallic) * ao * indirectVisibility;
+    if (!uUseRadianceBake) {
+        vec3 bounceNormalWorld =
+            (uHasVisBake && uVisBentStrength > 0.0) ? geometricNormalWorld : normalWorld;
+        vec3 bounce = uBounceRadiance * clamp(0.5 - 0.5 * bounceNormalWorld.y, 0.0, 1.0);
+        ambient += bounce * albedo * (1.0 - metallic) * ao * indirectVisibility;
+    }
     ambient = max(ambient, vec3(0.0));
 
     vec3 indirectColor = ambient;

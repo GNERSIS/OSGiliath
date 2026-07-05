@@ -762,6 +762,7 @@ GLTFLoader::loadMaterials()
         ss->addUniform( createZeroIrradianceShUniform() );
         ss->addUniform( new osg::Uniform( "uBounceRadiance",
                                           osg::vec3( 0.0F, 0.0F, 0.0F ) ) );
+        ss->addUniform( new osg::Uniform( "uRadianceScale", 1.0F ) );
         ss->addUniform( new osg::Uniform( "uGlassReflectance",
                                           isGlassMaterialName( materialName )
                                               ? glassReflection
@@ -781,6 +782,7 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uDoubleSidedMaterial",
                                           doubleSidedMaterial ) );
         ss->addUniform( new osg::Uniform( "uUseShIrradiance", false ) );
+        ss->addUniform( new osg::Uniform( "uUseRadianceBake", false ) );
         ss->addUniform( new osg::Uniform( "uHasVisBake", false ) );
         ss->addUniform( new osg::Uniform( "uVisStrength", 0.0F ) );
         ss->addUniform( new osg::Uniform( "uVisPower", 1.0F ) );
@@ -803,6 +805,7 @@ GLTFLoader::getPbrProgram()
                                                  pbrVertexShader ) );
         _pbrProgram->addShader( new osg::Shader( osg::Shader::FRAGMENT,
                                                  pbrFragmentShader ) );
+        _pbrProgram->addBindAttribLocation( "osg_RadianceBake", 1U );
         _pbrProgram->addBindAttribLocation( "osg_Tangent", 6U );
         _pbrProgram->addBindAttribLocation( "osg_VisBake", 7U );
     }
