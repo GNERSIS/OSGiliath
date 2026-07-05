@@ -44,6 +44,7 @@ namespace sponza
     constexpr float        defaultShadowSoftness     = 0.05F;
     constexpr float        defaultShadowBias         = 0.0008F;
     constexpr float        defaultShadowNormalOffset = 0.02F;
+    constexpr bool         defaultShadowCastGlass    = false;
     constexpr bool         defaultSkyEnabled         = true;
     constexpr bool         defaultIblShEnabled       = true;
     constexpr float        defaultBounceStrength     = 0.45F;
@@ -91,6 +92,7 @@ namespace sponza
             float          shadowSoftness     = defaultShadowSoftness;
             float          shadowBias         = defaultShadowBias;
             float          shadowNormalOffset = defaultShadowNormalOffset;
+            bool           shadowCastGlass    = defaultShadowCastGlass;
             bool           skyEnabled         = defaultSkyEnabled;
             TonemapMode    tonemapMode        = TonemapMode::Narkowicz;
             osg::vec3      whiteBalance       = defaultWhiteBalance;
