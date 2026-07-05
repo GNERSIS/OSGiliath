@@ -130,6 +130,7 @@ uniform bool uAlphaMask;
 uniform bool uHasEnv;
 uniform bool uUseShIrradiance;
 uniform bool uUseRadianceBake;
+uniform bool uRadianceDebug;
 uniform bool uHasShadow;
 uniform bool uHasVisBake;
 uniform bool uDoubleSidedMaterial;
@@ -326,6 +327,12 @@ void main()
 
     if (uAlphaMask && baseColor.a < uAlphaCutoff) {
         discard;
+    }
+
+    if (uRadianceDebug) {
+        osg_FragColor = vec4(max(vBakedIrradiance * uRadianceScale, vec3(0.0)), baseColor.a);
+        osg_IndirectColor = vec4(0.0, 0.0, 0.0, baseColor.a);
+        return;
     }
 
     float metallic = clamp(uMetallicFactor, 0.0, 1.0);
