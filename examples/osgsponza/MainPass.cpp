@@ -18,14 +18,15 @@ namespace sponza
                      SponzaTargets&            targets,
                      const SponzaFrameContext& frame )
     {
-        ( void )options;
-
         osg::ref_ptr<osg::Camera> rtt = new osg::Camera;
         rtt->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
         rtt->attach( osg::Camera::COLOR_BUFFER0, targets.hdrColor.get() );
         rtt->attach( osg::Camera::COLOR_BUFFER1, targets.indirectColor.get() );
         rtt->attach( osg::Camera::DEPTH_BUFFER, targets.sceneDepth.get() );
-        rtt->setViewport( 0, 0, renderWidth, renderHeight );
+        rtt->setViewport( 0,
+                          0,
+                          renderTargetWidth( options ),
+                          renderTargetHeight( options ) );
         rtt->setRenderOrder( osg::Camera::PRE_RENDER, mainPassOrder );
         rtt->setReferenceFrame( osg::Transform::ABSOLUTE_RF );
         rtt->setClearColor( osg::vec4( 0.0F, 0.0F, 0.0F, 1.0F ) );

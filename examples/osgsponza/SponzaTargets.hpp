@@ -7,6 +7,8 @@
 namespace sponza
 {
 
+    struct SponzaOptions;
+
     struct SponzaTargets
     {
             osg::ref_ptr<osg::Texture2D> hdrColor;
@@ -16,21 +18,25 @@ namespace sponza
     };
 
     osg::ref_ptr<osg::Texture2D>
-    createHdrColorTexture();
+    createHdrColorTexture( int width,
+                           int height );
 
     osg::ref_ptr<osg::Texture2D>
-    createIndirectColorTexture();
+    createIndirectColorTexture( int width,
+                                int height );
 
     osg::ref_ptr<osg::Texture2D>
-    createSceneDepthTexture();
+    createSceneDepthTexture( int width,
+                             int height );
 
     osg::ref_ptr<osg::Texture2D>
-    createAoTexture();
+    createAoTexture( int width,
+                     int height );
 
     osg::ref_ptr<osg::Texture2D>
     createShadowDepthTexture( int size );
 
     SponzaTargets
-    createSponzaTargets();
+    createSponzaTargets( const SponzaOptions& options );
 
 }

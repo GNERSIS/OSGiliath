@@ -9,10 +9,11 @@ namespace sponza
 {
 
     osg::ref_ptr<osg::Texture2D>
-    createHdrColorTexture()
+    createHdrColorTexture( int width,
+                           int height )
     {
         osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
-        texture->setTextureSize( renderWidth, renderHeight );
+        texture->setTextureSize( width, height );
         texture->setInternalFormat( GL_RGBA16F );
         texture->setSourceFormat( GL_RGBA );
         texture->setSourceType( GL_HALF_FLOAT );
@@ -24,16 +25,18 @@ namespace sponza
     }
 
     osg::ref_ptr<osg::Texture2D>
-    createIndirectColorTexture()
+    createIndirectColorTexture( int width,
+                                int height )
     {
-        return createHdrColorTexture();
+        return createHdrColorTexture( width, height );
     }
 
     osg::ref_ptr<osg::Texture2D>
-    createSceneDepthTexture()
+    createSceneDepthTexture( int width,
+                             int height )
     {
         osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
-        texture->setTextureSize( renderWidth, renderHeight );
+        texture->setTextureSize( width, height );
         texture->setInternalFormat( GL_DEPTH_COMPONENT24 );
         texture->setSourceFormat( GL_DEPTH_COMPONENT );
         texture->setSourceType( GL_FLOAT );
@@ -45,10 +48,11 @@ namespace sponza
     }
 
     osg::ref_ptr<osg::Texture2D>
-    createAoTexture()
+    createAoTexture( int width,
+                     int height )
     {
         osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
-        texture->setTextureSize( renderWidth, renderHeight );
+        texture->setTextureSize( width, height );
         texture->setInternalFormat( GL_R8 );
         texture->setSourceFormat( GL_RED );
         texture->setSourceType( GL_UNSIGNED_BYTE );
@@ -79,13 +83,15 @@ namespace sponza
     }
 
     SponzaTargets
-    createSponzaTargets()
+    createSponzaTargets( const SponzaOptions& options )
     {
+        const int width  = renderTargetWidth( options );
+        const int height = renderTargetHeight( options );
         return SponzaTargets{
-            createHdrColorTexture(),
-            createIndirectColorTexture(),
-            createSceneDepthTexture(),
-            createAoTexture()
+            createHdrColorTexture( width, height ),
+            createIndirectColorTexture( width, height ),
+            createSceneDepthTexture( width, height ),
+            createAoTexture( width, height )
         };
     }
 

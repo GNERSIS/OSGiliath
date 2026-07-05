@@ -47,7 +47,7 @@ main( int    argc,
     osg::ref_ptr<osg::Texture2D> envTexture =
         sponza::applySunAndIbl( model.get(), options, rttView );
 
-    sponza::SponzaTargets            targets = sponza::createSponzaTargets();
+    sponza::SponzaTargets            targets = sponza::createSponzaTargets( options );
     const sponza::SponzaFrameContext frame{
         rttView,
         projectionMatrix,
@@ -84,8 +84,8 @@ main( int    argc,
     {
         return osg::headlessCapture( root.get(),
                                      options.headlessOutput,
-                                     sponza::renderWidth,
-                                     sponza::renderHeight,
+                                     sponza::renderTargetWidth( options ),
+                                     sponza::renderTargetHeight( options ),
                                      options.camera.eye,
                                      options.camera.center,
                                      options.camera.up )

@@ -36,7 +36,8 @@ namespace
 
     constexpr unsigned int         visibilityAttribLocation = 7U;
     constexpr std::array<char, 8U> cacheMagic{ 'O', 'S', 'G', 'V', 'I', 'S', 'B', 'K' };
-    constexpr std::uint32_t        cacheVersion     = 2U;
+    // v3 stores one vec4 per vertex: xyz = world bent normal, w = visibility.
+    constexpr std::uint32_t        cacheVersion     = 3U;
     constexpr std::size_t          bvhLeafSize      = 8U;
     constexpr float                rayOriginOffset  = 0.02F;
     constexpr float                rayHitEpsilon    = 1.0E-4F;
@@ -689,7 +690,7 @@ namespace
                                    osg::vec3( 0.0F, 1.0F, 0.0F ) );
     }
 
-    float
+    osg::vec4
     computeVertexVisibility( const GeometryRecord&         record,
                              std::size_t                   vertexIndex,
                              const Bvh&                    bvh,
@@ -704,7 +705,7 @@ namespace
             record.vertexCount ||
             vertexIndex >= static_cast<std::size_t>( record.normals->getNumElements() ) )
         {
-            return 1.0F;
+            return osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F );
         }
 
         const osg::vec3 transformedNormal = transformNormal(
@@ -713,7 +714,7 @@ namespace
         );
         if( osg::length2( transformedNormal ) <= minNormalLength2 )
         {
-            return 1.0F;
+            return osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F );
         }
         const osg::vec3 normal =
             safeNormalize( transformedNormal, osg::vec3( 0.0F, 1.0F, 0.0F ) );
@@ -729,6 +730,7 @@ namespace
         const osg::vec3 origin     = position + normal * rayOriginOffset;
 
         std::size_t     unoccluded = 0U;
+        osg::vec3       unoccludedDirectionSum( 0.0F, 0.0F, 0.0F );
         for( const osg::vec3& sample : samples )
         {
             const osg::vec3 direction = safeNormalize(
@@ -738,27 +740,37 @@ namespace
             if( !bvhAnyHit( bvh, origin, direction, maxDistance ) )
             {
                 ++unoccluded;
+                unoccludedDirectionSum += direction;
             }
         }
 
-        return static_cast<float>( unoccluded ) / static_cast<float>( samples.size() );
+        const float visibility =
+            static_cast<float>( unoccluded ) / static_cast<float>( samples.size() );
+        const osg::vec3 bentNormal = visibility <=
+                                             1.0E-4F ||
+                                             osg::length2( unoccludedDirectionSum ) <=
+                                             minNormalLength2
+                                       ? normal
+                                       : safeNormalize( unoccludedDirectionSum, normal );
+        return osg::vec4( bentNormal, visibility );
     }
 
-    std::vector<std::vector<float>>
+    std::vector<std::vector<osg::vec4>>
     bakeVisibility( const std::vector<GeometryRecord>& records,
                     const Bvh&                         bvh,
                     int                                rayCount,
                     float                              maxDistance )
     {
-        std::vector<std::vector<float>> visibility( records.size() );
-        std::vector<std::size_t>        offsets;
+        std::vector<std::vector<osg::vec4>> visibility( records.size() );
+        std::vector<std::size_t>            offsets;
         offsets.reserve( records.size() + 1U );
         offsets.push_back( 0U );
 
         std::size_t totalVertices = 0U;
         for( std::size_t i = 0U; i < records.size(); ++i )
         {
-            visibility[i].assign( records[i].vertexCount, 1.0F );
+            visibility[i].assign( records[i].vertexCount,
+                                  osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
             totalVertices += records[i].vertexCount;
             offsets.push_back( totalVertices );
         }
@@ -911,12 +923,12 @@ namespace
     }
 
     bool
-    loadVisibilityCache( const std::filesystem::path&       cachePath,
-                         const ModelStamp&                  stamp,
-                         int                                rayCount,
-                         float                              rayDistance,
-                         const std::vector<GeometryRecord>& records,
-                         std::vector<std::vector<float>>&   visibility )
+    loadVisibilityCache( const std::filesystem::path&         cachePath,
+                         const ModelStamp&                    stamp,
+                         int                                  rayCount,
+                         float                                rayDistance,
+                         const std::vector<GeometryRecord>&   records,
+                         std::vector<std::vector<osg::vec4>>& visibility )
     {
         osgDB::ifstream stream( cachePath.string().c_str(),
                                 std::ios::in | std::ios::binary );
@@ -973,11 +985,12 @@ namespace
         visibility.resize( records.size() );
         for( std::size_t i = 0U; i < records.size(); ++i )
         {
-            visibility[i].resize( records[i].vertexCount, 1.0F );
+            visibility[i].resize( records[i].vertexCount,
+                                  osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
             if( !visibility[i].empty() &&
                 !readValue( stream,
                             visibility[i].data(),
-                            visibility[i].size() * sizeof( float ) ) )
+                            visibility[i].size() * sizeof( osg::vec4 ) ) )
             {
                 return false;
             }
@@ -987,12 +1000,12 @@ namespace
     }
 
     bool
-    saveVisibilityCache( const std::filesystem::path&           cachePath,
-                         const ModelStamp&                      stamp,
-                         int                                    rayCount,
-                         float                                  rayDistance,
-                         const std::vector<GeometryRecord>&     records,
-                         const std::vector<std::vector<float>>& visibility )
+    saveVisibilityCache( const std::filesystem::path&               cachePath,
+                         const ModelStamp&                          stamp,
+                         int                                        rayCount,
+                         float                                      rayDistance,
+                         const std::vector<GeometryRecord>&         records,
+                         const std::vector<std::vector<osg::vec4>>& visibility )
     {
         osgDB::ofstream stream( cachePath.string().c_str(),
                                 std::ios::out | std::ios::binary | std::ios::trunc );
@@ -1024,10 +1037,11 @@ namespace
             }
         }
 
-        for( const std::vector<float>& values : visibility )
+        for( const std::vector<osg::vec4>& values : visibility )
         {
-            if( !values.empty() &&
-                !writeValue( stream, values.data(), values.size() * sizeof( float ) ) )
+            if( !values.empty() && !writeValue( stream,
+                                                values.data(),
+                                                values.size() * sizeof( osg::vec4 ) ) )
             {
                 return false;
             }
@@ -1037,8 +1051,8 @@ namespace
     }
 
     void
-    applyVisibilityAttributes( const std::vector<GeometryRecord>&     records,
-                               const std::vector<std::vector<float>>& visibility )
+    applyVisibilityAttributes( const std::vector<GeometryRecord>&         records,
+                               const std::vector<std::vector<osg::vec4>>& visibility )
     {
         bool warnedExistingAttribute = false;
         for( std::size_t recordIndex = 0U; recordIndex < records.size(); ++recordIndex )
@@ -1058,7 +1072,7 @@ namespace
                 warnedExistingAttribute = true;
             }
 
-            osg::ref_ptr<osg::FloatArray> array = new osg::FloatArray(
+            osg::ref_ptr<osg::Vec4Array> array = new osg::Vec4Array(
                 static_cast<unsigned int>( records[recordIndex].vertexCount )
             );
             for( std::size_t i = 0U; i < records[recordIndex].vertexCount; ++i )
@@ -1076,7 +1090,8 @@ namespace
     setVisibilityUniforms( osg::Node& model,
                            bool       hasVisibility,
                            float      strength,
-                           float      power )
+                           float      power,
+                           float      bentStrength )
     {
         osg::StateSet* stateSet = model.getOrCreateStateSet();
         stateSet->addUniform( new osg::Uniform( "uHasVisBake", hasVisibility ),
@@ -1084,6 +1099,8 @@ namespace
         stateSet->addUniform( new osg::Uniform( "uVisStrength", strength ),
                               osg::StateAttribute::OVERRIDE );
         stateSet->addUniform( new osg::Uniform( "uVisPower", power ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uVisBentStrength", bentStrength ),
                               osg::StateAttribute::OVERRIDE );
     }
 
@@ -1125,7 +1142,8 @@ namespace sponza
         setVisibilityUniforms( *model,
                                false,
                                options.visBakeStrength,
-                               options.visBakePower );
+                               options.visBakePower,
+                               options.visBentStrength );
 
         if( !options.visBakeEnabled )
         {
@@ -1157,7 +1175,7 @@ namespace sponza
         const float sceneDiagonalEarly = computeSceneDiagonal( records );
         const float rayDistance =
             std::min( options.visBakeDistance, sceneDiagonalEarly );
-        std::vector<std::vector<float>> visibility;
+        std::vector<std::vector<osg::vec4>> visibility;
         if( hasStamp &&
             !options.visBakeRefresh &&
             loadVisibilityCache( cachePath,
@@ -1171,7 +1189,8 @@ namespace sponza
             setVisibilityUniforms( *model,
                                    true,
                                    options.visBakeStrength,
-                                   options.visBakePower );
+                                   options.visBakePower,
+                                   options.visBentStrength );
             const osg::Timer_t endTick = osg::Timer::instance()->tick();
             result.loadedFromCache     = true;
             result.wallTimeSeconds =
@@ -1191,7 +1210,8 @@ namespace sponza
         setVisibilityUniforms( *model,
                                true,
                                options.visBakeStrength,
-                               options.visBakePower );
+                               options.visBakePower,
+                               options.visBentStrength );
 
         if( hasStamp )
         {

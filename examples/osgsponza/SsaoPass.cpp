@@ -197,11 +197,11 @@ namespace sponza
         stateSet->addUniform( new osg::Uniform( "uProj", osg::mat4( frame.proj ) ) );
         stateSet->addUniform( new osg::Uniform( "uInvProj",
                                                 osg::mat4( frame.invProj ) ) );
-        stateSet->addUniform(
-            new osg::Uniform( "uResolution",
-                              osg::vec2( static_cast<float>( renderWidth ),
-                                         static_cast<float>( renderHeight ) ) )
-        );
+        stateSet->addUniform( new osg::Uniform(
+            "uResolution",
+            osg::vec2( static_cast<float>( renderTargetWidth( options ) ),
+                       static_cast<float>( renderTargetHeight( options ) ) )
+        ) );
         stateSet->addUniform( new osg::Uniform( "uRadius", options.aoRadius ) );
         stateSet->addUniform( new osg::Uniform( "uPower", options.aoPower ) );
         stateSet->addUniform( new osg::Uniform( "uBias", options.aoBias ) );
@@ -220,7 +220,10 @@ namespace sponza
         osg::ref_ptr<osg::Camera> ssao = new osg::Camera;
         ssao->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
         ssao->attach( osg::Camera::COLOR_BUFFER0, targets.aoTexture.get() );
-        ssao->setViewport( 0, 0, renderWidth, renderHeight );
+        ssao->setViewport( 0,
+                           0,
+                           renderTargetWidth( options ),
+                           renderTargetHeight( options ) );
         ssao->setRenderOrder( osg::Camera::PRE_RENDER, ssaoPassOrder );
         ssao->setReferenceFrame( osg::Transform::ABSOLUTE_RF );
         ssao->setProjectionMatrix( osg::mat4() );

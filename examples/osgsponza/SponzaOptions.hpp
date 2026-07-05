@@ -58,6 +58,8 @@ namespace sponza
     constexpr float        defaultVisBakeStrength    = 0.55F;
     constexpr float        defaultVisBakePower       = 1.0F;
     constexpr float        defaultVisBakeDistance    = 10.0F;
+    constexpr float        defaultVisBentStrength    = 0.8F;
+    constexpr int          defaultRenderScale        = 1;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
@@ -118,10 +120,18 @@ namespace sponza
             float          visBakeStrength    = defaultVisBakeStrength;
             float          visBakePower       = defaultVisBakePower;
             float          visBakeDistance    = defaultVisBakeDistance;
+            float          visBentStrength    = defaultVisBentStrength;
+            int            renderScale        = defaultRenderScale;
             bool           visBakeRefresh     = false;
 
             std::string    modelPath          = "NewSponza_Main_glTF_003.gltf";
     };
+
+    int
+    renderTargetWidth( const SponzaOptions& options );
+
+    int
+    renderTargetHeight( const SponzaOptions& options );
 
     bool
     parseSponzaOptions( osg::ArgumentParser& arguments,

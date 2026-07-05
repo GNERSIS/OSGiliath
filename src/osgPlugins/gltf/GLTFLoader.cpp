@@ -784,6 +784,7 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uHasVisBake", false ) );
         ss->addUniform( new osg::Uniform( "uVisStrength", 0.0F ) );
         ss->addUniform( new osg::Uniform( "uVisPower", 1.0F ) );
+        ss->addUniform( new osg::Uniform( "uVisBentStrength", 0.0F ) );
 
         ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );
 
