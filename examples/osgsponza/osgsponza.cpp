@@ -2,14 +2,14 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <osg/GL>
 #include <osg/core/ArgumentParser.hpp>
 #include <osg/geometry/Geometry.hpp>
+#include <osg/GL>
 #include <osg/images/Image.hpp>
 #include <osg/lighting/Light.hpp>
+#include <osg/maths/compat.hpp>
 #include <osg/maths/Math.hpp>
 #include <osg/maths/MatrixTemplate.hpp>
-#include <osg/maths/compat.hpp>
 #include <osg/nodes/Camera.hpp>
 #include <osg/nodes/Geode.hpp>
 #include <osg/nodes/Group.hpp>
@@ -27,36 +27,37 @@
 
 namespace
 {
-    constexpr int    renderWidth            = 1'920;
-    constexpr int    renderHeight           = 1'080;
-    constexpr double renderAspect           = 16.0 / 9.0;
-    constexpr double nearZ                  = 0.1;
-    constexpr double farZ                   = 2'000.0;
 
-    constexpr double defaultSunAzimuthDeg   = 75.0;
-    constexpr double defaultSunElevationDeg = 52.0;
-    constexpr float  defaultSunIntensity    = 3.5F;
-    constexpr float  defaultAmbientLevel    = 0.7F;
-    constexpr float  defaultExposure        = 1.3F;
-    constexpr float  defaultIblIntensity    = 1.0F;
-    constexpr float  defaultIblDiffuse      = 0.5F;
-    constexpr float  defaultIblSpecular     = 0.12F;
-    constexpr float  defaultIblClamp        = 20.0F;
-    constexpr float  defaultEnvRotation     = 0.0F;
-    constexpr float  defaultAoRadius        = 0.5F;
-    constexpr float  defaultAoStrength      = 0.8F;
-    constexpr float  defaultAoPower         = 1.5F;
-    constexpr float  defaultAoBias          = 0.025F;
-    constexpr int    defaultCameraIndex     = 0;
+    constexpr int          renderWidth            = 1'920;
+    constexpr int          renderHeight           = 1'080;
+    constexpr double       renderAspect           = 16.0 / 9.0;
+    constexpr double       nearZ                  = 0.1;
+    constexpr double       farZ                   = 2'000.0;
+
+    constexpr double       defaultSunAzimuthDeg   = 75.0;
+    constexpr double       defaultSunElevationDeg = 52.0;
+    constexpr float        defaultSunIntensity    = 3.5F;
+    constexpr float        defaultAmbientLevel    = 0.7F;
+    constexpr float        defaultExposure        = 1.3F;
+    constexpr float        defaultIblIntensity    = 1.0F;
+    constexpr float        defaultIblDiffuse      = 0.5F;
+    constexpr float        defaultIblSpecular     = 0.12F;
+    constexpr float        defaultIblClamp        = 20.0F;
+    constexpr float        defaultEnvRotation     = 0.0F;
+    constexpr float        defaultAoRadius        = 0.5F;
+    constexpr float        defaultAoStrength      = 0.8F;
+    constexpr float        defaultAoPower         = 1.5F;
+    constexpr float        defaultAoBias          = 0.025F;
+    constexpr int          defaultCameraIndex     = 0;
     constexpr unsigned int environmentTextureUnit = 5U;
 
     struct CameraPreset
     {
             const char* name;
-            osg::dvec3 eye;
-            osg::dvec3 forward;
-            osg::dvec3 up;
-            double     fovDeg;
+            osg::dvec3  eye;
+            osg::dvec3  forward;
+            osg::dvec3  up;
+            double      fovDeg;
     };
 
     struct CameraSettings
@@ -73,27 +74,27 @@ namespace
             osg::dvec3( 0.9639, 0.1943, 0.1820 ),
             osg::dvec3( -0.1909, 0.9809, -0.0360 ),
             58.51 },
-          { "PhysCamera002",
+         { "PhysCamera002",
             osg::dvec3( 10.5311031, 7.352985, 1.52825129 ),
             osg::dvec3( -0.9919, 0.0225, -0.1252 ),
             osg::dvec3( 0.0223, 0.9997, 0.0028 ),
             58.63 },
-          { "PhysCamera003",
+         { "PhysCamera003",
             osg::dvec3( 2.70301843, 1.35489559, 2.11138153 ),
             osg::dvec3( -0.9395, 0.0864, -0.3316 ),
             osg::dvec3( 0.0815, 0.9963, 0.0288 ),
             36.25 },
-          { "PhysCamera004",
+         { "PhysCamera004",
             osg::dvec3( -9.594356, 6.921101, 5.35278 ),
             osg::dvec3( 0.9413, -0.0202, -0.3368 ),
             osg::dvec3( 0.0190, 0.9998, -0.0068 ),
             58.24 },
-          { "PhysCamera005",
+         { "PhysCamera005",
             osg::dvec3( -2.23714, 0.7440546, 2.3608017 ),
             osg::dvec3( 0.8684, 0.2434, -0.4320 ),
             osg::dvec3( -0.2179, 0.9699, 0.1084 ),
             37.22 },
-          { "PhysCamera006",
+         { "PhysCamera006",
             osg::dvec3( -6.59548569, 10.8791218, -0.6290613 ),
             osg::dvec3( 0.9628, -0.2697, 0.0174 ),
             osg::dvec3( 0.2697, 0.9629, 0.0049 ),
@@ -113,7 +114,7 @@ void main()
 }
 )glsl";
 
-    constexpr char ssaoFragmentShader[] = R"glsl(
+    constexpr char ssaoFragmentShader[]     = R"glsl(
 #version 460 core
 
 uniform sampler2D uDepth;
@@ -210,7 +211,7 @@ void main()
 }
 )glsl";
 
-    constexpr char tonemapFragmentShader[] = R"glsl(
+    constexpr char tonemapFragmentShader[]  = R"glsl(
 #version 460 core
 
 uniform sampler2D uHdr;
@@ -315,24 +316,26 @@ void main()
     osg::Matrix3
     makeViewToWorldRotation( const osg::dmat4& viewMatrix )
     {
-        return osg::Matrix3(
-            static_cast<float>( viewMatrix[0][0] ),
-            static_cast<float>( viewMatrix[1][0] ),
-            static_cast<float>( viewMatrix[2][0] ),
-            static_cast<float>( viewMatrix[0][1] ),
-            static_cast<float>( viewMatrix[1][1] ),
-            static_cast<float>( viewMatrix[2][1] ),
-            static_cast<float>( viewMatrix[0][2] ),
-            static_cast<float>( viewMatrix[1][2] ),
-            static_cast<float>( viewMatrix[2][2] )
-        );
+        return osg::Matrix3( static_cast<float>( viewMatrix[0][0] ),
+                             static_cast<float>( viewMatrix[1][0] ),
+                             static_cast<float>( viewMatrix[2][0] ),
+                             static_cast<float>( viewMatrix[0][1] ),
+                             static_cast<float>( viewMatrix[1][1] ),
+                             static_cast<float>( viewMatrix[2][1] ),
+                             static_cast<float>( viewMatrix[0][2] ),
+                             static_cast<float>( viewMatrix[1][2] ),
+                             static_cast<float>( viewMatrix[2][2] ) );
     }
 
     CameraSettings
     makeCameraSettings( const CameraPreset& preset )
     {
-        return CameraSettings{ preset.eye, preset.eye + preset.forward, preset.up,
-                               preset.fovDeg };
+        return CameraSettings{
+            preset.eye,
+            preset.eye + preset.forward,
+            preset.up,
+            preset.fovDeg
+        };
     }
 
     osg::ref_ptr<osg::Texture2D>
@@ -400,11 +403,11 @@ void main()
     }
 
     osg::ref_ptr<osg::Camera>
-    createRttCamera( osg::Node*            model,
-                     osg::Texture2D*       hdrColor,
-                     osg::Texture2D*       sceneDepth,
-                     const osg::dmat4&     projectionMatrix,
-                     const osg::dmat4&     viewMatrix )
+    createRttCamera( osg::Node*        model,
+                     osg::Texture2D*   hdrColor,
+                     osg::Texture2D*   sceneDepth,
+                     const osg::dmat4& projectionMatrix,
+                     const osg::dmat4& viewMatrix )
     {
         osg::ref_ptr<osg::Camera> rtt = new osg::Camera;
         rtt->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
@@ -422,11 +425,11 @@ void main()
     }
 
     osg::ref_ptr<osg::Geode>
-    createSsaoQuad( osg::Texture2D*   sceneDepth,
-                    const osg::mat4&  projectionMatrix,
-                    const osg::mat4&  inverseProjectionMatrix,
-                    float             aoRadius,
-                    float             aoPower )
+    createSsaoQuad( osg::Texture2D*  sceneDepth,
+                    const osg::mat4& projectionMatrix,
+                    const osg::mat4& inverseProjectionMatrix,
+                    float            aoRadius,
+                    float            aoPower )
     {
         osg::ref_ptr<osg::Program> program = new osg::Program;
         program->addBindAttribLocation( "osg_Vertex", 0U );
@@ -436,7 +439,7 @@ void main()
                                              ssaoFragmentShader ) );
 
         osg::ref_ptr<osg::Geometry> geometry = createFullscreenQuadGeometry();
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<osg::Geode>    geode    = new osg::Geode;
         geode->setCullingActive( false );
         geode->addDrawable( geometry.get() );
 
@@ -447,11 +450,9 @@ void main()
         stateSet->addUniform( new osg::Uniform( "uProj", projectionMatrix ) );
         stateSet->addUniform( new osg::Uniform( "uInvProj", inverseProjectionMatrix ) );
         stateSet->addUniform(
-            new osg::Uniform(
-                "uResolution",
-                osg::vec2( static_cast<float>( renderWidth ),
-                           static_cast<float>( renderHeight ) )
-            )
+            new osg::Uniform( "uResolution",
+                              osg::vec2( static_cast<float>( renderWidth ),
+                                         static_cast<float>( renderHeight ) ) )
         );
         stateSet->addUniform( new osg::Uniform( "uRadius", aoRadius ) );
         stateSet->addUniform( new osg::Uniform( "uPower", aoPower ) );
@@ -485,12 +486,11 @@ void main()
 
         if( ssaoEnabled )
         {
-            osg::ref_ptr<osg::Geode> quad =
-                createSsaoQuad( sceneDepth,
-                                projectionMatrix,
-                                inverseProjectionMatrix,
-                                aoRadius,
-                                aoPower );
+            osg::ref_ptr<osg::Geode> quad = createSsaoQuad( sceneDepth,
+                                                            projectionMatrix,
+                                                            inverseProjectionMatrix,
+                                                            aoRadius,
+                                                            aoPower );
             ssao->addChild( quad.get() );
         }
 
@@ -511,7 +511,7 @@ void main()
                                              tonemapFragmentShader ) );
 
         osg::ref_ptr<osg::Geometry> geometry = createFullscreenQuadGeometry();
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<osg::Geode>    geode    = new osg::Geode;
         geode->setCullingActive( false );
         geode->addDrawable( geometry.get() );
 
@@ -535,7 +535,7 @@ void main()
                          float           exposure,
                          float           aoStrength )
     {
-        osg::ref_ptr<osg::Geode>  quad =
+        osg::ref_ptr<osg::Geode> quad =
             createTonemapQuad( hdrColor, aoTexture, exposure, aoStrength );
         osg::ref_ptr<osg::Camera> post = new osg::Camera;
         post->setReferenceFrame( osg::Transform::ABSOLUTE_RF );
@@ -548,6 +548,7 @@ void main()
         post->addChild( quad.get() );
         return post;
     }
+
 }
 
 int
@@ -556,13 +557,12 @@ main( int    argc,
 {
     osg::ArgumentParser arguments( &argc, argv );
 
-    std::string headlessOutput;
-    const bool  headless = arguments.read( "--headless", headlessOutput );
+    std::string         headlessOutput;
+    const bool          headless    = arguments.read( "--headless", headlessOutput );
 
-    int cameraIndex = defaultCameraIndex;
+    int                 cameraIndex = defaultCameraIndex;
     arguments.read( "--camera-index", cameraIndex );
-    if( cameraIndex < 0 ||
-        cameraIndex >= static_cast<int>( cameraPresets.size() ) )
+    if( cameraIndex < 0 || cameraIndex >= static_cast<int>( cameraPresets.size() ) )
     {
         std::cerr << "--camera-index must be in the range 0..5" << std::endl;
         return 1;
@@ -617,14 +617,13 @@ main( int    argc,
     readDVec3Argument( arguments, "--up", camera.up );
     arguments.read( "--fov", camera.fovDeg );
 
-    const osg::vec3 sunColor = readColorArgument(
-        arguments, "--sun-color", osg::vec3( 1.0F, 0.95F, 0.85F )
-    );
-    const osg::vec3 ambientColor = readColorArgument(
-        arguments, "--ambient-color", osg::vec3( 0.5F, 0.6F, 0.75F )
-    );
+    const osg::vec3 sunColor =
+        readColorArgument( arguments, "--sun-color", osg::vec3( 1.0F, 0.95F, 0.85F ) );
+    const osg::vec3 ambientColor = readColorArgument( arguments,
+                                                      "--ambient-color",
+                                                      osg::vec3( 0.5F, 0.6F, 0.75F ) );
 
-    std::string modelPath = "NewSponza_Main_glTF_003.gltf";
+    std::string     modelPath    = "NewSponza_Main_glTF_003.gltf";
     for( int i = 1; i < arguments.argc(); ++i )
     {
         if( !arguments.isOption( i ) )
@@ -641,37 +640,29 @@ main( int    argc,
         return 1;
     }
 
-    const double azimuthRad   = osg::DegreesToRadians( sunAzimuthDeg );
-    const double elevationRad = osg::DegreesToRadians( sunElevationDeg );
-    const osg::dvec3 dirWorld = osg::normalize(
+    const double     azimuthRad   = osg::DegreesToRadians( sunAzimuthDeg );
+    const double     elevationRad = osg::DegreesToRadians( sunElevationDeg );
+    const osg::dvec3 dirWorld     = osg::normalize(
         osg::dvec3( std::cos( elevationRad ) * std::cos( azimuthRad ),
                     std::sin( elevationRad ),
                     std::cos( elevationRad ) * std::sin( azimuthRad ) )
     );
     const osg::dmat4 rttView = osg::lookAt( camera.eye, camera.center, camera.up );
-    const osg::dvec3 dirView = osg::normalize(
-        osg::transform3x3( rttView, dirWorld )
-    );
+    const osg::dvec3 dirView = osg::normalize( osg::transform3x3( rttView, dirWorld ) );
     const osg::dmat4 projectionMatrix =
         osg::perspective( camera.fovDeg, renderAspect, nearZ, farZ );
     const osg::mat4 projectionMatrixUniform( projectionMatrix );
-    const osg::mat4 inverseProjectionMatrixUniform(
-        osg::inverse( projectionMatrix )
-    );
+    const osg::mat4 inverseProjectionMatrixUniform( osg::inverse( projectionMatrix ) );
 
-    osg::ref_ptr<osg::Light> sun = new osg::Light;
+    osg::ref_ptr<osg::Light> sun         = new osg::Light;
     const osg::vec3          sunRadiance = scaledColor( sunColor, sunIntensity );
     sun->setLightNum( 0 );
     sun->setPosition( osg::vec4( static_cast<float>( dirView.x ),
                                  static_cast<float>( dirView.y ),
                                  static_cast<float>( dirView.z ),
                                  0.0F ) );
-    sun->setDiffuse(
-        osg::vec4( sunRadiance.r, sunRadiance.g, sunRadiance.b, 1.0F )
-    );
-    sun->setSpecular(
-        osg::vec4( sunRadiance.r, sunRadiance.g, sunRadiance.b, 1.0F )
-    );
+    sun->setDiffuse( osg::vec4( sunRadiance.r, sunRadiance.g, sunRadiance.b, 1.0F ) );
+    sun->setSpecular( osg::vec4( sunRadiance.r, sunRadiance.g, sunRadiance.b, 1.0F ) );
     sun->setAmbient( osg::vec4( 0.0F, 0.0F, 0.0F, 1.0F ) );
 
     osg::StateSet* modelStateSet = model->getOrCreateStateSet();
@@ -679,22 +670,14 @@ main( int    argc,
     modelStateSet->setMode( GL_LIGHTING, osg::StateAttribute::ON );
 
     const osg::vec3 ambientRadiance = scaledColor( ambientColor, ambientLevel );
+    modelStateSet->addUniform( new osg::Uniform(
+        "osg_LightModel_ambient",
+        osg::vec4( ambientRadiance.r, ambientRadiance.g, ambientRadiance.b, 1.0F )
+    ) );
+    modelStateSet->addUniform( new osg::Uniform( "uViewToWorldRot",
+                                                 makeViewToWorldRotation( rttView ) ) );
     modelStateSet->addUniform(
-        new osg::Uniform(
-            "osg_LightModel_ambient",
-            osg::vec4( ambientRadiance.r,
-                       ambientRadiance.g,
-                       ambientRadiance.b,
-                       1.0F )
-        )
-    );
-    modelStateSet->addUniform(
-        new osg::Uniform( "uViewToWorldRot", makeViewToWorldRotation( rttView ) )
-    );
-    modelStateSet->addUniform(
-        new osg::Uniform(
-            "uEnvMap", static_cast<int>( environmentTextureUnit )
-        )
+        new osg::Uniform( "uEnvMap", static_cast<int>( environmentTextureUnit ) )
     );
     modelStateSet->addUniform( new osg::Uniform( "uEnvMaxLod", 0.0F ) );
     modelStateSet->addUniform( new osg::Uniform( "uEnvClamp", iblClamp ) );
@@ -709,12 +692,11 @@ main( int    argc,
     {
         osg::ref_ptr<osg::Texture2D> envTexture =
             createEnvironmentTexture( envImage.get() );
-        modelStateSet->setTextureAttributeAndModes(
-            environmentTextureUnit, envTexture.get(), osg::StateAttribute::ON
-        );
-        modelStateSet->getUniform( "uEnvMaxLod" )->set(
-            computeMaxMipLevel( *envImage )
-        );
+        modelStateSet->setTextureAttributeAndModes( environmentTextureUnit,
+                                                    envTexture.get(),
+                                                    osg::StateAttribute::ON );
+        modelStateSet->getUniform( "uEnvMaxLod" )
+            ->set( computeMaxMipLevel( *envImage ) );
         modelStateSet->getUniform( "uHasEnv" )->set( true );
     }
     else
@@ -727,31 +709,23 @@ main( int    argc,
     osg::ref_ptr<osg::Texture2D> hdrColor   = createHdrColorTexture();
     osg::ref_ptr<osg::Texture2D> sceneDepth = createSceneDepthTexture();
     osg::ref_ptr<osg::Texture2D> aoTexture  = createAoTexture();
-    osg::ref_ptr<osg::Camera>    rtt =
-        createRttCamera(
-            model.get(),
-            hdrColor.get(),
-            sceneDepth.get(),
-            projectionMatrix,
-            rttView
-        );
-    osg::ref_ptr<osg::Camera> ssao =
-        createSsaoCamera(
-            sceneDepth.get(),
-            aoTexture.get(),
-            projectionMatrixUniform,
-            inverseProjectionMatrixUniform,
-            aoRadius,
-            aoPower,
-            ssaoEnabled
-        );
-    osg::ref_ptr<osg::Camera> tonemapCamera =
-        createTonemapCamera(
-            hdrColor.get(),
-            aoTexture.get(),
-            exposure,
-            ssaoEnabled ? aoStrength : 0.0F
-        );
+    osg::ref_ptr<osg::Camera>    rtt        = createRttCamera( model.get(),
+                                                               hdrColor.get(),
+                                                               sceneDepth.get(),
+                                                               projectionMatrix,
+                                                               rttView );
+    osg::ref_ptr<osg::Camera>    ssao = createSsaoCamera( sceneDepth.get(),
+                                                          aoTexture.get(),
+                                                          projectionMatrixUniform,
+                                                          inverseProjectionMatrixUniform,
+                                                          aoRadius,
+                                                          aoPower,
+                                                          ssaoEnabled );
+    osg::ref_ptr<osg::Camera>    tonemapCamera =
+        createTonemapCamera( hdrColor.get(),
+                             aoTexture.get(),
+                             exposure,
+                             ssaoEnabled ? aoStrength : 0.0F );
 
     osg::ref_ptr<osg::Group> root = new osg::Group;
     root->addChild( rtt.get() );
@@ -774,7 +748,9 @@ main( int    argc,
     osgViewer::Viewer viewer;
     viewer.setSceneData( root.get() );
     viewer.setCameraManipulator( new osgGA::FirstPersonManipulator );
-    viewer.getCameraManipulator()->setHomePosition( camera.eye, camera.center, camera.up );
+    viewer.getCameraManipulator()->setHomePosition( camera.eye,
+                                                    camera.center,
+                                                    camera.up );
 
     return viewer.run();
 }

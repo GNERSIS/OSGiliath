@@ -54,6 +54,7 @@ namespace
             benchmark::DoNotOptimize( inv );
         }
     }
+
     BENCHMARK( BM_DMat4InverseAffine );
 
     /// General (non-affine) inverse — the inverse_4x4 path.
@@ -67,6 +68,7 @@ namespace
             benchmark::DoNotOptimize( inv );
         }
     }
+
     BENCHMARK( BM_DMat4InverseGeneral );
 
     /// Float comparison point for the affine inverse.
@@ -80,6 +82,7 @@ namespace
             benchmark::DoNotOptimize( inv );
         }
     }
+
     BENCHMARK( BM_Mat4InverseAffineFloat );
 
     /// The per-leaf MVP multiply (dmat4 * dmat4, 64 scalar multiplies).
@@ -94,6 +97,7 @@ namespace
             benchmark::DoNotOptimize( product );
         }
     }
+
     BENCHMARK( BM_DMat4Multiply );
 
     void
@@ -107,6 +111,7 @@ namespace
             benchmark::DoNotOptimize( product );
         }
     }
+
     BENCHMARK( BM_Mat4MultiplyFloat );
 
     /// vec3 transform through a dmat4 (cull-time bound-center transforms).
@@ -121,6 +126,7 @@ namespace
             benchmark::DoNotOptimize( transformed );
         }
     }
+
     BENCHMARK( BM_DMat4TransformVec3 );
 
 }    // namespace

@@ -36,9 +36,9 @@ namespace
     void
     BM_StateGraphFindWarm( benchmark::State& state )
     {
-        const auto                     count = static_cast<std::size_t>( state.range( 0 ) );
-        const auto                     sets  = makeStateSets( count );
-        osg::ref_ptr<osgUtil::StateGraph> root  = new osgUtil::StateGraph;
+        const auto count = static_cast<std::size_t>( state.range( 0 ) );
+        const auto sets  = makeStateSets( count );
+        osg::ref_ptr<osgUtil::StateGraph> root = new osgUtil::StateGraph;
 
         for( const auto& set : sets )
         {
@@ -55,16 +55,17 @@ namespace
         state.SetItemsProcessed( static_cast<std::int64_t>( state.iterations() ) *
                                  static_cast<std::int64_t>( count ) );
     }
-    BENCHMARK( BM_StateGraphFindWarm )->Arg( 4 )->Arg( 64 )->Arg( 1024 );
+
+    BENCHMARK( BM_StateGraphFindWarm )->Arg( 4 )->Arg( 64 )->Arg( 1'024 );
 
     /// Cold insert + clean cycle: allocation of StateGraph nodes on first
     /// encounter, then the per-frame clean() reuse pass.
     void
     BM_StateGraphInsertClean( benchmark::State& state )
     {
-        const auto                     count = static_cast<std::size_t>( state.range( 0 ) );
-        const auto                     sets  = makeStateSets( count );
-        osg::ref_ptr<osgUtil::StateGraph> root  = new osgUtil::StateGraph;
+        const auto count = static_cast<std::size_t>( state.range( 0 ) );
+        const auto sets  = makeStateSets( count );
+        osg::ref_ptr<osgUtil::StateGraph> root = new osgUtil::StateGraph;
 
         for( auto _ : state )
         {
@@ -77,7 +78,8 @@ namespace
         state.SetItemsProcessed( static_cast<std::int64_t>( state.iterations() ) *
                                  static_cast<std::int64_t>( count ) );
     }
-    BENCHMARK( BM_StateGraphInsertClean )->Arg( 64 )->Arg( 1024 );
+
+    BENCHMARK( BM_StateGraphInsertClean )->Arg( 64 )->Arg( 1'024 );
 
     /// RenderLeaf set()/reset() cycle — exactly the pool-reuse pattern
     /// CullVisitor runs per visible drawable per frame. With
@@ -86,17 +88,15 @@ namespace
     void
     BM_RenderLeafSetReset( benchmark::State& state )
     {
-        osg::ref_ptr<osg::Geometry>  geometry = osg::createTexturedQuadGeometry(
-            osg::vec3( 0.0F, 0.0F, 0.0F ),
-            osg::vec3( kQuadSize, 0.0F, 0.0F ),
-            osg::vec3( 0.0F, kQuadSize, 0.0F ) );
-        osg::ref_ptr<osg::RefMatrix> projection = new osg::RefMatrix;
-        osg::ref_ptr<osg::RefMatrix> modelview  = new osg::RefMatrix;
+        osg::ref_ptr<osg::Geometry> geometry =
+            osg::createTexturedQuadGeometry( osg::vec3( 0.0F, 0.0F, 0.0F ),
+                                             osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                             osg::vec3( 0.0F, kQuadSize, 0.0F ) );
+        osg::ref_ptr<osg::RefMatrix>      projection = new osg::RefMatrix;
+        osg::ref_ptr<osg::RefMatrix>      modelview  = new osg::RefMatrix;
 
         osg::ref_ptr<osgUtil::RenderLeaf> leaf =
-            new osgUtil::RenderLeaf( geometry.get(),
-                                     projection.get(),
-                                     modelview.get() );
+            new osgUtil::RenderLeaf( geometry.get(), projection.get(), modelview.get() );
 
         for( auto _ : state )
         {
@@ -105,6 +105,7 @@ namespace
             benchmark::DoNotOptimize( leaf.get() );
         }
     }
+
     BENCHMARK( BM_RenderLeafSetReset );
 
 }    // namespace

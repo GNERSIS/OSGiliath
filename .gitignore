@@ -129,7 +129,6 @@ VulkanSceneGraph/
 
 # glTF sample assets (large, fetched separately)
 glTF-Sample-Assets/
-gltf/
 glTF/
 new_data/
 
