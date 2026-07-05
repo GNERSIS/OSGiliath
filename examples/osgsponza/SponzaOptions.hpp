@@ -23,7 +23,7 @@ namespace sponza
     constexpr double       farZ                      = 2'000.0;
 
     constexpr double       defaultSunAzimuthDeg      = 14.0;
-    constexpr double       defaultSunElevationDeg    = 52.0;
+    constexpr double       defaultSunElevationDeg    = 62.0;
     constexpr float        defaultSunIntensity       = 3.5F;
     constexpr float        defaultAmbientLevel       = 0.7F;
     constexpr float        defaultExposure           = 2.2F;
