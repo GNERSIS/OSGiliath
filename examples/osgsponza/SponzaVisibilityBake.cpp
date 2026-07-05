@@ -1,4 +1,5 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt */
+#include "SponzaLighting.hpp"
 #include "SponzaOptions.hpp"
 #include "SponzaVisibilityBake.hpp"
 
@@ -10,6 +11,7 @@
 #include <filesystem>
 #include <ios>
 #include <limits>
+#include <map>
 #include <numeric>
 #include <osg/core/Notify.hpp>
 #include <osg/core/ref_ptr.hpp>
@@ -18,6 +20,7 @@
 #include <osg/geometry/Geometry.hpp>
 #include <osg/geometry/PrimitiveSet.hpp>
 #include <osg/GL>
+#include <osg/images/Image.hpp>
 #include <osg/maths/box.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/transform.hpp>
@@ -25,6 +28,7 @@
 #include <osg/nodes/Transform.hpp>
 #include <osg/state/StateSet.hpp>
 #include <osg/state/Uniform.hpp>
+#include <osg/textures/Texture2D.hpp>
 #include <osg/traversal/NodeVisitor.hpp>
 #include <osgDB/io/FileUtils.hpp>
 #include <osgDB/io/fstream.hpp>
@@ -35,14 +39,18 @@ namespace
 {
 
     constexpr unsigned int         visibilityAttribLocation = 7U;
+    constexpr unsigned int         radianceAttribLocation   = 1U;
     constexpr std::array<char, 8U> cacheMagic{ 'O', 'S', 'G', 'V', 'I', 'S', 'B', 'K' };
-    // v3 stores one vec4 per vertex: xyz = world bent normal, w = visibility.
-    constexpr std::uint32_t        cacheVersion     = 3U;
-    constexpr std::size_t          bvhLeafSize      = 8U;
-    constexpr float                rayOriginOffset  = 0.02F;
-    constexpr float                rayHitEpsilon    = 1.0E-4F;
-    constexpr float                minNormalLength2 = 1.0E-10F;
-    constexpr float                pi               = 3.14159265358979323846F;
+    // v4 stores the v3 vec4 per vertex plus shader-ready diffuse irradiance/pi.
+    constexpr std::uint32_t        cacheVersion        = 4U;
+    constexpr std::size_t          bvhLeafSize         = 8U;
+    constexpr float                rayOriginOffset     = 0.02F;
+    constexpr float                rayHitEpsilon       = 1.0E-4F;
+    constexpr float                minNormalLength2    = 1.0E-10F;
+    constexpr float                pi                  = 3.14159265358979323846F;
+    constexpr double               twoPi               = 6.28318530717958647692;
+    constexpr double               sunDiscLuminance    = 500.0;
+    constexpr int                  albedoTargetSamples = 4'096;
 
     struct GeometryRecord
     {
@@ -57,11 +65,33 @@ namespace
 
     struct Triangle
     {
-            osg::vec3 v0;
-            osg::vec3 v1;
-            osg::vec3 v2;
-            osg::vec3 centroid;
-            osg::box  bounds;
+            osg::vec3     v0;
+            osg::vec3     v1;
+            osg::vec3     v2;
+            osg::vec3     normal;
+            osg::vec3     centroid;
+            osg::box      bounds;
+            std::uint32_t materialIndex = 0U;
+    };
+
+    struct MaterialAlbedo
+    {
+            osg::vec3   albedo{ 1.0F, 1.0F, 1.0F };
+            std::string name;
+            bool        textured = false;
+    };
+
+    struct RayHit
+    {
+            float         distance      = std::numeric_limits<float>::max();
+            std::uint32_t triangleIndex = 0U;
+            bool          hit           = false;
+    };
+
+    struct VertexBake
+    {
+            osg::vec4 visibility{ 0.0F, 1.0F, 0.0F, 1.0F };
+            osg::vec3 radiance{ 0.0F, 0.0F, 0.0F };
     };
 
     struct BvhNode
@@ -175,6 +205,222 @@ namespace
                ( stateSet && isExcludedOccluderName( stateSet->getName() ) );
     }
 
+    double
+    luminance( const osg::dvec3& color )
+    {
+        return color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
+    }
+
+    float
+    srgbToLinear( float value )
+    {
+        return std::pow( std::clamp( value, 0.0F, 1.0F ), 2.2F );
+    }
+
+    osg::vec3
+    multiplyComponents( const osg::vec3& lhs,
+                        const osg::vec3& rhs )
+    {
+        return osg::vec3( lhs.r * rhs.r, lhs.g * rhs.g, lhs.b * rhs.b );
+    }
+
+    bool
+    canReadFloatRgb( const osg::Image& image )
+    {
+        return image.valid() &&
+               image.getDataType() ==
+               GL_FLOAT &&
+               ( image.getPixelFormat() == GL_RGB || image.getPixelFormat() == GL_RGBA );
+    }
+
+    osg::dvec3
+    readFloatRgb( const osg::Image& image,
+                  int               x,
+                  int               y )
+    {
+        const auto* pixel = reinterpret_cast<const float*>(
+            image.data( static_cast<unsigned int>( x ), static_cast<unsigned int>( y ) )
+        );
+        return osg::dvec3( static_cast<double>( pixel[0] ),
+                           static_cast<double>( pixel[1] ),
+                           static_cast<double>( pixel[2] ) );
+    }
+
+    class MaterialTable
+    {
+        public:
+
+            MaterialTable()
+            {
+                MaterialAlbedo fallback;
+                fallback.name = "<default>";
+                _materials.push_back( fallback );
+            }
+
+            std::uint32_t
+            materialIndex( const osg::StateSet* stateSet )
+            {
+                if( stateSet == nullptr )
+                {
+                    _fallbackUsed = true;
+                    return 0U;
+                }
+
+                const auto found = _indices.find( stateSet );
+                if( found != _indices.end() )
+                {
+                    return found->second;
+                }
+
+                const std::uint32_t index =
+                    static_cast<std::uint32_t>( _materials.size() );
+                _indices[stateSet] = index;
+                _materials.push_back( computeMaterialAlbedo( *stateSet ) );
+                return index;
+            }
+
+            const osg::vec3&
+            albedo( std::uint32_t index ) const
+            {
+                if( index >= _materials.size() )
+                {
+                    return _materials.front().albedo;
+                }
+                return _materials[static_cast<std::size_t>( index )].albedo;
+            }
+
+            void
+            logStats() const
+            {
+                const std::size_t begin = _fallbackUsed ? 0U : 1U;
+                if( begin >= _materials.size() )
+                {
+                    return;
+                }
+
+                osg::vec3   minAlbedo( std::numeric_limits<float>::max(),
+                                       std::numeric_limits<float>::max(),
+                                       std::numeric_limits<float>::max() );
+                osg::vec3   maxAlbedo( 0.0F, 0.0F, 0.0F );
+                std::size_t textured = 0U;
+                for( std::size_t i = begin; i < _materials.size(); ++i )
+                {
+                    const MaterialAlbedo& material = _materials[i];
+                    minAlbedo.r = std::min( minAlbedo.r, material.albedo.r );
+                    minAlbedo.g = std::min( minAlbedo.g, material.albedo.g );
+                    minAlbedo.b = std::min( minAlbedo.b, material.albedo.b );
+                    maxAlbedo.r = std::max( maxAlbedo.r, material.albedo.r );
+                    maxAlbedo.g = std::max( maxAlbedo.g, material.albedo.g );
+                    maxAlbedo.b = std::max( maxAlbedo.b, material.albedo.b );
+                    if( material.textured )
+                    {
+                        ++textured;
+                    }
+                }
+
+                OSG_NOTICE << "Sponza radiance bake material albedo table: "
+                           << ( _materials.size() - begin ) << " materials (" << textured
+                           << " textured), linear RGB range min=(" << minAlbedo.r << ", "
+                           << minAlbedo.g << ", " << minAlbedo.b << ") max=("
+                           << maxAlbedo.r << ", " << maxAlbedo.g << ", " << maxAlbedo.b
+                           << ")" << std::endl;
+            }
+
+        private:
+
+            static osg::vec3
+            readBaseColorFactor( const osg::StateSet& stateSet )
+            {
+                osg::vec4           factor( 1.0F, 1.0F, 1.0F, 1.0F );
+                const osg::Uniform* uniform = stateSet.getUniform( "uBaseColorFactor" );
+                if( uniform != nullptr )
+                {
+                    osg::vec4 value;
+                    if( uniform->get( value ) )
+                    {
+                        factor = value;
+                    }
+                }
+                return osg::vec3( factor.r, factor.g, factor.b );
+            }
+
+            static const osg::Image*
+            baseColorImage( const osg::StateSet& stateSet )
+            {
+                const osg::StateAttribute* attribute =
+                    stateSet.getTextureAttribute( 0U,
+                                                  osg::StateAttribute::Type::TEXTURE );
+                const auto* texture = dynamic_cast<const osg::Texture2D*>( attribute );
+                return texture != nullptr ? texture->getImage( 0U ) : nullptr;
+            }
+
+            static osg::vec3
+            averageTextureAlbedo( const osg::Image& image )
+            {
+                const int width  = image.s();
+                const int height = image.t();
+                if( width <= 0 || height <= 0 )
+                {
+                    return osg::vec3( 1.0F, 1.0F, 1.0F );
+                }
+
+                const int totalTexels = width * height;
+                const int stride =
+                    std::max( 1,
+                              static_cast<int>(
+                                  std::sqrt( static_cast<double>( totalTexels ) /
+                                             static_cast<double>( albedoTargetSamples ) )
+                              ) );
+
+                osg::dvec3  sum( 0.0, 0.0, 0.0 );
+                std::size_t sampleCount = 0U;
+                for( int y = 0; y < height; y += stride )
+                {
+                    for( int x = 0; x < width; x += stride )
+                    {
+                        const osg::vec4 srgb =
+                            image.getColor( static_cast<unsigned int>( x ),
+                                            static_cast<unsigned int>( y ),
+                                            0U );
+                        sum +=
+                            osg::dvec3( static_cast<double>( srgbToLinear( srgb.r ) ),
+                                        static_cast<double>( srgbToLinear( srgb.g ) ),
+                                        static_cast<double>( srgbToLinear( srgb.b ) ) );
+                        ++sampleCount;
+                    }
+                }
+
+                if( sampleCount == 0U )
+                {
+                    return osg::vec3( 1.0F, 1.0F, 1.0F );
+                }
+
+                const double invCount = 1.0 / static_cast<double>( sampleCount );
+                return osg::vec3( static_cast<float>( sum.r * invCount ),
+                                  static_cast<float>( sum.g * invCount ),
+                                  static_cast<float>( sum.b * invCount ) );
+            }
+
+            static MaterialAlbedo
+            computeMaterialAlbedo( const osg::StateSet& stateSet )
+            {
+                MaterialAlbedo material;
+                material.name                   = stateSet.getName();
+                const osg::vec3   factor        = readBaseColorFactor( stateSet );
+                const osg::Image* image         = baseColorImage( stateSet );
+                const osg::vec3   textureAlbedo = image != nullptr
+                                                    ? averageTextureAlbedo( *image )
+                                                    : osg::vec3( 1.0F, 1.0F, 1.0F );
+                material.albedo   = multiplyComponents( textureAlbedo, factor );
+                material.textured = image != nullptr;
+                return material;
+            }
+
+            std::vector<MaterialAlbedo>                   _materials;
+            std::map<const osg::StateSet*, std::uint32_t> _indices;
+            bool                                          _fallbackUsed = false;
+    };
+
     osg::box
     triangleBounds( const osg::vec3& v0,
                     const osg::vec3& v1,
@@ -191,6 +437,7 @@ namespace
     appendTriangle( std::vector<Triangle>& triangles,
                     const osg::Vec3Array&  vertices,
                     const osg::dmat4&      localToWorld,
+                    std::uint32_t          materialIndex,
                     unsigned int           i0,
                     unsigned int           i1,
                     unsigned int           i2 )
@@ -201,10 +448,11 @@ namespace
             return;
         }
 
-        const osg::vec3 v0 = transformPoint( localToWorld, vertices[i0] );
-        const osg::vec3 v1 = transformPoint( localToWorld, vertices[i1] );
-        const osg::vec3 v2 = transformPoint( localToWorld, vertices[i2] );
-        if( osg::length2( osg::cross( v1 - v0, v2 - v0 ) ) <= 1.0E-12F )
+        const osg::vec3 v0         = transformPoint( localToWorld, vertices[i0] );
+        const osg::vec3 v1         = transformPoint( localToWorld, vertices[i1] );
+        const osg::vec3 v2         = transformPoint( localToWorld, vertices[i2] );
+        const osg::vec3 faceNormal = osg::cross( v1 - v0, v2 - v0 );
+        if( osg::length2( faceNormal ) <= 1.0E-12F )
         {
             return;
         }
@@ -213,8 +461,10 @@ namespace
         triangle.v0       = v0;
         triangle.v1       = v1;
         triangle.v2       = v2;
+        triangle.normal   = safeNormalize( faceNormal, osg::vec3( 0.0F, 1.0F, 0.0F ) );
         triangle.centroid = ( v0 + v1 + v2 ) * ( 1.0F / 3.0F );
         triangle.bounds   = triangleBounds( v0, v1, v2 );
+        triangle.materialIndex = materialIndex;
         triangles.push_back( triangle );
     }
 
@@ -222,6 +472,7 @@ namespace
     appendPrimitiveTriangles( std::vector<Triangle>&   triangles,
                               const osg::Vec3Array&    vertices,
                               const osg::dmat4&        localToWorld,
+                              std::uint32_t            materialIndex,
                               const osg::PrimitiveSet& primitiveSet )
     {
         const unsigned int indexCount = primitiveSet.getNumIndices();
@@ -233,6 +484,7 @@ namespace
                     appendTriangle( triangles,
                                     vertices,
                                     localToWorld,
+                                    materialIndex,
                                     primitiveSet.index( i ),
                                     primitiveSet.index( i + 1U ),
                                     primitiveSet.index( i + 2U ) );
@@ -247,6 +499,7 @@ namespace
                         appendTriangle( triangles,
                                         vertices,
                                         localToWorld,
+                                        materialIndex,
                                         primitiveSet.index( i ),
                                         primitiveSet.index( i + 1U ),
                                         primitiveSet.index( i + 2U ) );
@@ -256,6 +509,7 @@ namespace
                         appendTriangle( triangles,
                                         vertices,
                                         localToWorld,
+                                        materialIndex,
                                         primitiveSet.index( i + 1U ),
                                         primitiveSet.index( i ),
                                         primitiveSet.index( i + 2U ) );
@@ -269,6 +523,7 @@ namespace
                     appendTriangle( triangles,
                                     vertices,
                                     localToWorld,
+                                    materialIndex,
                                     primitiveSet.index( 0U ),
                                     primitiveSet.index( i ),
                                     primitiveSet.index( i + 1U ) );
@@ -282,8 +537,20 @@ namespace
                     const unsigned int i1 = primitiveSet.index( i + 1U );
                     const unsigned int i2 = primitiveSet.index( i + 2U );
                     const unsigned int i3 = primitiveSet.index( i + 3U );
-                    appendTriangle( triangles, vertices, localToWorld, i0, i1, i2 );
-                    appendTriangle( triangles, vertices, localToWorld, i0, i2, i3 );
+                    appendTriangle( triangles,
+                                    vertices,
+                                    localToWorld,
+                                    materialIndex,
+                                    i0,
+                                    i1,
+                                    i2 );
+                    appendTriangle( triangles,
+                                    vertices,
+                                    localToWorld,
+                                    materialIndex,
+                                    i0,
+                                    i2,
+                                    i3 );
                 }
                 break;
 
@@ -296,8 +563,9 @@ namespace
     {
         public:
 
-            GeometryRecordVisitor() :
-                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN )
+            explicit GeometryRecordVisitor( MaterialTable& materialTable ) :
+                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN ),
+                _materialTable( materialTable )
             {
                 _worldStack.push_back( osg::dmat4() );
             }
@@ -320,6 +588,7 @@ namespace
                 {
                     return;
                 }
+                _materialTable.materialIndex( drawable.getStateSet() );
 
                 const osg::Array*     vertexArray = geometry->getVertexArray();
                 const osg::Vec3Array* vertices =
@@ -351,14 +620,16 @@ namespace
         private:
 
             std::vector<osg::dmat4> _worldStack;
+            MaterialTable&          _materialTable;
     };
 
     class OccluderTriangleVisitor : public osg::NodeVisitor
     {
         public:
 
-            OccluderTriangleVisitor() :
-                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN )
+            explicit OccluderTriangleVisitor( MaterialTable& materialTable ) :
+                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN ),
+                _materialTable( materialTable )
             {
                 _worldStack.push_back( osg::dmat4() );
             }
@@ -389,6 +660,8 @@ namespace
                     return;
                 }
 
+                const std::uint32_t materialIndex =
+                    _materialTable.materialIndex( drawable.getStateSet() );
                 for( unsigned int primitiveIndex = 0U;
                      primitiveIndex < geometry->getNumPrimitiveSets();
                      ++primitiveIndex )
@@ -400,6 +673,7 @@ namespace
                         appendPrimitiveTriangles( triangles,
                                                   *vertices,
                                                   _worldStack.back(),
+                                                  materialIndex,
                                                   *primitiveSet );
                     }
                 }
@@ -410,20 +684,23 @@ namespace
         private:
 
             std::vector<osg::dmat4> _worldStack;
+            MaterialTable&          _materialTable;
     };
 
     std::vector<GeometryRecord>
-    collectGeometryRecords( osg::Node& model )
+    collectGeometryRecords( osg::Node&     model,
+                            MaterialTable& materialTable )
     {
-        GeometryRecordVisitor visitor;
+        GeometryRecordVisitor visitor( materialTable );
         model.accept( visitor );
         return visitor.records;
     }
 
     std::vector<Triangle>
-    collectOccluderTriangles( osg::Node& model )
+    collectOccluderTriangles( osg::Node&     model,
+                              MaterialTable& materialTable )
     {
-        OccluderTriangleVisitor visitor;
+        OccluderTriangleVisitor visitor( materialTable );
         model.accept( visitor );
         return visitor.triangles;
     }
@@ -552,10 +829,11 @@ namespace
     }
 
     bool
-    rayIntersectsTriangle( const osg::vec3& origin,
-                           const osg::vec3& direction,
-                           float            maxDistance,
-                           const Triangle&  triangle )
+    rayTriangleIntersection( const osg::vec3& origin,
+                             const osg::vec3& direction,
+                             float            maxDistance,
+                             const Triangle&  triangle,
+                             float&           distance )
     {
         const osg::vec3 edge1 = triangle.v1 - triangle.v0;
         const osg::vec3 edge2 = triangle.v2 - triangle.v0;
@@ -582,7 +860,27 @@ namespace
         }
 
         const float t = osg::dot( edge2, qvec ) * invDet;
-        return t > rayHitEpsilon && t <= maxDistance;
+        if( t <= rayHitEpsilon || t > maxDistance )
+        {
+            return false;
+        }
+
+        distance = t;
+        return true;
+    }
+
+    bool
+    rayIntersectsTriangle( const osg::vec3& origin,
+                           const osg::vec3& direction,
+                           float            maxDistance,
+                           const Triangle&  triangle )
+    {
+        float distance = 0.0F;
+        return rayTriangleIntersection( origin,
+                                        direction,
+                                        maxDistance,
+                                        triangle,
+                                        distance );
     }
 
     bool
@@ -645,6 +943,73 @@ namespace
         return false;
     }
 
+    RayHit
+    bvhClosestHit( const Bvh&       bvh,
+                   const osg::vec3& origin,
+                   const osg::vec3& direction,
+                   float            maxDistance )
+    {
+        RayHit result;
+        if( bvh.nodes.empty() )
+        {
+            return result;
+        }
+
+        std::array<std::uint32_t, 96U> stack{};
+        std::size_t                    stackSize = 1U;
+        stack[0]                                 = 0U;
+
+        while( stackSize > 0U )
+        {
+            --stackSize;
+            const BvhNode& node =
+                bvh.nodes[static_cast<std::size_t>( stack[stackSize] )];
+            const float currentMax = result.hit ? result.distance : maxDistance;
+            if( !rayIntersectsBox( node.bounds, origin, direction, currentMax ) )
+            {
+                continue;
+            }
+
+            if( node.count > 0U )
+            {
+                const std::size_t end = static_cast<std::size_t>( node.start ) +
+                                        static_cast<std::size_t>( node.count );
+                for( std::size_t i = static_cast<std::size_t>( node.start ); i < end;
+                     ++i )
+                {
+                    const std::uint32_t triangleIndex = bvh.triangleIndices[i];
+                    const Triangle&     triangle =
+                        bvh.triangles[static_cast<std::size_t>( triangleIndex )];
+                    float       distance    = 0.0F;
+                    const float triangleMax = result.hit ? result.distance : currentMax;
+                    if( rayTriangleIntersection( origin,
+                                                 direction,
+                                                 triangleMax,
+                                                 triangle,
+                                                 distance ) )
+                    {
+                        result.hit           = true;
+                        result.distance      = distance;
+                        result.triangleIndex = triangleIndex;
+                    }
+                }
+            }
+            else
+            {
+                if( stackSize + 2U > stack.size() )
+                {
+                    break;
+                }
+                stack[stackSize] = node.left;
+                ++stackSize;
+                stack[stackSize] = node.right;
+                ++stackSize;
+            }
+        }
+
+        return result;
+    }
+
     float
     radicalInverseVdC( std::uint32_t bits )
     {
@@ -690,13 +1055,172 @@ namespace
                                    osg::vec3( 0.0F, 1.0F, 0.0F ) );
     }
 
-    osg::vec4
-    computeVertexVisibility( const GeometryRecord&         record,
-                             std::size_t                   vertexIndex,
-                             const Bvh&                    bvh,
-                             const std::vector<osg::vec3>& samples,
-                             float                         maxDistance )
+    int
+    wrapTexelIndex( int value,
+                    int size )
     {
+        if( size <= 0 )
+        {
+            return 0;
+        }
+        int wrapped = value % size;
+        if( wrapped < 0 )
+        {
+            wrapped += size;
+        }
+        return wrapped;
+    }
+
+    osg::vec3
+    readSkyTexel( const osg::Image& image,
+                  int               x,
+                  int               y )
+    {
+        const osg::dvec3 color = readFloatRgb( image, x, y );
+        const double     lum   = luminance( color );
+        if( lum > sunDiscLuminance )
+        {
+            const double scale = sunDiscLuminance / lum;
+            return osg::vec3( static_cast<float>( color.r * scale ),
+                              static_cast<float>( color.g * scale ),
+                              static_cast<float>( color.b * scale ) );
+        }
+        return osg::vec3( static_cast<float>( color.r ),
+                          static_cast<float>( color.g ),
+                          static_cast<float>( color.b ) );
+    }
+
+    void
+    logEnvironmentStats( const osg::Image& image )
+    {
+        const int width  = image.s();
+        const int height = image.t();
+        if( width <= 0 || height <= 0 )
+        {
+            return;
+        }
+
+        double meanLuminance = 0.0;
+        double maxLuminance  = 0.0;
+        for( int y = 0; y < height; ++y )
+        {
+            for( int x = 0; x < width; ++x )
+            {
+                const double lum  = luminance( readFloatRgb( image, x, y ) );
+                meanLuminance    += lum;
+                maxLuminance      = std::max( maxLuminance, lum );
+            }
+        }
+        meanLuminance /= static_cast<double>( width ) * static_cast<double>( height );
+
+        OSG_NOTICE << "Sponza radiance bake environment HDR " << width << "x" << height
+                   << " GL_FLOAT "
+                   << ( image.getPixelFormat() == GL_RGBA ? "RGBA" : "RGB" )
+                   << ", mean luminance " << meanLuminance << ", max luminance "
+                   << maxLuminance << std::endl;
+    }
+
+    class EnvironmentSampler
+    {
+        public:
+
+            EnvironmentSampler( const osg::Image* image,
+                                float             envRotation ) :
+                _image( image ),
+                _envRotation( envRotation )
+            {
+                _valid = image !=
+                         nullptr &&
+                         canReadFloatRgb( *image ) &&
+                         image->s() >
+                         0 &&
+                         image->t() > 0;
+                if( !_valid && image != nullptr )
+                {
+                    OSG_WARN << "Sponza radiance bake requires GL_RGB/GL_RGBA float HDR "
+                             << "image data for escaped sky rays" << std::endl;
+                }
+                if( _valid )
+                {
+                    logEnvironmentStats( *image );
+                }
+            }
+
+            osg::vec3
+            sample( const osg::vec3& dirWorld ) const
+            {
+                if( !_valid || _image == nullptr )
+                {
+                    return osg::vec3( 0.0F, 0.0F, 0.0F );
+                }
+
+                const osg::vec3 direction =
+                    safeNormalize( dirWorld, osg::vec3( 0.0F, 1.0F, 0.0F ) );
+                const double lon =
+                    ( std::fabs( static_cast<double>( direction.x ) ) +
+                      std::fabs( static_cast<double>( direction.z ) ) < 1.0E-5 )
+                        ? 0.0
+                        : std::atan2( static_cast<double>( direction.z ),
+                                      static_cast<double>( direction.x ) );
+                double u =
+                    lon / twoPi + 0.5 + static_cast<double>( _envRotation ) / twoPi;
+                u = u - std::floor( u );
+                const double v =
+                    std::acos(
+                        std::clamp( static_cast<double>( direction.y ), -1.0, 1.0 )
+                    ) /
+                    static_cast<double>( pi );
+
+                const int    width  = _image->s();
+                const int    height = _image->t();
+                const double imageX = u * static_cast<double>( width ) - 0.5;
+                const double imageY =
+                    std::clamp( ( 1.0 - v ) * static_cast<double>( height ) - 0.5,
+                                0.0,
+                                static_cast<double>( height - 1 ) );
+
+                const double    floorX = std::floor( imageX );
+                const double    floorY = std::floor( imageY );
+                const int       x0     = static_cast<int>( floorX );
+                const int       y0     = static_cast<int>( floorY );
+                const int       x1     = x0 + 1;
+                const int       y1     = std::min( y0 + 1, height - 1 );
+                const float     tx     = static_cast<float>( imageX - floorX );
+                const float     ty     = static_cast<float>( imageY - floorY );
+
+                const osg::vec3 c00 =
+                    readSkyTexel( *_image, wrapTexelIndex( x0, width ), y0 );
+                const osg::vec3 c10 =
+                    readSkyTexel( *_image, wrapTexelIndex( x1, width ), y0 );
+                const osg::vec3 c01 =
+                    readSkyTexel( *_image, wrapTexelIndex( x0, width ), y1 );
+                const osg::vec3 c11 =
+                    readSkyTexel( *_image, wrapTexelIndex( x1, width ), y1 );
+                const osg::vec3 cx0 = c00 * ( 1.0F - tx ) + c10 * tx;
+                const osg::vec3 cx1 = c01 * ( 1.0F - tx ) + c11 * tx;
+                return cx0 * ( 1.0F - ty ) + cx1 * ty;
+            }
+
+        private:
+
+            const osg::Image* _image       = nullptr;
+            float             _envRotation = 0.0F;
+            bool              _valid       = false;
+    };
+
+    VertexBake
+    computeVertexBake( const GeometryRecord&         record,
+                       std::size_t                   vertexIndex,
+                       const Bvh&                    bvh,
+                       const MaterialTable&          materialTable,
+                       const EnvironmentSampler&     environment,
+                       const std::vector<osg::vec3>& samples,
+                       const osg::vec3&              sunDirection,
+                       const osg::vec3&              sunRadiance,
+                       float                         visibilityMaxDistance,
+                       float                         radianceMaxDistance )
+    {
+        VertexBake result;
         if( record.vertices ==
             nullptr ||
             record.normals ==
@@ -705,7 +1229,7 @@ namespace
             record.vertexCount ||
             vertexIndex >= static_cast<std::size_t>( record.normals->getNumElements() ) )
         {
-            return osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F );
+            return result;
         }
 
         const osg::vec3 transformedNormal = transformNormal(
@@ -714,7 +1238,7 @@ namespace
         );
         if( osg::length2( transformedNormal ) <= minNormalLength2 )
         {
-            return osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F );
+            return result;
         }
         const osg::vec3 normal =
             safeNormalize( transformedNormal, osg::vec3( 0.0F, 1.0F, 0.0F ) );
@@ -731,17 +1255,46 @@ namespace
 
         std::size_t     unoccluded = 0U;
         osg::vec3       unoccludedDirectionSum( 0.0F, 0.0F, 0.0F );
+        osg::vec3       radianceSum( 0.0F, 0.0F, 0.0F );
         for( const osg::vec3& sample : samples )
         {
             const osg::vec3 direction = safeNormalize(
                 tangent * sample.x + bitangent * sample.y + normal * sample.z,
                 normal
             );
-            if( !bvhAnyHit( bvh, origin, direction, maxDistance ) )
+            const RayHit hit =
+                bvhClosestHit( bvh, origin, direction, radianceMaxDistance );
+            if( !hit.hit || hit.distance > visibilityMaxDistance )
             {
                 ++unoccluded;
                 unoccludedDirectionSum += direction;
             }
+
+            if( !hit.hit )
+            {
+                radianceSum += environment.sample( direction );
+                continue;
+            }
+
+            const Triangle& triangle =
+                bvh.triangles[static_cast<std::size_t>( hit.triangleIndex )];
+            const osg::vec3 hitPoint = origin + direction * hit.distance;
+            const osg::vec3 hitNormal =
+                safeNormalize( triangle.normal, osg::vec3( 0.0F, 1.0F, 0.0F ) );
+            const float nDotSun = osg::dot( hitNormal, sunDirection );
+            if( nDotSun <= 0.0F )
+            {
+                continue;
+            }
+
+            const osg::vec3 shadowOrigin = hitPoint + hitNormal * rayOriginOffset;
+            if( bvhAnyHit( bvh, shadowOrigin, sunDirection, radianceMaxDistance ) )
+            {
+                continue;
+            }
+
+            const osg::vec3 albedo = materialTable.albedo( triangle.materialIndex );
+            radianceSum += multiplyComponents( sunRadiance, albedo ) * ( nDotSun / pi );
         }
 
         const float visibility =
@@ -752,49 +1305,82 @@ namespace
                                              minNormalLength2
                                        ? normal
                                        : safeNormalize( unoccludedDirectionSum, normal );
-        return osg::vec4( bentNormal, visibility );
+        result.visibility          = osg::vec4( bentNormal, visibility );
+        // The shader multiplies this value by albedo directly, matching the existing
+        // SH path where coefficients are irradiance divided by PI. With cosine-weighted
+        // samples (pdf = cos(theta) / PI), E / PI is the mean incoming radiance.
+        result.radiance = radianceSum * ( 1.0F / static_cast<float>( samples.size() ) );
+        return result;
     }
 
-    std::vector<std::vector<osg::vec4>>
-    bakeVisibility( const std::vector<GeometryRecord>& records,
-                    const Bvh&                         bvh,
-                    int                                rayCount,
-                    float                              maxDistance )
+    struct BakeArrays
     {
-        std::vector<std::vector<osg::vec4>> visibility( records.size() );
-        std::vector<std::size_t>            offsets;
+            std::vector<std::vector<osg::vec4>> visibility;
+            std::vector<std::vector<osg::vec3>> radiance;
+    };
+
+    BakeArrays
+    bakeVisibilityAndRadiance( const std::vector<GeometryRecord>& records,
+                               const Bvh&                         bvh,
+                               const MaterialTable&               materialTable,
+                               const osg::Image*                  envImage,
+                               const sponza::SponzaOptions&       options,
+                               int                                rayCount,
+                               float                              visibilityMaxDistance,
+                               float                              radianceMaxDistance )
+    {
+        BakeArrays bake;
+        bake.visibility.resize( records.size() );
+        bake.radiance.resize( records.size() );
+        std::vector<std::size_t> offsets;
         offsets.reserve( records.size() + 1U );
         offsets.push_back( 0U );
 
         std::size_t totalVertices = 0U;
         for( std::size_t i = 0U; i < records.size(); ++i )
         {
-            visibility[i].assign( records[i].vertexCount,
-                                  osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
+            bake.visibility[i].assign( records[i].vertexCount,
+                                       osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
+            bake.radiance[i].assign( records[i].vertexCount,
+                                     osg::vec3( 0.0F, 0.0F, 0.0F ) );
             totalVertices += records[i].vertexCount;
             offsets.push_back( totalVertices );
         }
 
-        if( totalVertices == 0U || bvh.triangles.empty() )
+        if( totalVertices == 0U )
         {
-            return visibility;
+            return bake;
         }
 
         const std::vector<osg::vec3> samples = makeHemisphereSamples( rayCount );
-        std::atomic<std::size_t>     nextVertex{ 0U };
-        const std::size_t            chunkSize = 64U;
-        const unsigned int hardwareThreads     = std::thread::hardware_concurrency();
-        std::size_t        threadCount =
+        const EnvironmentSampler     environment( envImage, options.envRotation );
+        const osg::dvec3 sunDirectionD = sponza::computeSunDirectionWorld( options );
+        const osg::vec3  sunDirection =
+            safeNormalize( osg::vec3( static_cast<float>( sunDirectionD.x ),
+                                      static_cast<float>( sunDirectionD.y ),
+                                      static_cast<float>( sunDirectionD.z ) ),
+                           osg::vec3( 0.0F, 1.0F, 0.0F ) );
+        const osg::vec3 sunRadiance =
+            sponza::scaledColor( options.sunColor, options.sunIntensity );
+        std::atomic<std::size_t> nextVertex{ 0U };
+        const std::size_t        chunkSize       = 64U;
+        const unsigned int       hardwareThreads = std::thread::hardware_concurrency();
+        std::size_t              threadCount =
             std::max<std::size_t>( 1U, static_cast<std::size_t>( hardwareThreads ) );
         threadCount = std::min( threadCount, totalVertices );
 
         auto worker = [&records,
-                       &visibility,
+                       &bake,
                        &offsets,
                        &nextVertex,
                        &samples,
                        &bvh,
-                       maxDistance,
+                       &materialTable,
+                       &environment,
+                       sunDirection,
+                       sunRadiance,
+                       visibilityMaxDistance,
+                       radianceMaxDistance,
                        totalVertices]()
         {
             while( true )
@@ -821,12 +1407,20 @@ namespace
                     const std::size_t vertexIndex = globalIndex - offsets[recordIndex];
                     if( records[recordIndex].hasNormals )
                     {
-                        visibility[recordIndex][vertexIndex] =
-                            computeVertexVisibility( records[recordIndex],
-                                                     vertexIndex,
-                                                     bvh,
-                                                     samples,
-                                                     maxDistance );
+                        const VertexBake vertexBake =
+                            computeVertexBake( records[recordIndex],
+                                               vertexIndex,
+                                               bvh,
+                                               materialTable,
+                                               environment,
+                                               samples,
+                                               sunDirection,
+                                               sunRadiance,
+                                               visibilityMaxDistance,
+                                               radianceMaxDistance );
+                        bake.visibility[recordIndex][vertexIndex] =
+                            vertexBake.visibility;
+                        bake.radiance[recordIndex][vertexIndex] = vertexBake.radiance;
                     }
                 }
             }
@@ -843,7 +1437,7 @@ namespace
             thread.join();
         }
 
-        return visibility;
+        return bake;
     }
 
     bool
@@ -922,44 +1516,116 @@ namespace
         return cachePath;
     }
 
+    enum class CacheLoadStatus
+    {
+        Missing,
+        Stale,
+        Loaded
+    };
+
     bool
-    loadVisibilityCache( const std::filesystem::path&         cachePath,
-                         const ModelStamp&                    stamp,
-                         int                                  rayCount,
-                         float                                rayDistance,
-                         const std::vector<GeometryRecord>&   records,
-                         std::vector<std::vector<osg::vec4>>& visibility )
+    cacheLightingKeyChanged( double                       cachedSunAzimuth,
+                             double                       cachedSunElevation,
+                             float                        cachedSunIntensity,
+                             const osg::vec3&             cachedSunColor,
+                             float                        cachedEnvRotation,
+                             float                        cachedRadianceDistance,
+                             const sponza::SponzaOptions& options,
+                             float                        radianceDistance )
+    {
+        return cachedSunAzimuth !=
+               options.sunAzimuthDeg ||
+               cachedSunElevation !=
+               options.sunElevationDeg ||
+               cachedSunIntensity !=
+               options.sunIntensity ||
+               cachedSunColor !=
+               options.sunColor ||
+               cachedEnvRotation !=
+               options.envRotation ||
+               cachedRadianceDistance != radianceDistance;
+    }
+
+    CacheLoadStatus
+    loadVisibilityCache( const std::filesystem::path&       cachePath,
+                         const ModelStamp&                  stamp,
+                         int                                rayCount,
+                         float                              rayDistance,
+                         float                              radianceDistance,
+                         const sponza::SponzaOptions&       options,
+                         const std::vector<GeometryRecord>& records,
+                         BakeArrays&                        bake )
     {
         osgDB::ifstream stream( cachePath.string().c_str(),
                                 std::ios::in | std::ios::binary );
         if( !stream )
         {
-            return false;
+            return CacheLoadStatus::Missing;
         }
 
         std::array<char, 8U> magic{};
-        std::uint32_t        version        = 0U;
-        std::uint32_t        cachedRayCount = 0U;
-        float                cachedDistance = 0.0F;
-        std::uint64_t        cachedSize     = 0U;
-        std::int64_t         cachedMtime    = 0;
-        std::uint64_t        geometryCount  = 0U;
+        std::uint32_t        version = 0U;
         if( !readValue( stream, magic.data(), magic.size() ) ||
-            !readPod( stream, version ) ||
-            !readPod( stream, cachedRayCount ) ||
+            !readPod( stream, version ) )
+        {
+            return CacheLoadStatus::Stale;
+        }
+
+        if( magic != cacheMagic )
+        {
+            OSG_NOTICE << "Sponza visibility/radiance bake cache magic changed; "
+                       << "rebaking " << cachePath.string() << std::endl;
+            return CacheLoadStatus::Stale;
+        }
+        if( version != cacheVersion )
+        {
+            OSG_NOTICE << "Sponza visibility/radiance bake cache version changed to v"
+                       << cacheVersion << "; rebaking " << cachePath.string()
+                       << std::endl;
+            return CacheLoadStatus::Stale;
+        }
+
+        std::uint32_t cachedRayCount         = 0U;
+        float         cachedDistance         = 0.0F;
+        float         cachedRadianceDistance = 0.0F;
+        double        cachedSunAzimuth       = 0.0;
+        double        cachedSunElevation     = 0.0;
+        float         cachedSunIntensity     = 0.0F;
+        osg::vec3     cachedSunColor( 0.0F, 0.0F, 0.0F );
+        float         cachedEnvRotation = 0.0F;
+        std::uint64_t cachedSize        = 0U;
+        std::int64_t  cachedMtime       = 0;
+        std::uint64_t geometryCount     = 0U;
+        if( !readPod( stream, cachedRayCount ) ||
             !readPod( stream, cachedDistance ) ||
+            !readPod( stream, cachedRadianceDistance ) ||
+            !readPod( stream, cachedSunAzimuth ) ||
+            !readPod( stream, cachedSunElevation ) ||
+            !readPod( stream, cachedSunIntensity ) ||
+            !readPod( stream, cachedSunColor ) ||
+            !readPod( stream, cachedEnvRotation ) ||
             !readPod( stream, cachedSize ) ||
             !readPod( stream, cachedMtime ) ||
             !readPod( stream, geometryCount ) )
         {
-            return false;
+            return CacheLoadStatus::Stale;
         }
 
-        if( magic !=
-            cacheMagic ||
-            version !=
-            cacheVersion ||
-            cachedRayCount !=
+        if( cacheLightingKeyChanged( cachedSunAzimuth,
+                                     cachedSunElevation,
+                                     cachedSunIntensity,
+                                     cachedSunColor,
+                                     cachedEnvRotation,
+                                     cachedRadianceDistance,
+                                     options,
+                                     radianceDistance ) )
+        {
+            OSG_NOTICE << "Sponza radiance bake cache lighting key changed; rebaking "
+                       << cachePath.string() << std::endl;
+            return CacheLoadStatus::Stale;
+        }
+
+        if( cachedRayCount !=
             static_cast<std::uint32_t>( rayCount ) ||
             cachedDistance !=
             rayDistance ||
@@ -969,7 +1635,9 @@ namespace
             stamp.mtimeTicks ||
             geometryCount != static_cast<std::uint64_t>( records.size() ) )
         {
-            return false;
+            OSG_NOTICE << "Sponza visibility/radiance bake cache geometry key changed; "
+                       << "rebaking " << cachePath.string() << std::endl;
+            return CacheLoadStatus::Stale;
         }
 
         std::vector<std::uint64_t> vertexCounts( records.size(), 0U );
@@ -978,34 +1646,50 @@ namespace
             if( !readPod( stream, vertexCounts[i] ) ||
                 vertexCounts[i] != static_cast<std::uint64_t>( records[i].vertexCount ) )
             {
-                return false;
+                return CacheLoadStatus::Stale;
             }
         }
 
-        visibility.resize( records.size() );
+        bake.visibility.resize( records.size() );
+        bake.radiance.resize( records.size() );
         for( std::size_t i = 0U; i < records.size(); ++i )
         {
-            visibility[i].resize( records[i].vertexCount,
-                                  osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
-            if( !visibility[i].empty() &&
+            bake.visibility[i].resize( records[i].vertexCount,
+                                       osg::vec4( 0.0F, 1.0F, 0.0F, 1.0F ) );
+            if( !bake.visibility[i].empty() &&
                 !readValue( stream,
-                            visibility[i].data(),
-                            visibility[i].size() * sizeof( osg::vec4 ) ) )
+                            bake.visibility[i].data(),
+                            bake.visibility[i].size() * sizeof( osg::vec4 ) ) )
             {
-                return false;
+                return CacheLoadStatus::Stale;
             }
         }
 
-        return true;
+        for( std::size_t i = 0U; i < records.size(); ++i )
+        {
+            bake.radiance[i].resize( records[i].vertexCount,
+                                     osg::vec3( 0.0F, 0.0F, 0.0F ) );
+            if( !bake.radiance[i].empty() &&
+                !readValue( stream,
+                            bake.radiance[i].data(),
+                            bake.radiance[i].size() * sizeof( osg::vec3 ) ) )
+            {
+                return CacheLoadStatus::Stale;
+            }
+        }
+
+        return CacheLoadStatus::Loaded;
     }
 
     bool
-    saveVisibilityCache( const std::filesystem::path&               cachePath,
-                         const ModelStamp&                          stamp,
-                         int                                        rayCount,
-                         float                                      rayDistance,
-                         const std::vector<GeometryRecord>&         records,
-                         const std::vector<std::vector<osg::vec4>>& visibility )
+    saveVisibilityCache( const std::filesystem::path&       cachePath,
+                         const ModelStamp&                  stamp,
+                         int                                rayCount,
+                         float                              rayDistance,
+                         float                              radianceDistance,
+                         const sponza::SponzaOptions&       options,
+                         const std::vector<GeometryRecord>& records,
+                         const BakeArrays&                  bake )
     {
         osgDB::ofstream stream( cachePath.string().c_str(),
                                 std::ios::out | std::ios::binary | std::ios::trunc );
@@ -1020,6 +1704,12 @@ namespace
             !writePod( stream, cacheVersion ) ||
             !writePod( stream, cachedRayCount ) ||
             !writePod( stream, rayDistance ) ||
+            !writePod( stream, radianceDistance ) ||
+            !writePod( stream, options.sunAzimuthDeg ) ||
+            !writePod( stream, options.sunElevationDeg ) ||
+            !writePod( stream, options.sunIntensity ) ||
+            !writePod( stream, options.sunColor ) ||
+            !writePod( stream, options.envRotation ) ||
             !writePod( stream, stamp.size ) ||
             !writePod( stream, stamp.mtimeTicks ) ||
             !writePod( stream, geometryCount ) )
@@ -1037,11 +1727,20 @@ namespace
             }
         }
 
-        for( const std::vector<osg::vec4>& values : visibility )
+        for( const std::vector<osg::vec4>& values : bake.visibility )
         {
             if( !values.empty() && !writeValue( stream,
                                                 values.data(),
                                                 values.size() * sizeof( osg::vec4 ) ) )
+            {
+                return false;
+            }
+        }
+        for( const std::vector<osg::vec3>& values : bake.radiance )
+        {
+            if( !values.empty() && !writeValue( stream,
+                                                values.data(),
+                                                values.size() * sizeof( osg::vec3 ) ) )
             {
                 return false;
             }
@@ -1051,10 +1750,11 @@ namespace
     }
 
     void
-    applyVisibilityAttributes( const std::vector<GeometryRecord>&         records,
-                               const std::vector<std::vector<osg::vec4>>& visibility )
+    applyBakeAttributes( const std::vector<GeometryRecord>& records,
+                         const BakeArrays&                  bake )
     {
-        bool warnedExistingAttribute = false;
+        bool warnedExistingVisibilityAttribute = false;
+        bool warnedExistingRadianceAttribute   = false;
         for( std::size_t recordIndex = 0U; recordIndex < records.size(); ++recordIndex )
         {
             osg::Geometry* geometry = records[recordIndex].geometry;
@@ -1065,23 +1765,41 @@ namespace
 
             if( geometry->getVertexAttribArray( visibilityAttribLocation ) !=
                 nullptr &&
-                !warnedExistingAttribute )
+                !warnedExistingVisibilityAttribute )
             {
                 OSG_WARN << "Sponza visibility bake replacing existing vertex "
                          << "attribute " << visibilityAttribLocation << std::endl;
-                warnedExistingAttribute = true;
+                warnedExistingVisibilityAttribute = true;
+            }
+            if( geometry->getVertexAttribArray( radianceAttribLocation ) !=
+                nullptr &&
+                !warnedExistingRadianceAttribute )
+            {
+                OSG_WARN << "Sponza radiance bake replacing existing vertex "
+                         << "attribute " << radianceAttribLocation << std::endl;
+                warnedExistingRadianceAttribute = true;
             }
 
-            osg::ref_ptr<osg::Vec4Array> array = new osg::Vec4Array(
+            osg::ref_ptr<osg::Vec4Array> visibilityArray = new osg::Vec4Array(
+                static_cast<unsigned int>( records[recordIndex].vertexCount )
+            );
+            osg::ref_ptr<osg::Vec3Array> radianceArray = new osg::Vec3Array(
                 static_cast<unsigned int>( records[recordIndex].vertexCount )
             );
             for( std::size_t i = 0U; i < records[recordIndex].vertexCount; ++i )
             {
-                ( *array )[static_cast<unsigned int>( i )] = visibility[recordIndex][i];
+                ( *visibilityArray )[static_cast<unsigned int>( i )] =
+                    bake.visibility[recordIndex][i];
+                ( *radianceArray )[static_cast<unsigned int>( i )] =
+                    bake.radiance[recordIndex][i];
             }
-            array->setNormalize( false );
+            visibilityArray->setNormalize( false );
+            radianceArray->setNormalize( false );
             geometry->setVertexAttribArray( visibilityAttribLocation,
-                                            array.get(),
+                                            visibilityArray.get(),
+                                            osg::Array::BIND_PER_VERTEX );
+            geometry->setVertexAttribArray( radianceAttribLocation,
+                                            radianceArray.get(),
                                             osg::Array::BIND_PER_VERTEX );
         }
     }
@@ -1089,9 +1807,11 @@ namespace
     void
     setVisibilityUniforms( osg::Node& model,
                            bool       hasVisibility,
+                           bool       useRadianceBake,
                            float      strength,
                            float      power,
-                           float      bentStrength )
+                           float      bentStrength,
+                           float      radianceScale )
     {
         osg::StateSet* stateSet = model.getOrCreateStateSet();
         stateSet->addUniform( new osg::Uniform( "uHasVisBake", hasVisibility ),
@@ -1101,6 +1821,10 @@ namespace
         stateSet->addUniform( new osg::Uniform( "uVisPower", power ),
                               osg::StateAttribute::OVERRIDE );
         stateSet->addUniform( new osg::Uniform( "uVisBentStrength", bentStrength ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uUseRadianceBake", useRadianceBake ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRadianceScale", radianceScale ),
                               osg::StateAttribute::OVERRIDE );
     }
 
@@ -1141,9 +1865,11 @@ namespace sponza
 
         setVisibilityUniforms( *model,
                                false,
+                               false,
                                options.visBakeStrength,
                                options.visBakePower,
-                               options.visBentStrength );
+                               options.visBentStrength,
+                               options.radianceScale );
 
         if( !options.visBakeEnabled )
         {
@@ -1152,8 +1878,11 @@ namespace sponza
         }
 
         const osg::Timer_t                startTick = osg::Timer::instance()->tick();
-        const std::vector<GeometryRecord> records   = collectGeometryRecords( *model );
-        const std::size_t                 vertexCount =
+        MaterialTable                     materialTable;
+        const std::vector<GeometryRecord> records =
+            collectGeometryRecords( *model, materialTable );
+        materialTable.logStats();
+        const std::size_t vertexCount =
             std::accumulate( records.begin(),
                              records.end(),
                              std::size_t{ 0U },
@@ -1175,43 +1904,66 @@ namespace sponza
         const float sceneDiagonalEarly = computeSceneDiagonal( records );
         const float rayDistance =
             std::min( options.visBakeDistance, sceneDiagonalEarly );
-        std::vector<std::vector<osg::vec4>> visibility;
-        if( hasStamp &&
-            !options.visBakeRefresh &&
-            loadVisibilityCache( cachePath,
-                                 stamp,
-                                 options.visBakeRays,
-                                 rayDistance,
-                                 records,
-                                 visibility ) )
+        const float radianceDistance = sceneDiagonalEarly;
+        BakeArrays  bake;
+        if( hasStamp && !options.visBakeRefresh )
         {
-            applyVisibilityAttributes( records, visibility );
-            setVisibilityUniforms( *model,
-                                   true,
-                                   options.visBakeStrength,
-                                   options.visBakePower,
-                                   options.visBentStrength );
-            const osg::Timer_t endTick = osg::Timer::instance()->tick();
-            result.loadedFromCache     = true;
-            result.wallTimeSeconds =
-                osg::Timer::instance()->delta_s( startTick, endTick );
-            OSG_NOTICE << "Sponza visibility bake loaded " << vertexCount
-                       << " vertices from " << result.cachePath << " in "
-                       << result.wallTimeSeconds << " s" << std::endl;
-            return result;
+            const CacheLoadStatus cacheStatus = loadVisibilityCache( cachePath,
+                                                                     stamp,
+                                                                     options.visBakeRays,
+                                                                     rayDistance,
+                                                                     radianceDistance,
+                                                                     options,
+                                                                     records,
+                                                                     bake );
+            if( cacheStatus == CacheLoadStatus::Loaded )
+            {
+                applyBakeAttributes( records, bake );
+                setVisibilityUniforms( *model,
+                                       true,
+                                       options.radianceBakeEnabled,
+                                       options.visBakeStrength,
+                                       options.visBakePower,
+                                       options.visBentStrength,
+                                       options.radianceScale );
+                const osg::Timer_t endTick = osg::Timer::instance()->tick();
+                result.loadedFromCache     = true;
+                result.wallTimeSeconds =
+                    osg::Timer::instance()->delta_s( startTick, endTick );
+                OSG_NOTICE << "Sponza visibility/radiance bake loaded " << vertexCount
+                           << " vertices from " << result.cachePath << " in "
+                           << result.wallTimeSeconds << " s" << std::endl;
+                return result;
+            }
         }
 
-        std::vector<Triangle> triangles = collectOccluderTriangles( *model );
-        result.occluderTriangles        = triangles.size();
-        Bvh bvh                         = buildBvh( std::move( triangles ) );
+        std::vector<Triangle> triangles =
+            collectOccluderTriangles( *model, materialTable );
+        result.occluderTriangles          = triangles.size();
+        Bvh                      bvh      = buildBvh( std::move( triangles ) );
 
-        visibility = bakeVisibility( records, bvh, options.visBakeRays, rayDistance );
-        applyVisibilityAttributes( records, visibility );
+        osg::ref_ptr<osg::Image> envImage = sponza::loadEnvironmentImage();
+        if( !envImage )
+        {
+            OSG_WARN << "Sponza radiance bake could not load environment HDR; "
+                     << "escaped rays contribute black" << std::endl;
+        }
+        bake = bakeVisibilityAndRadiance( records,
+                                          bvh,
+                                          materialTable,
+                                          envImage.get(),
+                                          options,
+                                          options.visBakeRays,
+                                          rayDistance,
+                                          radianceDistance );
+        applyBakeAttributes( records, bake );
         setVisibilityUniforms( *model,
                                true,
+                               options.radianceBakeEnabled,
                                options.visBakeStrength,
                                options.visBakePower,
-                               options.visBentStrength );
+                               options.visBentStrength,
+                               options.radianceScale );
 
         if( hasStamp )
         {
@@ -1225,10 +1977,12 @@ namespace sponza
                                       stamp,
                                       options.visBakeRays,
                                       rayDistance,
+                                      radianceDistance,
+                                      options,
                                       records,
-                                      visibility ) )
+                                      bake ) )
             {
-                OSG_WARN << "Sponza visibility bake could not write cache "
+                OSG_WARN << "Sponza visibility/radiance bake could not write cache "
                          << result.cachePath << std::endl;
             }
         }
@@ -1240,10 +1994,12 @@ namespace sponza
 
         const osg::Timer_t endTick = osg::Timer::instance()->tick();
         result.wallTimeSeconds = osg::Timer::instance()->delta_s( startTick, endTick );
-        OSG_NOTICE << "Sponza visibility bake processed " << vertexCount << " vertices, "
-                   << result.occluderTriangles << " occluder triangles, "
-                   << options.visBakeRays << " rays/vertex in " << result.wallTimeSeconds
-                   << " s" << std::endl;
+        OSG_NOTICE << "Sponza visibility/radiance bake processed " << vertexCount
+                   << " vertices, " << result.occluderTriangles
+                   << " occluder triangles, " << options.visBakeRays
+                   << " rays/vertex, visibility length " << rayDistance
+                   << ", radiance length " << radianceDistance << " in "
+                   << result.wallTimeSeconds << " s" << std::endl;
         return result;
     }
 

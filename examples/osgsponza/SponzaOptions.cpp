@@ -54,6 +54,14 @@ namespace
             "Blend strength for bent-normal irradiance lookup."
         );
         arguments.getApplicationUsage()->addCommandLineOption(
+            "--radiance-bake <on|off>",
+            "Enable first-bounce baked diffuse radiance."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--radiance-scale <value>",
+            "Scale applied to first-bounce baked diffuse radiance."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
             "--render-scale <N>",
             "Integer supersampling scale for headless render targets."
         );
@@ -281,11 +289,23 @@ namespace sponza
         arguments.read( "--vis-bake-power", options.visBakePower );
         arguments.read( "--vis-bake-distance", options.visBakeDistance );
         arguments.read( "--vis-bent-strength", options.visBentStrength );
+        if( !readOnOffArgument( arguments,
+                                "--radiance-bake",
+                                options.radianceBakeEnabled ) )
+        {
+            return false;
+        }
+        arguments.read( "--radiance-scale", options.radianceScale );
         arguments.read( "--render-scale", options.renderScale );
         options.visBakeRefresh = arguments.read( "--vis-bake-refresh" );
         if( options.visBakeRays <= 0 )
         {
             std::cerr << "--vis-bake-rays must be greater than 0" << std::endl;
+            return false;
+        }
+        if( options.radianceScale < 0.0F )
+        {
+            std::cerr << "--radiance-scale must be non-negative" << std::endl;
             return false;
         }
         if( options.renderScale <= 0 )
