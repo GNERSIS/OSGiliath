@@ -25,6 +25,8 @@ uniform vec2 uResolution;
 uniform float uRadius;
 uniform float uPower;
 uniform float uBias;
+uniform float uRoomRadius;
+uniform float uRoomStrength;
 
 in vec2 vUV;
 out vec4 o;
@@ -49,11 +51,69 @@ const vec3 kernel[kernelSize] = vec3[kernelSize](
     vec3(-0.611, -0.421, 0.813)
 );
 
+const int roomKernelSize = 16;
+const vec3 roomKernel[roomKernelSize] = vec3[roomKernelSize](
+    vec3( 0.196,  0.089, 0.180),
+    vec3(-0.220,  0.151, 0.220),
+    vec3( 0.073, -0.314, 0.200),
+    vec3( 0.326,  0.247, 0.280),
+    vec3(-0.417, -0.112, 0.240),
+    vec3(-0.127,  0.502, 0.340),
+    vec3( 0.526, -0.265, 0.300),
+    vec3(-0.540, -0.361, 0.380),
+    vec3( 0.209,  0.675, 0.320),
+    vec3( 0.690, -0.049, 0.460),
+    vec3(-0.707,  0.427, 0.360),
+    vec3( 0.089, -0.833, 0.420),
+    vec3( 0.812,  0.368, 0.400),
+    vec3(-0.391, -0.808, 0.480),
+    vec3(-0.916,  0.168, 0.340),
+    vec3( 0.516, -0.793, 0.300)
+);
+
 vec3 reconstructViewPosition(vec2 uv, float depth)
 {
     vec4 ndc = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 vp = uInvProj * ndc;
     return vp.xyz / vp.w;
+}
+
+float computeRoomAo(vec3 P, mat3 TBN)
+{
+    float occlusion = 0.0;
+    float roomBias = max(uBias, uRoomRadius * 0.035);
+
+    for(int i = 0; i < roomKernelSize; ++i)
+    {
+        vec3 s = P + TBN * roomKernel[i] * uRoomRadius;
+        vec4 clip = uProj * vec4(s, 1.0);
+        if(clip.w <= 0.0)
+        {
+            continue;
+        }
+
+        vec3 ndc = clip.xyz / clip.w;
+        vec2 sampleUV = ndc.xy * 0.5 + 0.5;
+        if(any(lessThan(sampleUV, vec2(0.0))) ||
+           any(greaterThan(sampleUV, vec2(1.0))))
+        {
+            continue;
+        }
+
+        float sampleDepthRaw = texture(uDepth, sampleUV).r;
+        if(sampleDepthRaw >= 1.0)
+        {
+            continue;
+        }
+
+        vec3 sampleP = reconstructViewPosition(sampleUV, sampleDepthRaw);
+        float depthDelta = abs(P.z - sampleP.z);
+        float rangeCheck =
+            1.0 - smoothstep(uRoomRadius * 0.25, uRoomRadius, depthDelta);
+        occlusion += (sampleP.z >= s.z + roomBias ? 1.0 : 0.0) * rangeCheck;
+    }
+
+    return clamp(1.0 - (occlusion / float(roomKernelSize)), 0.0, 1.0);
 }
 
 void main()
@@ -108,6 +168,11 @@ void main()
 
     float ao = 1.0 - (occlusion / float(kernelSize));
     ao = pow(clamp(ao, 0.0, 1.0), uPower);
+    if(uRoomStrength > 0.0 && uRoomRadius > 0.0)
+    {
+        float roomAO = computeRoomAo(P, TBN);
+        ao = clamp(ao * mix(1.0, roomAO, uRoomStrength), 0.0, 1.0);
+    }
     o = vec4(ao, ao, ao, 1.0);
 }
 )glsl";
@@ -140,6 +205,9 @@ namespace sponza
         stateSet->addUniform( new osg::Uniform( "uRadius", options.aoRadius ) );
         stateSet->addUniform( new osg::Uniform( "uPower", options.aoPower ) );
         stateSet->addUniform( new osg::Uniform( "uBias", options.aoBias ) );
+        stateSet->addUniform( new osg::Uniform( "uRoomRadius", options.aoRoomRadius ) );
+        stateSet->addUniform( new osg::Uniform( "uRoomStrength",
+                                                options.aoRoomStrength ) );
 
         return geode;
     }

@@ -36,6 +36,8 @@ namespace sponza
     constexpr float        defaultAoStrength         = 0.8F;
     constexpr float        defaultAoPower            = 1.5F;
     constexpr float        defaultAoBias             = 0.025F;
+    constexpr float        defaultAoRoomRadius       = 4.0F;
+    constexpr float        defaultAoRoomStrength     = 0.7F;
     constexpr int          defaultCameraIndex        = 0;
     constexpr unsigned int environmentTextureUnit    = 5U;
 
@@ -85,6 +87,8 @@ namespace sponza
             float          aoStrength         = defaultAoStrength;
             float          aoPower            = defaultAoPower;
             float          aoBias             = defaultAoBias;
+            float          aoRoomRadius       = defaultAoRoomRadius;
+            float          aoRoomStrength     = defaultAoRoomStrength;
             bool           ssaoEnabled        = true;
 
             bool           shadowEnabled      = defaultShadowEnabled;

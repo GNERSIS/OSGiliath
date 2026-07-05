@@ -160,6 +160,8 @@ namespace sponza
         arguments.read( "--ao-strength", options.aoStrength );
         arguments.read( "--ao-power", options.aoPower );
         arguments.read( "--ao-bias", options.aoBias );
+        arguments.read( "--ao-room-radius", options.aoRoomRadius );
+        arguments.read( "--ao-room-strength", options.aoRoomStrength );
         arguments.read( "--shadow-map-size", options.shadowMapSize );
         arguments.read( "--shadow-softness", options.shadowSoftness );
         arguments.read( "--shadow-bias", options.shadowBias );
