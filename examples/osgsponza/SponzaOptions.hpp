@@ -22,11 +22,11 @@ namespace sponza
     constexpr double       nearZ                     = 0.1;
     constexpr double       farZ                      = 2'000.0;
 
-    constexpr double       defaultSunAzimuthDeg      = 10.8;
-    constexpr double       defaultSunElevationDeg    = 55.9;
+    constexpr double       defaultSunAzimuthDeg      = 14.0;
+    constexpr double       defaultSunElevationDeg    = 68.0;
     constexpr float        defaultSunIntensity       = 3.5F;
     constexpr float        defaultAmbientLevel       = 0.7F;
-    constexpr float        defaultExposure           = 1.3F;
+    constexpr float        defaultExposure           = 2.45F;
     constexpr float        defaultIblIntensity       = 1.0F;
     constexpr float        defaultIblDiffuse         = 1.0F;
     constexpr float        defaultIblSpecular        = 0.12F;
@@ -46,13 +46,13 @@ namespace sponza
     constexpr float        defaultShadowNormalOffset = 0.02F;
     constexpr bool         defaultSkyEnabled         = true;
     constexpr bool         defaultIblShEnabled       = true;
-    constexpr float        defaultBounceStrength     = 0.25F;
+    constexpr float        defaultBounceStrength     = 0.45F;
     constexpr float        defaultExposureTrim       = 1.0F;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
     inline const osg::vec3 defaultWhiteBalance{ 1.0F, 1.0F, 1.0F };
-    inline const osg::vec3 defaultBounceColor{ 0.62F, 0.48F, 0.35F };
+    inline const osg::vec3 defaultBounceColor{ 0.55F, 0.50F, 0.42F };
 
     enum class TonemapMode
     {
