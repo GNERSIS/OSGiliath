@@ -14,7 +14,8 @@ using json = nlohmann::json;
 
 namespace
 {
-    constexpr char pbrVertexShader[] = R"glsl(
+
+    constexpr char pbrVertexShader[]   = R"glsl(
 #version 460 core
 
 layout(location = 0) in vec4 osg_Vertex;
@@ -402,8 +403,8 @@ void main()
     }
 
     osg::vec4
-    readVec4( const json& object,
-              const char* key,
+    readVec4( const json&      object,
+              const char*      key,
               const osg::vec4& fallback )
     {
         if( !object.contains( key ) )
@@ -424,8 +425,8 @@ void main()
     }
 
     osg::vec3
-    readVec3( const json& object,
-              const char* key,
+    readVec3( const json&      object,
+              const char*      key,
               const osg::vec3& fallback )
     {
         if( !object.contains( key ) )
@@ -456,8 +457,22 @@ void main()
         }
     }
 
+    osg::Texture::WrapMode
+    wrapModeFromGltf( int value )
+    {
+        switch( value )
+        {
+            case 33'071 :
+                return osg::Texture::CLAMP_TO_EDGE;
+            case 33'648 :
+                return osg::Texture::MIRROR;
+            default :
+                return osg::Texture::REPEAT;
+        }
+    }
+
     bool
-    bindTextureInfo( osg::StateSet&                                  stateSet,
+    bindTextureInfo( osg::StateSet&                                   stateSet,
                      const std::vector<osg::ref_ptr<osg::Texture2D>>& textures,
                      const json&                                      textureInfo,
                      unsigned int                                     unit,
@@ -474,16 +489,16 @@ void main()
         const int textureIndexValue = textureInfo["index"].get<int>();
         if( !validIndex( textureIndexValue, textures.size() ) )
         {
-            OSG_WARN << "GLTFLoader: " << label << " texture index "
-                     << textureIndexValue << " is out of range" << std::endl;
+            OSG_WARN << "GLTFLoader: " << label << " texture index " << textureIndexValue
+                     << " is out of range" << std::endl;
             return false;
         }
 
         const size_t textureIndex = jsonIndex( textureIndexValue );
         if( !textures[textureIndex].valid() )
         {
-            OSG_WARN << "GLTFLoader: " << label << " texture index "
-                     << textureIndexValue << " did not load a texture" << std::endl;
+            OSG_WARN << "GLTFLoader: " << label << " texture index " << textureIndexValue
+                     << " did not load a texture" << std::endl;
             return false;
         }
 
@@ -507,8 +522,8 @@ void main()
             return false;
         }
 
-        const int materialIndexValue = primitive["material"].get<int>();
-        const auto& materials = document["materials"];
+        const int   materialIndexValue = primitive["material"].get<int>();
+        const auto& materials          = document["materials"];
         if( !validIndex( materialIndexValue, materials.size() ) )
         {
             return false;
@@ -742,8 +757,8 @@ GLTFLoader::loadImages()
             {
                 const size_t   bufferIndex = jsonIndex( bufIdx );
                 const uint8_t* data        = _buffers[bufferIndex].data() + offset;
-                std::string    mimeType = img.value( "mimeType", "image/png" );
-                std::string    ext      = ( mimeType == "image/jpeg" ) ? "jpg" : "png";
+                std::string    mimeType    = img.value( "mimeType", "image/png" );
+                std::string    ext = ( mimeType == "image/jpeg" ) ? "jpg" : "png";
 
                 // Load via osgDB ReaderWriter from memory stream
                 osg::ref_ptr<osgDB::ReaderWriter> rw =
@@ -820,28 +835,15 @@ GLTFLoader::loadTextures()
                 osgTex->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
             }
 
-            auto wrapMode = []( int val ) -> osg::Texture::WrapMode
-            {
-                switch( val )
-                {
-                    case 33'071 :
-                        return osg::Texture::CLAMP_TO_EDGE;
-                    case 33'648 :
-                        return osg::Texture::MIRROR;
-                    default :
-                        return osg::Texture::REPEAT;
-                }
-            };
-            if( samp.contains( "wrapS" ) )
-            {
-                osgTex->setWrap( osg::Texture2D::WRAP_S,
-                                 wrapMode( samp["wrapS"].get<int>() ) );
-            }
-            if( samp.contains( "wrapT" ) )
-            {
-                osgTex->setWrap( osg::Texture2D::WRAP_T,
-                                 wrapMode( samp["wrapT"].get<int>() ) );
-            }
+            // glTF 2.0 Section 5.26: absent wrapS/wrapT default to REPEAT (10497).
+            osgTex->setWrap( osg::Texture2D::WRAP_S,
+                             samp.contains( "wrapS" )
+                                 ? wrapModeFromGltf( samp["wrapS"].get<int>() )
+                                 : osg::Texture::REPEAT );
+            osgTex->setWrap( osg::Texture2D::WRAP_T,
+                             samp.contains( "wrapT" )
+                                 ? wrapModeFromGltf( samp["wrapT"].get<int>() )
+                                 : osg::Texture::REPEAT );
         }
         else
         {
@@ -853,7 +855,7 @@ GLTFLoader::loadTextures()
             osgTex->setWrap( osg::Texture2D::WRAP_T, osg::Texture::REPEAT );
         }
 
-        osgTex->setMaxAnisotropy( 16.0f );
+        osgTex->setMaxAnisotropy( 16.0F );
 
         _textures.push_back( osgTex );
     }
@@ -869,7 +871,7 @@ GLTFLoader::loadMaterials()
 
     for( const auto& mat : _json["materials"] )
     {
-        osg::ref_ptr<osg::StateSet> ss = new osg::StateSet;
+        osg::ref_ptr<osg::StateSet> ss  = new osg::StateSet;
         const json*                 pbr = nullptr;
         if( mat.contains( "pbrMetallicRoughness" ) )
         {
@@ -882,12 +884,9 @@ GLTFLoader::loadMaterials()
 
         if( pbr )
         {
-            baseColorFactor = readVec4(
-                *pbr,
-                "baseColorFactor",
-                osg::vec4( 1.0F, 1.0F, 1.0F, 1.0F )
-            );
-            metallicFactor = pbr->value( "metallicFactor", 1.0F );
+            baseColorFactor =
+                readVec4( *pbr, "baseColorFactor", osg::vec4( 1.0F, 1.0F, 1.0F, 1.0F ) );
+            metallicFactor  = pbr->value( "metallicFactor", 1.0F );
             roughnessFactor = pbr->value( "roughnessFactor", 1.0F );
         }
 
@@ -919,38 +918,37 @@ GLTFLoader::loadMaterials()
                                  false );
         }
 
-        float normalScale = 1.0F;
+        float normalScale  = 1.0F;
         bool  hasNormalMap = false;
         if( mat.contains( "normalTexture" ) )
         {
             const auto& normalTexture = mat["normalTexture"];
-            normalScale = normalTexture.value( "scale", 1.0F );
-            hasNormalMap = bindTextureInfo( *ss,
-                                            _textures,
-                                            normalTexture,
-                                            2U,
-                                            "normalTexture",
-                                            false );
+            normalScale               = normalTexture.value( "scale", 1.0F );
+            hasNormalMap              = bindTextureInfo( *ss,
+                                                         _textures,
+                                                         normalTexture,
+                                                         2U,
+                                                         "normalTexture",
+                                                         false );
         }
 
         float occlusionStrength = 1.0F;
-        bool  hasOcclusionMap = false;
+        bool  hasOcclusionMap   = false;
         if( mat.contains( "occlusionTexture" ) )
         {
             const auto& occlusionTexture = mat["occlusionTexture"];
-            occlusionStrength = occlusionTexture.value( "strength", 1.0F );
-            hasOcclusionMap = bindTextureInfo( *ss,
-                                               _textures,
-                                               occlusionTexture,
-                                               3U,
-                                               "occlusionTexture",
-                                               false );
+            occlusionStrength            = occlusionTexture.value( "strength", 1.0F );
+            hasOcclusionMap              = bindTextureInfo( *ss,
+                                                            _textures,
+                                                            occlusionTexture,
+                                                            3U,
+                                                            "occlusionTexture",
+                                                            false );
         }
 
-        osg::vec3 emissiveFactor = readVec3( mat,
-                                             "emissiveFactor",
-                                             osg::vec3( 0.0F, 0.0F, 0.0F ) );
-        bool      hasEmissiveMap = false;
+        osg::vec3 emissiveFactor =
+            readVec3( mat, "emissiveFactor", osg::vec3( 0.0F, 0.0F, 0.0F ) );
+        bool hasEmissiveMap = false;
         if( mat.contains( "emissiveTexture" ) )
         {
             hasEmissiveMap = bindTextureInfo( *ss,
@@ -968,8 +966,8 @@ GLTFLoader::loadMaterials()
         }
 
         // Alpha blending
-        std::string alphaMode = mat.value( "alphaMode", "OPAQUE" );
-        bool        alphaMask = false;
+        std::string alphaMode   = mat.value( "alphaMode", "OPAQUE" );
+        bool        alphaMask   = false;
         float       alphaCutoff = mat.value( "alphaCutoff", 0.5F );
         if( alphaMode == "BLEND" )
         {
@@ -1017,12 +1015,10 @@ GLTFLoader::getPbrProgram()
     {
         _pbrProgram = new osg::Program;
         _pbrProgram->setName( "GLTF PBR metallic-roughness" );
-        _pbrProgram->addShader(
-            new osg::Shader( osg::Shader::VERTEX, pbrVertexShader )
-        );
-        _pbrProgram->addShader(
-            new osg::Shader( osg::Shader::FRAGMENT, pbrFragmentShader )
-        );
+        _pbrProgram->addShader( new osg::Shader( osg::Shader::VERTEX,
+                                                 pbrVertexShader ) );
+        _pbrProgram->addShader( new osg::Shader( osg::Shader::FRAGMENT,
+                                                 pbrFragmentShader ) );
         _pbrProgram->addBindAttribLocation( "osg_Tangent", 6U );
     }
 
@@ -1134,8 +1130,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
                                                stride );
         if( data && type == 3 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec3Array> arr =
-                new osg::Vec3Array( arrayCount( count ) );
+            osg::ref_ptr<osg::Vec3Array> arr = new osg::Vec3Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 ( *arr )[i] = *reinterpret_cast<const osg::vec3*>( data + i * stride );
@@ -1154,8 +1149,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             getAccessorData( attrs["NORMAL"].get<int>(), count, compType, type, stride );
         if( data && type == 3 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec3Array> arr =
-                new osg::Vec3Array( arrayCount( count ) );
+            osg::ref_ptr<osg::Vec3Array> arr = new osg::Vec3Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 ( *arr )[i] = *reinterpret_cast<const osg::vec3*>( data + i * stride );
@@ -1170,12 +1164,14 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
         size_t         count;
         int            compType, type;
         size_t         stride;
-        const uint8_t* data =
-            getAccessorData( attrs["TANGENT"].get<int>(), count, compType, type, stride );
+        const uint8_t* data = getAccessorData( attrs["TANGENT"].get<int>(),
+                                               count,
+                                               compType,
+                                               type,
+                                               stride );
         if( data && type == 4 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec4Array> arr =
-                new osg::Vec4Array( arrayCount( count ) );
+            osg::ref_ptr<osg::Vec4Array> arr = new osg::Vec4Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 ( *arr )[i] = *reinterpret_cast<const osg::vec4*>( data + i * stride );
@@ -1201,8 +1197,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
                                                stride );
         if( data && type == 2 && compType == 5'126 )
         {
-            osg::ref_ptr<osg::Vec2Array> arr =
-                new osg::Vec2Array( arrayCount( count ) );
+            osg::ref_ptr<osg::Vec2Array> arr = new osg::Vec2Array( arrayCount( count ) );
             for( size_t i = 0; i < count; ++i )
             {
                 const osg::vec2& uv =
@@ -1360,8 +1355,10 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
 
     if( primitiveMaterialHasNormalTexture( _json, primitive ) && !hasTangentArray )
     {
-        if( geom->getVertexArray() && geom->getNormalArray() &&
-            geom->getTexCoordArray( 0 ) && geom->getNumPrimitiveSets() > 0U )
+        if( geom->getVertexArray() &&
+            geom->getNormalArray() &&
+            geom->getTexCoordArray( 0 ) &&
+            geom->getNumPrimitiveSets() > 0U )
         {
             osg::ref_ptr<osgUtil::TangentSpaceGenerator> tangentGenerator =
                 new osgUtil::TangentSpaceGenerator;
@@ -1370,9 +1367,7 @@ GLTFLoader::buildPrimitive( const nlohmann::json& primitive ) const
             if( tangents && tangents->getNumElements() > 0U )
             {
                 tangents->setNormalize( false );
-                geom->setVertexAttribArray( 6,
-                                            tangents,
-                                            osg::Array::BIND_PER_VERTEX );
+                geom->setVertexAttribArray( 6, tangents, osg::Array::BIND_PER_VERTEX );
                 hasTangentArray = true;
             }
         }
