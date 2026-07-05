@@ -59,10 +59,10 @@ namespace sponza
     constexpr float        defaultVisBakePower        = 1.0F;
     constexpr float        defaultVisBakeDistance     = 10.0F;
     constexpr float        defaultVisBentStrength     = 0.8F;
-    constexpr bool         defaultRadianceBakeEnabled = false;
+    constexpr bool         defaultRadianceBakeEnabled = true;
     constexpr bool         defaultRadianceMultibounce = true;
     constexpr bool         defaultRadianceDebug       = false;
-    constexpr float        defaultRadianceScale       = 1.0F;
+    constexpr float        defaultRadianceScale       = 5.0F;
     constexpr int          defaultRenderScale         = 1;
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
