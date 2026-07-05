@@ -11,6 +11,7 @@ namespace osg
 
     class Image;
     class Node;
+    class StateSet;
     class Texture2D;
 
 }
@@ -36,9 +37,20 @@ namespace sponza
     osg::Matrix3
     makeViewToWorldRotation( const osg::dmat4& viewMatrix );
 
+    osg::dvec3
+    computeSunDirectionWorld( const SponzaOptions& options );
+
     osg::ref_ptr<osg::Texture2D>
     applySunAndIbl( osg::Node*           model,
                     const SponzaOptions& options,
                     const osg::dmat4&    rttView );
+
+    void
+    applyShadowReceiverState( osg::StateSet*       stateSet,
+                              const SponzaOptions& options,
+                              osg::Texture2D*      shadowTexture,
+                              const osg::mat4&     shadowMatrix,
+                              float                lightSpaceExtent,
+                              bool                 hasShadow );
 
 }

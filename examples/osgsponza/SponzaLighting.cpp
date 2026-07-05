@@ -20,6 +20,13 @@
 namespace sponza
 {
 
+    namespace
+    {
+
+        constexpr unsigned int shadowTextureUnit = 6U;
+
+    }
+
     osg::vec3
     scaledColor( const osg::vec3& color,
                  float            scale )
@@ -78,18 +85,24 @@ namespace sponza
                              static_cast<float>( viewMatrix[2][2] ) );
     }
 
+    osg::dvec3
+    computeSunDirectionWorld( const SponzaOptions& options )
+    {
+        const double azimuthRad   = osg::DegreesToRadians( options.sunAzimuthDeg );
+        const double elevationRad = osg::DegreesToRadians( options.sunElevationDeg );
+        return osg::normalize(
+            osg::dvec3( std::cos( elevationRad ) * std::cos( azimuthRad ),
+                        std::sin( elevationRad ),
+                        std::cos( elevationRad ) * std::sin( azimuthRad ) )
+        );
+    }
+
     osg::ref_ptr<osg::Texture2D>
     applySunAndIbl( osg::Node*           model,
                     const SponzaOptions& options,
                     const osg::dmat4&    rttView )
     {
-        const double     azimuthRad   = osg::DegreesToRadians( options.sunAzimuthDeg );
-        const double     elevationRad = osg::DegreesToRadians( options.sunElevationDeg );
-        const osg::dvec3 dirWorld     = osg::normalize(
-            osg::dvec3( std::cos( elevationRad ) * std::cos( azimuthRad ),
-                        std::sin( elevationRad ),
-                        std::cos( elevationRad ) * std::sin( azimuthRad ) )
-        );
+        const osg::dvec3 dirWorld = computeSunDirectionWorld( options );
         const osg::dvec3 dirView =
             osg::normalize( osg::transform3x3( rttView, dirWorld ) );
 
@@ -155,6 +168,31 @@ namespace sponza
                      "or kloppenheim_05_4k.hdr; IBL disabled"
                   << std::endl;
         return nullptr;
+    }
+
+    void
+    applyShadowReceiverState( osg::StateSet*       stateSet,
+                              const SponzaOptions& options,
+                              osg::Texture2D*      shadowTexture,
+                              const osg::mat4&     shadowMatrix,
+                              float                lightSpaceExtent,
+                              bool                 hasShadow )
+    {
+        const float uvSoftness =
+            options.shadowSoftness / std::max( lightSpaceExtent, 1.0E-6F );
+
+        stateSet->setTextureAttributeAndModes( shadowTextureUnit,
+                                               shadowTexture,
+                                               osg::StateAttribute::ON );
+        stateSet->addUniform(
+            new osg::Uniform( "uShadowMap", static_cast<int>( shadowTextureUnit ) )
+        );
+        stateSet->addUniform( new osg::Uniform( "uShadowMatrix", shadowMatrix ) );
+        stateSet->addUniform( new osg::Uniform( "uHasShadow", hasShadow ) );
+        stateSet->addUniform( new osg::Uniform( "uShadowSoftness", uvSoftness ) );
+        stateSet->addUniform( new osg::Uniform( "uShadowBias", options.shadowBias ) );
+        stateSet->addUniform( new osg::Uniform( "uShadowNormalOffset",
+                                                options.shadowNormalOffset ) );
     }
 
 }

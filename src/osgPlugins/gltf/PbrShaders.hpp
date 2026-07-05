@@ -84,6 +84,7 @@ uniform sampler2D uNormalMap;
 uniform sampler2D uOcclusionMap;
 uniform sampler2D uEmissiveMap;
 uniform sampler2D uEnvMap;
+layout(binding = 6) uniform sampler2DShadow uShadowMap;
 
 uniform vec4 uBaseColorFactor;
 uniform float uMetallicFactor;
@@ -98,6 +99,10 @@ uniform float uIblIntensity;
 uniform float uIblDiffuse;
 uniform float uIblSpecular;
 uniform float uEnvRotation;
+uniform mat4 uShadowMatrix;
+uniform float uShadowSoftness;
+uniform float uShadowBias;
+uniform float uShadowNormalOffset;
 uniform mat3 uViewToWorldRot;
 
 uniform bool uHasBaseColorMap;
@@ -107,6 +112,7 @@ uniform bool uHasOcclusionMap;
 uniform bool uHasEmissiveMap;
 uniform bool uAlphaMask;
 uniform bool uHasEnv;
+uniform bool uHasShadow;
 
 in vec3 v_position;
 in vec3 v_normal;
@@ -178,6 +184,52 @@ vec2 envBRDFApprox(float rough, float ndv)
     return vec2(-1.04, 1.04) * a004 + r.zw;
 }
 
+const int shadowTapCount = 16;
+const vec2 shadowPoisson[shadowTapCount] = vec2[shadowTapCount](
+    vec2(-0.94201624, -0.39906216),
+    vec2( 0.94558609, -0.76890725),
+    vec2(-0.09418410, -0.92938870),
+    vec2( 0.34495938,  0.29387760),
+    vec2(-0.91588581,  0.45771432),
+    vec2(-0.81544232, -0.87912464),
+    vec2(-0.38277543,  0.27676845),
+    vec2( 0.97484398,  0.75648379),
+    vec2( 0.44323325, -0.97511554),
+    vec2( 0.53742981, -0.47373420),
+    vec2(-0.26496911, -0.41893023),
+    vec2( 0.79197514,  0.19090188),
+    vec2(-0.24188840,  0.99706507),
+    vec2(-0.81409955,  0.91437590),
+    vec2( 0.19984126,  0.78641367),
+    vec2( 0.14383161, -0.14100790)
+);
+
+float sunShadow(vec3 viewPos, vec3 geometricNormal)
+{
+    vec3 normal = safeNormalize(geometricNormal, vec3(0.0, 0.0, 1.0));
+    vec4 shadowCoord = uShadowMatrix * vec4(viewPos + normal * uShadowNormalOffset, 1.0);
+    if (abs(shadowCoord.w) < 1e-7) {
+        return 1.0;
+    }
+
+    vec3 sc = shadowCoord.xyz / shadowCoord.w;
+    if (any(lessThan(sc, vec3(0.0))) || any(greaterThan(sc, vec3(1.0)))) {
+        return 1.0;
+    }
+
+    float angle = fract(
+        sin(dot(sc.xy * 4096.0, vec2(12.9898, 78.233))) * 43758.5453
+    ) * 2.0 * PI;
+    mat2 rotation = mat2(cos(angle), sin(angle), -sin(angle), cos(angle));
+    float referenceDepth = sc.z - uShadowBias;
+    float visibility = 0.0;
+    for (int i = 0; i < shadowTapCount; ++i) {
+        vec2 uv = sc.xy + rotation * shadowPoisson[i] * uShadowSoftness;
+        visibility += texture(uShadowMap, vec3(uv, referenceDepth));
+    }
+    return visibility / float(shadowTapCount);
+}
+
 vec3 getNormal()
 {
     vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
@@ -226,13 +278,13 @@ void main()
     }
 
     vec3 albedo = baseColor.rgb;
+    vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
     vec3 normal = getNormal();
     vec3 viewDir = safeNormalize(-v_position, vec3(0.0, 0.0, 1.0));
 
     vec3 flatAmbient = albedo * ao * osg_LightModel_ambient.rgb;
     vec3 ambient = flatAmbient;
     if (uHasEnv) {
-        vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
         vec3 geometricNormalWorld = uViewToWorldRot * geometricNormal;
         geometricNormalWorld = (length(geometricNormalWorld) > 1e-6)
             ? normalize(geometricNormalWorld)
@@ -306,7 +358,10 @@ void main()
 
             vec3 diffuse = (vec3(1.0) - fresnel) * (1.0 - metallic) * albedo / PI;
             vec3 radiance = osg_LightSource.diffuse.rgb * attenuation;
-            color += (diffuse + specular) * radiance * nDotL;
+            float shadow = (uHasShadow && osg_LightSource.position.w == 0.0)
+                ? sunShadow(v_position, geometricNormal)
+                : 1.0;
+            color += (diffuse + specular) * radiance * nDotL * shadow;
         }
     }
 

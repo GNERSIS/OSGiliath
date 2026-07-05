@@ -3,6 +3,7 @@ set(TARGET_SRC
     SponzaOptions.cpp
     SponzaCameras.cpp
     SponzaTargets.cpp
+    ShadowPass.cpp
     FullscreenQuad.cpp
     MainPass.cpp
     SsaoPass.cpp
