@@ -26,19 +26,8 @@ namespace sponza
     {
 
         constexpr unsigned int shadowTextureUnit = 6U;
-        constexpr size_t       irradianceShCount = 9U;
         constexpr double       pi                = 3.14159265358979323846;
         constexpr double       sunDiscLuminance  = 500.0;
-
-        using IrradianceShCoefficients = std::array<osg::vec3, irradianceShCount>;
-
-        struct IrradianceShResult
-        {
-                IrradianceShCoefficients coefficients{};
-                osg::vec3                upNormal;
-                int                      excludedSunPixels = 0;
-                bool                     valid             = false;
-        };
 
         std::array<double,
                    irradianceShCount>
@@ -91,7 +80,7 @@ namespace sponza
         }
 
         IrradianceShResult
-        computeSunExcludedIrradianceSh( const osg::Image& image )
+        computeSunExcludedIrradianceShImpl( const osg::Image& image )
         {
             IrradianceShResult result;
             for( osg::vec3& coefficient : result.coefficients )
@@ -210,6 +199,33 @@ namespace sponza
 
     }
 
+    IrradianceShResult
+    computeSunExcludedIrradianceSh( const osg::Image& image )
+    {
+        return computeSunExcludedIrradianceShImpl( image );
+    }
+
+    osg::vec3
+    evaluateIrradianceShEOverPi( const IrradianceShCoefficients& coefficients,
+                                 const osg::vec3&                directionWorld )
+    {
+        const float     len2      = osg::length2( directionWorld );
+        const osg::vec3 direction = len2 > 1.0E-10F
+                                      ? directionWorld * ( 1.0F / std::sqrt( len2 ) )
+                                      : osg::vec3( 0.0F, 1.0F, 0.0F );
+
+        const std::array<double, irradianceShCount> basis =
+            evaluateShBasis( static_cast<double>( direction.x ),
+                             static_cast<double>( direction.y ),
+                             static_cast<double>( direction.z ) );
+        osg::vec3 result( 0.0F, 0.0F, 0.0F );
+        for( size_t i = 0; i < coefficients.size(); ++i )
+        {
+            result += coefficients[i] * static_cast<float>( basis[i] );
+        }
+        return result;
+    }
+
     osg::vec3
     scaledColor( const osg::vec3& color,
                  float            scale )
@@ -281,9 +297,11 @@ namespace sponza
     }
 
     osg::ref_ptr<osg::Texture2D>
-    applySunAndIbl( osg::Node*           model,
-                    const SponzaOptions& options,
-                    const osg::dmat4&    rttView )
+    applySunAndIbl( osg::Node*                model,
+                    const SponzaOptions&      options,
+                    const osg::dmat4&         rttView,
+                    osg::Image*               preloadedEnvImage,
+                    const IrradianceShResult* precomputedIrradianceSh )
     {
         const osg::dvec3 dirWorld = computeSunDirectionWorld( options );
         const osg::dvec3 dirView =
@@ -352,28 +370,42 @@ namespace sponza
         modelStateSet->addUniform( new osg::Uniform( "uBounceRadiance", bounceRadiance ),
                                    osg::StateAttribute::OVERRIDE );
 
-        osg::ref_ptr<osg::Image> envImage = loadEnvironmentImage();
-        if( envImage )
+        osg::ref_ptr<osg::Image> loadedEnvImage;
+        osg::Image*              envImage = preloadedEnvImage;
+        if( envImage == nullptr )
         {
-            const IrradianceShResult irradianceSh =
-                computeSunExcludedIrradianceSh( *envImage );
-            if( irradianceSh.valid )
+            loadedEnvImage = loadEnvironmentImage();
+            envImage       = loadedEnvImage.get();
+        }
+
+        if( envImage != nullptr )
+        {
+            IrradianceShResult        computedIrradianceSh;
+            const IrradianceShResult* irradianceSh = precomputedIrradianceSh;
+            if( irradianceSh == nullptr || !irradianceSh->valid )
             {
-                for( size_t i = 0; i < irradianceSh.coefficients.size(); ++i )
+                computedIrradianceSh = computeSunExcludedIrradianceSh( *envImage );
+                irradianceSh         = &computedIrradianceSh;
+            }
+
+            if( irradianceSh->valid )
+            {
+                for( size_t i = 0; i < irradianceSh->coefficients.size(); ++i )
                 {
                     irradianceShUniform->setElement( static_cast<unsigned int>( i ),
-                                                     irradianceSh.coefficients[i] );
+                                                     irradianceSh->coefficients[i] );
                 }
                 useShUniform->set( options.iblShEnabled );
                 OSG_NOTICE << "Sponza SH irradiance up-normal reconstruction: ("
-                           << irradianceSh.upNormal.r << ", " << irradianceSh.upNormal.g
-                           << ", " << irradianceSh.upNormal.b << "), excluded "
-                           << irradianceSh.excludedSunPixels << " sun-disc pixels"
+                           << irradianceSh->upNormal.r << ", "
+                           << irradianceSh->upNormal.g << ", "
+                           << irradianceSh->upNormal.b << "), excluded "
+                           << irradianceSh->excludedSunPixels << " sun-disc pixels"
                            << std::endl;
             }
 
             osg::ref_ptr<osg::Texture2D> envTexture =
-                createEnvironmentTexture( envImage.get() );
+                createEnvironmentTexture( envImage );
             modelStateSet->setTextureAttributeAndModes( environmentTextureUnit,
                                                         envTexture.get(),
                                                         osg::StateAttribute::ON );

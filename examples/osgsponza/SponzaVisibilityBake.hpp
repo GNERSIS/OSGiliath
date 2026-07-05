@@ -7,6 +7,7 @@
 namespace osg
 {
 
+    class Image;
     class Node;
 
 }
@@ -15,6 +16,7 @@ namespace sponza
 {
 
     struct SponzaOptions;
+    struct IrradianceShResult;
 
     struct VisibilityBakeResult
     {
@@ -28,7 +30,9 @@ namespace sponza
     };
 
     VisibilityBakeResult
-    applyVisibilityBake( osg::Node*           model,
-                         const SponzaOptions& options );
+    applyVisibilityBake( osg::Node*                model,
+                         const SponzaOptions&      options,
+                         const osg::Image*         preloadedEnvImage        = nullptr,
+                         const IrradianceShResult* precomputedSkyIrradiance = nullptr );
 
 }

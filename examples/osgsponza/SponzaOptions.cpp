@@ -58,6 +58,14 @@ namespace
             "Enable first-bounce baked diffuse radiance."
         );
         arguments.getApplicationUsage()->addCommandLineOption(
+            "--radiance-multibounce <on|off>",
+            "Apply analytic multi-bounce closure to baked diffuse radiance."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--radiance-debug <on|off>",
+            "Show baked irradiance directly in the PBR output."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
             "--radiance-scale <value>",
             "Scale applied to first-bounce baked diffuse radiance."
         );
@@ -291,7 +299,11 @@ namespace sponza
         arguments.read( "--vis-bent-strength", options.visBentStrength );
         if( !readOnOffArgument( arguments,
                                 "--radiance-bake",
-                                options.radianceBakeEnabled ) )
+                                options.radianceBakeEnabled ) ||
+            !readOnOffArgument( arguments,
+                                "--radiance-multibounce",
+                                options.radianceMultibounce ) ||
+            !readOnOffArgument( arguments, "--radiance-debug", options.radianceDebug ) )
         {
             return false;
         }

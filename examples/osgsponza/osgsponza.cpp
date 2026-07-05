@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <osg/core/ArgumentParser.hpp>
+#include <osg/images/Image.hpp>
 #include <osg/maths/transform.hpp>
 #include <osg/nodes/Camera.hpp>
 #include <osg/nodes/Group.hpp>
@@ -40,14 +41,24 @@ main( int    argc,
         return 1;
     }
 
-    sponza::applyVisibilityBake( model.get(), options );
+    const osg::dmat4 rttView            = sponza::makeViewMatrix( options.camera );
+    const osg::dmat4 projectionMatrix   = sponza::makeProjectionMatrix( options.camera );
+    osg::ref_ptr<osg::Image>   envImage = sponza::loadEnvironmentImage();
+    sponza::IrradianceShResult irradianceSh;
+    if( envImage )
+    {
+        irradianceSh = sponza::computeSunExcludedIrradianceSh( *envImage );
+    }
 
-    const osg::dmat4 rttView          = sponza::makeViewMatrix( options.camera );
-    const osg::dmat4 projectionMatrix = sponza::makeProjectionMatrix( options.camera );
-    osg::ref_ptr<osg::Texture2D> envTexture =
-        sponza::applySunAndIbl( model.get(), options, rttView );
+    sponza::applyVisibilityBake( model.get(), options, envImage.get(), &irradianceSh );
 
-    sponza::SponzaTargets            targets = sponza::createSponzaTargets( options );
+    osg::ref_ptr<osg::Texture2D> envTexture = sponza::applySunAndIbl( model.get(),
+                                                                      options,
+                                                                      rttView,
+                                                                      envImage.get(),
+                                                                      &irradianceSh );
+
+    sponza::SponzaTargets        targets    = sponza::createSponzaTargets( options );
     const sponza::SponzaFrameContext frame{
         rttView,
         projectionMatrix,

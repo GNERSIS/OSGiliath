@@ -783,6 +783,7 @@ GLTFLoader::loadMaterials()
                                           doubleSidedMaterial ) );
         ss->addUniform( new osg::Uniform( "uUseShIrradiance", false ) );
         ss->addUniform( new osg::Uniform( "uUseRadianceBake", false ) );
+        ss->addUniform( new osg::Uniform( "uRadianceDebug", false ) );
         ss->addUniform( new osg::Uniform( "uHasVisBake", false ) );
         ss->addUniform( new osg::Uniform( "uVisStrength", 0.0F ) );
         ss->addUniform( new osg::Uniform( "uVisPower", 1.0F ) );
