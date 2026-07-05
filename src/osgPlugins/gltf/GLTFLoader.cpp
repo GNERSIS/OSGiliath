@@ -93,6 +93,7 @@ uniform sampler2D uMetallicRoughnessMap;
 uniform sampler2D uNormalMap;
 uniform sampler2D uOcclusionMap;
 uniform sampler2D uEmissiveMap;
+uniform sampler2D uEnvMap;
 
 uniform vec4 uBaseColorFactor;
 uniform float uMetallicFactor;
@@ -101,6 +102,13 @@ uniform float uNormalScale;
 uniform float uOcclusionStrength;
 uniform vec3 uEmissiveFactor;
 uniform float uAlphaCutoff;
+uniform float uEnvMaxLod;
+uniform float uEnvClamp;
+uniform float uIblIntensity;
+uniform float uIblDiffuse;
+uniform float uIblSpecular;
+uniform float uEnvRotation;
+uniform mat3 uViewToWorldRot;
 
 uniform bool uHasBaseColorMap;
 uniform bool uHasMetallicRoughnessMap;
@@ -108,6 +116,7 @@ uniform bool uHasNormalMap;
 uniform bool uHasOcclusionMap;
 uniform bool uHasEmissiveMap;
 uniform bool uAlphaMask;
+uniform bool uHasEnv;
 
 in vec3 v_position;
 in vec3 v_normal;
@@ -156,6 +165,27 @@ float geometrySmith(vec3 normal, vec3 viewDir, vec3 lightDir, float roughness)
 vec3 fresnelSchlick(float cosTheta, vec3 f0)
 {
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 sampleEnv(vec3 dirWorld, float lod)
+{
+    vec3 d = dirWorld;
+    float len = length(d);
+    d = (len > 1e-6) ? d / len : vec3(0.0, 1.0, 0.0);
+    float lon = (abs(d.x) + abs(d.z) < 1e-5) ? 0.0 : atan(d.z, d.x);
+    float u = lon / (2.0 * PI) + 0.5 + uEnvRotation / (2.0 * PI);
+    float v = acos(clamp(d.y, -1.0, 1.0)) / PI;
+    vec3 c = textureLod(uEnvMap, vec2(u, v), lod).rgb;
+    return min(c, vec3(uEnvClamp));
+}
+
+vec2 envBRDFApprox(float rough, float ndv)
+{
+    const vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
+    const vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
+    vec4 r = rough * c0 + c1;
+    float a004 = min(r.x * r.x, exp2(-9.28 * ndv)) * r.x + r.y;
+    return vec2(-1.04, 1.04) * a004 + r.zw;
 }
 
 vec3 getNormal()
@@ -209,7 +239,45 @@ void main()
     vec3 normal = getNormal();
     vec3 viewDir = safeNormalize(-v_position, vec3(0.0, 0.0, 1.0));
 
-    vec3 ambient = albedo * ao * osg_LightModel_ambient.rgb;
+    vec3 flatAmbient = albedo * ao * osg_LightModel_ambient.rgb;
+    vec3 ambient = flatAmbient;
+    if (uHasEnv) {
+        vec3 geometricNormal = safeNormalize(v_normal, vec3(0.0, 0.0, 1.0));
+        vec3 geometricNormalWorld = uViewToWorldRot * geometricNormal;
+        geometricNormalWorld = (length(geometricNormalWorld) > 1e-6)
+            ? normalize(geometricNormalWorld)
+            : vec3(0.0, 1.0, 0.0);
+
+        vec3 normalWorld = uViewToWorldRot * normal;
+        normalWorld = (length(normalWorld) > 1e-6)
+            ? normalize(normalWorld)
+            : geometricNormalWorld;
+
+        vec3 viewWorld = uViewToWorldRot * viewDir;
+        viewWorld = (length(viewWorld) > 1e-6) ? normalize(viewWorld) : vec3(0.0, 0.0, 1.0);
+
+        vec3 reflectionWorld = reflect(-viewWorld, normalWorld);
+        reflectionWorld = (length(reflectionWorld) > 1e-6)
+            ? normalize(reflectionWorld)
+            : normalWorld;
+
+        vec3 irradiance = sampleEnv(normalWorld, uEnvMaxLod - 2.0);
+        vec3 iblDiffuse = irradiance * albedo * (1.0 - metallic);
+
+        float nDotV = max(dot(normal, viewDir), 1e-3);
+        float specularLod = max(roughness * uEnvMaxLod, uEnvMaxLod * 0.35);
+        vec3 prefiltered = sampleEnv(reflectionWorld, specularLod);
+        vec3 f0 = mix(vec3(0.04), albedo, metallic);
+        vec2 ab = envBRDFApprox(roughness, nDotV);
+        vec3 iblSpecular = prefiltered * (f0 * ab.x + ab.y);
+
+        ambient = (iblDiffuse * uIblDiffuse + iblSpecular * uIblSpecular) * ao;
+        ambient *= uIblIntensity;
+        if (any(isnan(ambient)) || any(isinf(ambient))) {
+            ambient = vec3(0.0);
+        }
+        ambient = max(ambient, vec3(0.0));
+    }
     vec3 color = ambient + emissive;
 
     if (osg_LightingEnabled) {

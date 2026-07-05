@@ -1,11 +1,14 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <osg/GL>
 #include <osg/core/ArgumentParser.hpp>
 #include <osg/geometry/Geometry.hpp>
+#include <osg/images/Image.hpp>
 #include <osg/lighting/Light.hpp>
 #include <osg/maths/Math.hpp>
+#include <osg/maths/MatrixTemplate.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/nodes/Camera.hpp>
 #include <osg/nodes/Geode.hpp>
@@ -35,7 +38,13 @@ namespace
     constexpr float  defaultSunIntensity    = 3.2F;
     constexpr float  defaultAmbientLevel    = 0.7F;
     constexpr float  defaultExposure        = 1.5F;
+    constexpr float  defaultIblIntensity    = 1.0F;
+    constexpr float  defaultIblDiffuse      = 1.0F;
+    constexpr float  defaultIblSpecular     = 0.3F;
+    constexpr float  defaultIblClamp        = 20.0F;
+    constexpr float  defaultEnvRotation     = 0.0F;
     constexpr int    defaultCameraIndex     = 0;
+    constexpr unsigned int environmentTextureUnit = 5U;
 
     struct CameraPreset
     {
@@ -159,6 +168,59 @@ void main()
                  float            scale )
     {
         return osg::vec3( color.r * scale, color.g * scale, color.b * scale );
+    }
+
+    float
+    computeMaxMipLevel( const osg::Image& image )
+    {
+        const int maxDimension = std::max( image.s(), image.t() );
+        return maxDimension > 0
+                 ? std::floor( std::log2( static_cast<float>( maxDimension ) ) )
+                 : 0.0F;
+    }
+
+    osg::ref_ptr<osg::Image>
+    loadEnvironmentImage()
+    {
+        osg::ref_ptr<osg::Image> image =
+            osgDB::readRefImageFile( "textures/kloppenheim_05_4k.hdr" );
+        if( !image )
+        {
+            image = osgDB::readRefImageFile( "kloppenheim_05_4k.hdr" );
+        }
+        return image;
+    }
+
+    osg::ref_ptr<osg::Texture2D>
+    createEnvironmentTexture( osg::Image* image )
+    {
+        osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D;
+        texture->setImage( image );
+        texture->setInternalFormat( GL_RGB16F );
+        texture->setFilter( osg::Texture2D::MIN_FILTER,
+                            osg::Texture2D::LINEAR_MIPMAP_LINEAR );
+        texture->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
+        texture->setWrap( osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT );
+        texture->setWrap( osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE );
+        texture->setUseHardwareMipMapGeneration( true );
+        texture->setMaxAnisotropy( 4.0F );
+        return texture;
+    }
+
+    osg::Matrix3
+    makeViewToWorldRotation( const osg::dmat4& viewMatrix )
+    {
+        return osg::Matrix3(
+            static_cast<float>( viewMatrix[0][0] ),
+            static_cast<float>( viewMatrix[1][0] ),
+            static_cast<float>( viewMatrix[2][0] ),
+            static_cast<float>( viewMatrix[0][1] ),
+            static_cast<float>( viewMatrix[1][1] ),
+            static_cast<float>( viewMatrix[2][1] ),
+            static_cast<float>( viewMatrix[0][2] ),
+            static_cast<float>( viewMatrix[1][2] ),
+            static_cast<float>( viewMatrix[2][2] )
+        );
     }
 
     CameraSettings
@@ -306,12 +368,22 @@ main( int    argc,
     float  sunIntensity    = defaultSunIntensity;
     float  ambientLevel    = defaultAmbientLevel;
     float  exposure        = defaultExposure;
+    float  iblIntensity    = defaultIblIntensity;
+    float  iblDiffuse      = defaultIblDiffuse;
+    float  iblSpecular     = defaultIblSpecular;
+    float  iblClamp        = defaultIblClamp;
+    float  envRotation     = defaultEnvRotation;
 
     arguments.read( "--sun-azimuth", sunAzimuthDeg );
     arguments.read( "--sun-elevation", sunElevationDeg );
     arguments.read( "--sun-intensity", sunIntensity );
     arguments.read( "--ambient", ambientLevel );
     arguments.read( "--exposure", exposure );
+    arguments.read( "--ibl-intensity", iblIntensity );
+    arguments.read( "--ibl-diffuse", iblDiffuse );
+    arguments.read( "--ibl-specular", iblSpecular );
+    arguments.read( "--ibl-clamp", iblClamp );
+    arguments.read( "--env-rotation", envRotation );
     readDVec3Argument( arguments, "--eye", camera.eye );
     readDVec3Argument( arguments, "--center", camera.center );
     readDVec3Argument( arguments, "--up", camera.up );
@@ -382,6 +454,41 @@ main( int    argc,
                        1.0F )
         )
     );
+    modelStateSet->addUniform(
+        new osg::Uniform( "uViewToWorldRot", makeViewToWorldRotation( rttView ) )
+    );
+    modelStateSet->addUniform(
+        new osg::Uniform(
+            "uEnvMap", static_cast<int>( environmentTextureUnit )
+        )
+    );
+    modelStateSet->addUniform( new osg::Uniform( "uEnvMaxLod", 0.0F ) );
+    modelStateSet->addUniform( new osg::Uniform( "uEnvClamp", iblClamp ) );
+    modelStateSet->addUniform( new osg::Uniform( "uIblIntensity", iblIntensity ) );
+    modelStateSet->addUniform( new osg::Uniform( "uIblDiffuse", iblDiffuse ) );
+    modelStateSet->addUniform( new osg::Uniform( "uIblSpecular", iblSpecular ) );
+    modelStateSet->addUniform( new osg::Uniform( "uEnvRotation", envRotation ) );
+    modelStateSet->addUniform( new osg::Uniform( "uHasEnv", false ) );
+
+    osg::ref_ptr<osg::Image> envImage = loadEnvironmentImage();
+    if( envImage )
+    {
+        osg::ref_ptr<osg::Texture2D> envTexture =
+            createEnvironmentTexture( envImage.get() );
+        modelStateSet->setTextureAttributeAndModes(
+            environmentTextureUnit, envTexture.get(), osg::StateAttribute::ON
+        );
+        modelStateSet->getUniform( "uEnvMaxLod" )->set(
+            computeMaxMipLevel( *envImage )
+        );
+        modelStateSet->getUniform( "uHasEnv" )->set( true );
+    }
+    else
+    {
+        std::cerr << "Warning: failed to load textures/kloppenheim_05_4k.hdr "
+                     "or kloppenheim_05_4k.hdr; IBL disabled"
+                  << std::endl;
+    }
 
     osg::ref_ptr<osg::Texture2D> hdrColor   = createHdrColorTexture();
     osg::ref_ptr<osg::Texture2D> sceneDepth = createSceneDepthTexture();
