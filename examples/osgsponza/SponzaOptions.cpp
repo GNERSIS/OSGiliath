@@ -22,6 +22,10 @@ namespace
             "--ambient-color <r> <g> <b>",
             "Fallback ambient color; ignored when the HDRI environment loads."
         );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--shadow-cast-glass <on|off>",
+            "Let named Sponza glass materials cast into the shadow map."
+        );
     }
 
     bool
@@ -178,6 +182,9 @@ namespace sponza
             }
         }
         if( !readOnOffArgument( arguments, "--shadow", options.shadowEnabled ) ||
+            !readOnOffArgument( arguments,
+                                "--shadow-cast-glass",
+                                options.shadowCastGlass ) ||
             !readOnOffArgument( arguments, "--sky", options.skyEnabled ) ||
             !readOnOffArgument( arguments, "--ibl-sh", options.iblShEnabled ) ||
             !readTonemapArgument( arguments, options.tonemapMode ) )

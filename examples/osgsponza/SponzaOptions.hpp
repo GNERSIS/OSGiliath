@@ -23,7 +23,7 @@ namespace sponza
     constexpr double       farZ                      = 2'000.0;
 
     constexpr double       defaultSunAzimuthDeg      = 14.0;
-    constexpr double       defaultSunElevationDeg    = 52.0;
+    constexpr double       defaultSunElevationDeg    = 62.0;
     constexpr float        defaultSunIntensity       = 3.5F;
     constexpr float        defaultAmbientLevel       = 0.7F;
     constexpr float        defaultExposure           = 2.2F;
@@ -44,6 +44,7 @@ namespace sponza
     constexpr float        defaultShadowSoftness     = 0.05F;
     constexpr float        defaultShadowBias         = 0.0008F;
     constexpr float        defaultShadowNormalOffset = 0.02F;
+    constexpr bool         defaultShadowCastGlass    = false;
     constexpr bool         defaultSkyEnabled         = true;
     constexpr bool         defaultIblShEnabled       = true;
     constexpr float        defaultBounceStrength     = 0.45F;
@@ -91,6 +92,7 @@ namespace sponza
             float          shadowSoftness     = defaultShadowSoftness;
             float          shadowBias         = defaultShadowBias;
             float          shadowNormalOffset = defaultShadowNormalOffset;
+            bool           shadowCastGlass    = defaultShadowCastGlass;
             bool           skyEnabled         = defaultSkyEnabled;
             TonemapMode    tonemapMode        = TonemapMode::Narkowicz;
             osg::vec3      whiteBalance       = defaultWhiteBalance;

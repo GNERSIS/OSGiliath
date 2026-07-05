@@ -579,6 +579,11 @@ GLTFLoader::loadMaterials()
     {
         osg::ref_ptr<osg::StateSet> ss  = new osg::StateSet;
         const json*                 pbr = nullptr;
+        if( mat.contains( "name" ) )
+        {
+            ss->setName( mat["name"].get<std::string>() );
+        }
+
         if( mat.contains( "pbrMetallicRoughness" ) )
         {
             pbr = &mat["pbrMetallicRoughness"];

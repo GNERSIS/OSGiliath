@@ -7,6 +7,7 @@
 #include "SponzaTargets.hpp"
 
 #include <algorithm>
+#include <osg/geometry/Geometry.hpp>
 #include <osg/GL>
 #include <osg/maths/box.hpp>
 #include <osg/maths/compat.hpp>
@@ -18,16 +19,19 @@
 #include <osg/state/Shader.hpp>
 #include <osg/state/StateSet.hpp>
 #include <osg/traversal/ComputeBoundsVisitor.hpp>
+#include <osg/traversal/NodeVisitor.hpp>
+#include <string>
 
 namespace
 {
 
-    constexpr double shadowFrustumMargin         = 2.0;
-    constexpr double lightDistanceScale          = 1.5;
-    constexpr float  polygonOffsetFactor         = 2.5F;
-    constexpr float  polygonOffsetUnits          = 8.0F;
+    constexpr double              shadowFrustumMargin         = 2.0;
+    constexpr double              lightDistanceScale          = 1.5;
+    constexpr float               polygonOffsetFactor         = 2.5F;
+    constexpr float               polygonOffsetUnits          = 8.0F;
+    constexpr osg::Node::NodeMask shadowCasterMask            = 0X1U;
 
-    constexpr char   shadowDepthVertexShader[]   = R"glsl(
+    constexpr char                shadowDepthVertexShader[]   = R"glsl(
 #version 460 core
 
 layout(location = 0) in vec4 osg_Vertex;
@@ -39,7 +43,7 @@ void main()
 }
 )glsl";
 
-    constexpr char   shadowDepthFragmentShader[] = R"glsl(
+    constexpr char                shadowDepthFragmentShader[] = R"glsl(
 #version 460 core
 
 void main()
@@ -85,6 +89,43 @@ void main()
                                              shadowDepthFragmentShader ) );
         return program;
     }
+
+    bool
+    isShadowPassGlassMaterialName( const std::string& name )
+    {
+        return name == "glass" || name == "lamp_glass_01";
+    }
+
+    bool
+    isShadowPassGlassGeometry( const osg::Drawable& drawable )
+    {
+        // InheritAccept dispatches visitors to apply(Drawable&) — an
+        // apply(Geometry&) override never fires in this fork.
+        const osg::StateSet* stateSet = drawable.getStateSet();
+        return isShadowPassGlassMaterialName( drawable.getName() ) ||
+               ( stateSet && isShadowPassGlassMaterialName( stateSet->getName() ) );
+    }
+
+    class GlassShadowCasterMaskVisitor : public osg::NodeVisitor
+    {
+        public:
+
+            GlassShadowCasterMaskVisitor() :
+                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN )
+            {
+            }
+
+            void
+            apply( osg::Drawable& drawable ) override
+            {
+                if( isShadowPassGlassGeometry( drawable ) )
+                {
+                    drawable.setNodeMask( drawable.getNodeMask() & ~shadowCasterMask );
+                }
+
+                traverse( drawable );
+            }
+    };
 
     osg::box
     computeWorldBounds( osg::Node* model )
@@ -174,6 +215,7 @@ void main()
         camera->setReferenceFrame( osg::Transform::ABSOLUTE_RF );
         camera->setComputeNearFarMode( osg::Camera::DO_NOT_COMPUTE_NEAR_FAR );
         camera->setClearMask( GL_DEPTH_BUFFER_BIT );
+        camera->setCullMask( shadowCasterMask );
         camera->setProjectionMatrix( lightProjection );
         camera->setViewMatrix( lightView );
         camera->addChild( model );
@@ -220,6 +262,11 @@ namespace sponza
         LightFit                     lightFit = fitLightSpace( model, options, frame );
         osg::ref_ptr<osg::Texture2D> shadowTexture =
             createShadowDepthTexture( textureSize );
+        if( !options.shadowCastGlass )
+        {
+            GlassShadowCasterMaskVisitor glassVisitor;
+            model->accept( glassVisitor );
+        }
 
         return ShadowPassResult{
             createShadowCamera( model,
