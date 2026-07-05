@@ -23,6 +23,9 @@ namespace sponza
     osg::ref_ptr<osg::Texture2D>
     createAoTexture();
 
+    osg::ref_ptr<osg::Texture2D>
+    createShadowDepthTexture( int size );
+
     SponzaTargets
     createSponzaTargets();
 

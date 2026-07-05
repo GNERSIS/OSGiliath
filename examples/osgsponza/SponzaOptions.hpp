@@ -22,8 +22,8 @@ namespace sponza
     constexpr double       nearZ                     = 0.1;
     constexpr double       farZ                      = 2'000.0;
 
-    constexpr double       defaultSunAzimuthDeg      = 75.0;
-    constexpr double       defaultSunElevationDeg    = 52.0;
+    constexpr double       defaultSunAzimuthDeg      = 10.8;
+    constexpr double       defaultSunElevationDeg    = 55.9;
     constexpr float        defaultSunIntensity       = 3.5F;
     constexpr float        defaultAmbientLevel       = 0.7F;
     constexpr float        defaultExposure           = 1.3F;
@@ -49,7 +49,7 @@ namespace sponza
     constexpr float        defaultBounceStrength     = 0.25F;
     constexpr float        defaultExposureTrim       = 1.0F;
 
-    inline const osg::vec3 defaultSunColor{ 1.0F, 0.95F, 0.85F };
+    inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.6F, 0.75F };
     inline const osg::vec3 defaultWhiteBalance{ 1.0F, 1.0F, 1.0F };
     inline const osg::vec3 defaultBounceColor{ 0.62F, 0.48F, 0.35F };

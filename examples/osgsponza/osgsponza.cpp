@@ -1,5 +1,6 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt */
 #include "MainPass.hpp"
+#include "ShadowPass.hpp"
 #include "SponzaCameras.hpp"
 #include "SponzaFrameContext.hpp"
 #include "SponzaLighting.hpp"
@@ -53,13 +54,25 @@ main( int    argc,
         options.envRotation
     };
 
+    sponza::ShadowPassResult shadowPass =
+        sponza::createShadowPass( model.get(), options, frame );
     osg::ref_ptr<osg::Camera> rtt =
         sponza::createRttCamera( model.get(), options, targets, frame );
+    sponza::applyShadowReceiverState( rtt->getOrCreateStateSet(),
+                                      options,
+                                      shadowPass.shadowTexture.get(),
+                                      shadowPass.shadowMatrix,
+                                      shadowPass.lightSpaceExtent,
+                                      shadowPass.hasShadow );
     osg::ref_ptr<osg::Camera> ssao = sponza::createSsaoCamera( options, targets, frame );
     osg::ref_ptr<osg::Camera> tonemapCamera =
         sponza::createTonemapCamera( options, targets, frame );
 
     osg::ref_ptr<osg::Group> root = new osg::Group;
+    if( shadowPass.camera )
+    {
+        root->addChild( shadowPass.camera.get() );
+    }
     root->addChild( rtt.get() );
     root->addChild( ssao.get() );
     root->addChild( tonemapCamera.get() );

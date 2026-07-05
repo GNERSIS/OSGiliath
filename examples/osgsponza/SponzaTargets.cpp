@@ -2,6 +2,7 @@
 #include "SponzaOptions.hpp"
 #include "SponzaTargets.hpp"
 
+#include <algorithm>
 #include <osg/GL>
 
 namespace sponza
@@ -49,6 +50,25 @@ namespace sponza
         texture->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
         texture->setWrap( osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE );
         texture->setWrap( osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE );
+        return texture;
+    }
+
+    osg::ref_ptr<osg::Texture2D>
+    createShadowDepthTexture( int size )
+    {
+        const int                    textureSize = std::max( size, 1 );
+
+        osg::ref_ptr<osg::Texture2D> texture     = new osg::Texture2D;
+        texture->setTextureSize( textureSize, textureSize );
+        texture->setInternalFormat( GL_DEPTH_COMPONENT32F );
+        texture->setSourceFormat( GL_DEPTH_COMPONENT );
+        texture->setSourceType( GL_FLOAT );
+        texture->setFilter( osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR );
+        texture->setFilter( osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR );
+        texture->setWrap( osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_BORDER );
+        texture->setWrap( osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_BORDER );
+        texture->setBorderColor( osg::dvec4( 1.0, 1.0, 1.0, 1.0 ) );
+        texture->setShadowComparison( true );
         return texture;
     }
 
