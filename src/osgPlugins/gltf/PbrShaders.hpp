@@ -10,7 +10,7 @@ namespace
 layout(location = 0) in vec4 osg_Vertex;
 layout(location = 2) in vec3 osg_Normal;
 layout(location = 6) in vec4 osg_Tangent;
-layout(location = 7) in float osg_VisBake;
+layout(location = 7) in vec4 osg_VisBake;
 layout(location = 8) in vec4 osg_MultiTexCoord0;
 
 uniform mat4 osg_ModelViewProjectionMatrix;
@@ -22,6 +22,7 @@ out vec3 v_normal;
 out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec2 v_texcoord0;
+out vec3 vBentNormalWorld;
 out float vVisBake;
 
 vec3 safeNormalize(vec3 value, vec3 fallback)
@@ -52,7 +53,8 @@ void main()
     v_tangent = tangent;
     v_bitangent = bitangent;
     v_texcoord0 = osg_MultiTexCoord0.xy;
-    vVisBake = osg_VisBake;
+    vBentNormalWorld = safeNormalize(osg_VisBake.xyz, vec3(0.0, 1.0, 0.0));
+    vVisBake = osg_VisBake.w;
 
     gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
 }
@@ -106,6 +108,7 @@ uniform float uDarkMetalLift;
 uniform float uEnvRotation;
 uniform float uVisStrength;
 uniform float uVisPower;
+uniform float uVisBentStrength;
 uniform vec3 uIrradianceSH[9];
 uniform vec3 uBounceRadiance;
 uniform mat4 uShadowMatrix;
@@ -131,6 +134,7 @@ in vec3 v_normal;
 in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texcoord0;
+in vec3 vBentNormalWorld;
 in float vVisBake;
 
 layout(location = 0) out vec4 osg_FragColor;
@@ -276,6 +280,21 @@ float indirectVisibilityScale()
     return mix(1.0, pow(clamp(vVisBake, 0.0, 1.0), uVisPower), uVisStrength);
 }
 
+vec3 indirectIrradianceNormal(vec3 normalWorld, vec3 geometricNormalWorld)
+{
+    if (!uHasVisBake || uVisBentStrength <= 0.0) {
+        return normalWorld;
+    }
+
+    vec3 bentNormalWorld = safeNormalize(vBentNormalWorld, geometricNormalWorld);
+    if (uDoubleSidedMaterial && !gl_FrontFacing) {
+        bentNormalWorld = -bentNormalWorld;
+    }
+
+    float strength = clamp(uVisBentStrength, 0.0, 1.0);
+    return safeNormalize(mix(normalWorld, bentNormalWorld, strength), normalWorld);
+}
+
 vec3 getNormal(vec3 geometricNormal)
 {
     if (!uHasNormalMap) {
@@ -346,12 +365,13 @@ void main()
         : normalWorld;
 
     float indirectVisibility = indirectVisibilityScale();
+    vec3 irradianceNormalWorld = indirectIrradianceNormal(normalWorld, geometricNormalWorld);
     vec3 flatAmbient = albedo * ao * osg_LightModel_ambient.rgb;
     vec3 ambient = flatAmbient;
     if (uHasEnv) {
         vec3 irradiance = uUseShIrradiance
-            ? evaluateIrradianceSH(normalWorld)
-            : sampleEnvClamped(normalWorld, uEnvMaxLod - 2.0);
+            ? evaluateIrradianceSH(irradianceNormalWorld)
+            : sampleEnvClamped(irradianceNormalWorld, uEnvMaxLod - 2.0);
         vec3 iblDiffuse = irradiance * albedo * (1.0 - metallic);
 
         float nDotV = max(dot(normal, viewDir), 1e-3);
@@ -382,7 +402,9 @@ void main()
         ambient = max(ambient, vec3(0.0));
     }
 
-    vec3 bounce = uBounceRadiance * clamp(0.5 - 0.5 * normalWorld.y, 0.0, 1.0);
+    vec3 bounceNormalWorld =
+        (uHasVisBake && uVisBentStrength > 0.0) ? geometricNormalWorld : normalWorld;
+    vec3 bounce = uBounceRadiance * clamp(0.5 - 0.5 * bounceNormalWorld.y, 0.0, 1.0);
     ambient += bounce * albedo * (1.0 - metallic) * ao * indirectVisibility;
     ambient = max(ambient, vec3(0.0));
 

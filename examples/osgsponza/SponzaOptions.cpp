@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <limits>
 #include <osg/core/ApplicationUsage.hpp>
 #include <osg/core/ArgumentParser.hpp>
 #include <osgDB/registry/Options.hpp>
@@ -47,6 +48,14 @@ namespace
         arguments.getApplicationUsage()->addCommandLineOption(
             "--vis-bake-refresh",
             "Ignore any existing visibility bake cache and rebuild it."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--vis-bent-strength <value>",
+            "Blend strength for bent-normal irradiance lookup."
+        );
+        arguments.getApplicationUsage()->addCommandLineOption(
+            "--render-scale <N>",
+            "Integer supersampling scale for headless render targets."
         );
     }
 
@@ -157,6 +166,22 @@ namespace
 namespace sponza
 {
 
+    int
+    renderTargetWidth( const SponzaOptions& options )
+    {
+        const int scale =
+            options.renderScale > 0 ? options.renderScale : defaultRenderScale;
+        return renderWidth * scale;
+    }
+
+    int
+    renderTargetHeight( const SponzaOptions& options )
+    {
+        const int scale =
+            options.renderScale > 0 ? options.renderScale : defaultRenderScale;
+        return renderHeight * scale;
+    }
+
     bool
     parseSponzaOptions( osg::ArgumentParser& arguments,
                         SponzaOptions&       options )
@@ -255,10 +280,27 @@ namespace sponza
         arguments.read( "--vis-bake-strength", options.visBakeStrength );
         arguments.read( "--vis-bake-power", options.visBakePower );
         arguments.read( "--vis-bake-distance", options.visBakeDistance );
+        arguments.read( "--vis-bent-strength", options.visBentStrength );
+        arguments.read( "--render-scale", options.renderScale );
         options.visBakeRefresh = arguments.read( "--vis-bake-refresh" );
         if( options.visBakeRays <= 0 )
         {
             std::cerr << "--vis-bake-rays must be greater than 0" << std::endl;
+            return false;
+        }
+        if( options.renderScale <= 0 )
+        {
+            std::cerr << "--render-scale must be greater than 0" << std::endl;
+            return false;
+        }
+        if( options.renderScale >
+            std::numeric_limits<int>::max() /
+            renderWidth ||
+            options.renderScale >
+            std::numeric_limits<int>::max() /
+            renderHeight )
+        {
+            std::cerr << "--render-scale is too large" << std::endl;
             return false;
         }
 

@@ -247,7 +247,10 @@ namespace sponza
         post->setViewMatrix( osg::mat4() );
         post->setClearMask( 0 );
         post->setAllowEventFocus( false );
-        post->setViewport( 0, 0, renderWidth, renderHeight );
+        post->setViewport( 0,
+                           0,
+                           renderTargetWidth( options ),
+                           renderTargetHeight( options ) );
         post->addChild( quad.get() );
         return post;
     }
