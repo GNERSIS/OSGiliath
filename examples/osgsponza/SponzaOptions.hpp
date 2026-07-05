@@ -67,7 +67,7 @@ namespace sponza
 
     inline const osg::vec3 defaultSunColor{ 1.0F, 0.98F, 0.95F };
     inline const osg::vec3 defaultAmbientColor{ 0.5F, 0.5F, 0.5F };
-    inline const osg::vec3 defaultWhiteBalance{ 1.0F, 1.0F, 1.0F };
+    inline const osg::vec3 defaultWhiteBalance{ 0.975F, 1.0F, 1.02F };
     inline const osg::vec3 defaultBounceColor{ 0.60F, 0.49F, 0.37F };
 
     enum class TonemapMode
