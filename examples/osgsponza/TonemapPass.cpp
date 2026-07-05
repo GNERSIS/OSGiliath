@@ -25,6 +25,7 @@ uniform sampler2D uEnvMap;
 uniform float uExposure;
 uniform float uAoStrength;
 uniform float uEnvRotation;
+uniform float uSkyGain;
 uniform vec3 uWhiteBalance;
 uniform mat4 uInvProj;
 uniform mat3 uViewToWorldRot;
@@ -137,7 +138,7 @@ void main()
     bool skyPixel = uSkyEnabled && texture(uDepth, vUV).r >= 1.0;
     vec3 hdr = texture(uHdr, vUV).rgb;
     if (skyPixel) {
-        hdr = sampleSky(skyRayWorld(), 1.0);
+        hdr = sampleSky(skyRayWorld(), 1.0) * uSkyGain;
     } else {
         vec3 indirect = texture(uIndirect, vUV).rgb;
         float ao = texture(uAo, vUV).r;
@@ -215,6 +216,7 @@ namespace sponza
                                                 options.ssaoEnabled ? options.aoStrength
                                                                     : 0.0F ) );
         stateSet->addUniform( new osg::Uniform( "uEnvRotation", frame.envRotation ) );
+        stateSet->addUniform( new osg::Uniform( "uSkyGain", options.skyGain ) );
         stateSet->addUniform( new osg::Uniform( "uWhiteBalance",
                                                 options.whiteBalance ) );
         stateSet->addUniform( new osg::Uniform( "uInvProj",
