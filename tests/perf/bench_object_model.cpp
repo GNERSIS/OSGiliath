@@ -5,8 +5,8 @@
  */
 
 #include <benchmark/benchmark.h>
-#include <osg/core/Referenced.hpp>
 #include <osg/core/ref_ptr.hpp>
+#include <osg/core/Referenced.hpp>
 #include <osg/geometry/Geometry.hpp>
 #include <osg/nodes/Geode.hpp>
 #include <osg/nodes/Group.hpp>
@@ -29,6 +29,7 @@ namespace
             benchmark::DoNotOptimize( copy.get() );
         }
     }
+
     BENCHMARK( BM_RefPtrCopy );
 
     /// Baseline: raw pointer copy (no refcount traffic).
@@ -42,6 +43,7 @@ namespace
             benchmark::DoNotOptimize( copy );
         }
     }
+
     BENCHMARK( BM_RawPtrCopy );
 
     /// Object creation throughput: one Group per iteration (malloc + ctor +
@@ -55,6 +57,7 @@ namespace
             benchmark::DoNotOptimize( group.get() );
         }
     }
+
     BENCHMARK( BM_GroupCreateDestroy );
 
     osg::ref_ptr<osg::Group>
@@ -67,10 +70,11 @@ namespace
             for( std::size_t i = 0; i < width; ++i )
             {
                 osg::ref_ptr<osg::Geode> geode = osg::Geode::create();
-                geode->addDrawable( osg::createTexturedQuadGeometry(
-                    osg::vec3( 0.0F, 0.0F, 0.0F ),
-                    osg::vec3( kQuadSize, 0.0F, 0.0F ),
-                    osg::vec3( 0.0F, kQuadSize, 0.0F ) ) );
+                geode->addDrawable(
+                    osg::createTexturedQuadGeometry( osg::vec3( 0.0F, 0.0F, 0.0F ),
+                                                     osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                                     osg::vec3( 0.0F, kQuadSize, 0.0F ) )
+                );
                 root->addChild( geode.get() );
             }
             return root;
@@ -93,10 +97,10 @@ namespace
             osg::ref_ptr<osg::Group> root = buildTree( 1, width );
             benchmark::DoNotOptimize( root.get() );
         }
-        state.SetItemsProcessed(
-            static_cast<std::int64_t>( state.iterations() ) *
-            static_cast<std::int64_t>( width * width ) );
+        state.SetItemsProcessed( static_cast<std::int64_t>( state.iterations() ) *
+                                 static_cast<std::int64_t>( width * width ) );
     }
+
     BENCHMARK( BM_SceneBuildTeardown )->Arg( 8 )->Arg( 32 )->Arg( 64 );
 
     constexpr std::size_t kMaxBenchThreads = 8;
@@ -141,6 +145,7 @@ namespace
             group->removeChild( child );
         }
     }
+
     BENCHMARK( BM_AddRemoveChildThreaded )->Threads( 1 )->Threads( 4 )->Threads( 8 );
 
     /// dirtyBound at the leaf of a deep chain + getBound at the root:
@@ -157,10 +162,11 @@ namespace
             tail = next.get();
         }
         osg::ref_ptr<osg::Geode> leaf = osg::Geode::create();
-        leaf->addDrawable( osg::createTexturedQuadGeometry(
-            osg::vec3( 0.0F, 0.0F, 0.0F ),
-            osg::vec3( kQuadSize, 0.0F, 0.0F ),
-            osg::vec3( 0.0F, kQuadSize, 0.0F ) ) );
+        leaf->addDrawable(
+            osg::createTexturedQuadGeometry( osg::vec3( 0.0F, 0.0F, 0.0F ),
+                                             osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                             osg::vec3( 0.0F, kQuadSize, 0.0F ) )
+        );
         tail->addChild( leaf.get() );
 
         for( auto _ : state )
@@ -170,6 +176,7 @@ namespace
             benchmark::DoNotOptimize( bound );
         }
     }
+
     BENCHMARK( BM_DirtyBoundChainRecompute );
 
     /// Wide-group bound recompute (Group::computeBound iterates children twice).
@@ -182,10 +189,11 @@ namespace
         {
             osg::ref_ptr<osg::Geode> geode = osg::Geode::create();
             const float              x     = static_cast<float>( i ) * kQuadSize;
-            geode->addDrawable( osg::createTexturedQuadGeometry(
-                osg::vec3( x, 0.0F, 0.0F ),
-                osg::vec3( kQuadSize, 0.0F, 0.0F ),
-                osg::vec3( 0.0F, kQuadSize, 0.0F ) ) );
+            geode->addDrawable(
+                osg::createTexturedQuadGeometry( osg::vec3( x, 0.0F, 0.0F ),
+                                                 osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                                 osg::vec3( 0.0F, kQuadSize, 0.0F ) )
+            );
             root->addChild( geode.get() );
         }
         for( auto _ : state )
@@ -195,6 +203,7 @@ namespace
             benchmark::DoNotOptimize( bound );
         }
     }
-    BENCHMARK( BM_WideGroupBoundRecompute )->Arg( 256 )->Arg( 4096 );
+
+    BENCHMARK( BM_WideGroupBoundRecompute )->Arg( 256 )->Arg( 4'096 );
 
 }    // namespace

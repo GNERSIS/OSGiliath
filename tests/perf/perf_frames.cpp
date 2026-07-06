@@ -27,9 +27,9 @@
 #include <osg/nodes/Group.hpp>
 #include <osg/nodes/MatrixTransform.hpp>
 #include <osg/rendering/GraphicsContext.hpp>
-#include <osg/state/Viewport.hpp>
 #include <osg/state/Material.hpp>
 #include <osg/state/StateSet.hpp>
+#include <osg/state/Viewport.hpp>
 #include <osgViewer/core/Viewer.hpp>
 #include <string>
 #include <vector>
@@ -37,10 +37,10 @@
 namespace
 {
 
-    constexpr int    kDefaultCount     = 10000;
+    constexpr int    kDefaultCount     = 10'000;
     constexpr int    kDefaultFrames    = 200;
     constexpr int    kDefaultWarmup    = 20;
-    constexpr int    kViewportWidth    = 1024;
+    constexpr int    kViewportWidth    = 1'024;
     constexpr int    kViewportHeight   = 768;
     constexpr float  kQuadSize         = 0.8F;
     constexpr float  kCellSpacing      = 1.0F;
@@ -52,10 +52,9 @@ namespace
     osg::ref_ptr<osg::Geometry>
     makeQuad( const osg::vec3& corner )
     {
-        return osg::createTexturedQuadGeometry(
-            corner,
-            osg::vec3( kQuadSize, 0.0F, 0.0F ),
-            osg::vec3( 0.0F, kQuadSize, 0.0F ) );
+        return osg::createTexturedQuadGeometry( corner,
+                                                osg::vec3( kQuadSize, 0.0F, 0.0F ),
+                                                osg::vec3( 0.0F, kQuadSize, 0.0F ) );
     }
 
     osg::vec3
@@ -73,19 +72,19 @@ namespace
     int
     cubeSide( int count )
     {
-        return std::max( 1,
-                         static_cast<int>( std::ceil(
-                             std::cbrt( static_cast<double>( count ) ) ) ) );
+        return std::max(
+            1,
+            static_cast<int>( std::ceil( std::cbrt( static_cast<double>( count ) ) ) )
+        );
     }
 
     osg::ref_ptr<osg::StateSet>
     makeUniqueStateSet( int index,
                         int count )
     {
-        osg::ref_ptr<osg::StateSet>  set      = new osg::StateSet;
-        osg::ref_ptr<osg::Material>  material = new osg::Material;
-        const float                  shade =
-            static_cast<float>( index ) / static_cast<float>( count );
+        osg::ref_ptr<osg::StateSet> set      = new osg::StateSet;
+        osg::ref_ptr<osg::Material> material = new osg::Material;
+        const float shade = static_cast<float>( index ) / static_cast<float>( count );
         material->setDiffuse( osg::Material::FRONT_AND_BACK,
                               osg::vec4( shade, 1.0F - shade, 0.5F, 1.0F ) );
         set->setAttribute( material.get() );
@@ -107,8 +106,7 @@ namespace
             if( scene == "transforms" )
             {
                 geode->addDrawable( makeQuad( osg::vec3( 0.0F, 0.0F, 0.0F ) ) );
-                osg::ref_ptr<osg::MatrixTransform> xf =
-                    osg::MatrixTransform::create();
+                osg::ref_ptr<osg::MatrixTransform> xf = osg::MatrixTransform::create();
                 xf->setMatrix( osg::translate( static_cast<double>( pos.x ),
                                                static_cast<double>( pos.y ),
                                                static_cast<double>( pos.z ) ) );
@@ -127,9 +125,10 @@ namespace
             }
             else if( scene == "transparent" )
             {
-                osg::ref_ptr<osg::StateSet> set = makeUniqueStateSet( i, count );
+                osg::ref_ptr<osg::StateSet> set      = makeUniqueStateSet( i, count );
                 osg::Material*              material = static_cast<osg::Material*>(
-                    set->getAttribute( osg::StateAttribute::Type::MATERIAL ) );
+                    set->getAttribute( osg::StateAttribute::Type::MATERIAL )
+                );
                 osg::vec4 diffuse =
                     material->getDiffuse( osg::Material::FRONT_AND_BACK );
                 diffuse.a = kTransparentAlpha;
@@ -156,7 +155,7 @@ namespace
     {
         FrameStats stats;
         std::sort( samples.begin(), samples.end() );
-        const std::size_t n = samples.size();
+        const std::size_t n   = samples.size();
         double            sum = 0.0;
         for( double s : samples )
         {
@@ -187,7 +186,12 @@ main( int    argc,
     arguments.read( "--frames", frames );
     arguments.read( "--warmup", warmup );
 
-    if( scene != "grid" && scene != "statesets" && scene != "transforms" &&
+    if( scene !=
+        "grid" &&
+        scene !=
+        "statesets" &&
+        scene !=
+        "transforms" &&
         scene != "transparent" )
     {
         std::fprintf( stderr,
@@ -199,14 +203,13 @@ main( int    argc,
 
     osg::ref_ptr<osg::Node>                    sceneRoot = buildScene( scene, count );
 
-    osg::ref_ptr<osg::GraphicsContext::Traits> traits =
-        new osg::GraphicsContext::Traits;
-    traits->x            = 0;
-    traits->y            = 0;
-    traits->width        = kViewportWidth;
-    traits->height       = kViewportHeight;
-    traits->doubleBuffer = true;
-    traits->headless     = true;
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+    traits->x                                         = 0;
+    traits->y                                         = 0;
+    traits->width                                     = kViewportWidth;
+    traits->height                                    = kViewportHeight;
+    traits->doubleBuffer                              = true;
+    traits->headless                                  = true;
     traits->readDISPLAY();
     traits->setUndefinedScreenDetailsToDefaultScreen();
 
@@ -222,7 +225,8 @@ main( int    argc,
     viewer.setThreadingModel( osgViewer::Viewer::SingleThreaded );
     viewer.getCamera()->setGraphicsContext( gc.get() );
     viewer.getCamera()->setViewport(
-        new osg::Viewport( 0, 0, kViewportWidth, kViewportHeight ) );
+        new osg::Viewport( 0, 0, kViewportWidth, kViewportHeight )
+    );
     viewer.setSceneData( sceneRoot.get() );
 
     // Per-stage timing (cull / draw / GPU). Privilege-free alternative to perf:
@@ -262,22 +266,18 @@ main( int    argc,
         viewer.frame();
         const auto t1 = std::chrono::steady_clock::now();
         samples.push_back(
-            std::chrono::duration<double, std::milli>( t1 - t0 ).count() );
+            std::chrono::duration<double, std::milli>( t1 - t0 ).count()
+        );
 
-        const unsigned int frameNumber =
-            viewer.getFrameStamp()->getFrameNumber();
-        double cull = 0.0;
-        double draw = 0.0;
-        double gpu  = 0.0;
-        if( cameraStats->getAttribute( frameNumber,
-                                       "Cull traversal time taken",
-                                       cull ) )
+        const unsigned int frameNumber = viewer.getFrameStamp()->getFrameNumber();
+        double             cull        = 0.0;
+        double             draw        = 0.0;
+        double             gpu         = 0.0;
+        if( cameraStats->getAttribute( frameNumber, "Cull traversal time taken", cull ) )
         {
             cullSamples.push_back( cull * 1000.0 );
         }
-        if( cameraStats->getAttribute( frameNumber,
-                                       "Draw traversal time taken",
-                                       draw ) )
+        if( cameraStats->getAttribute( frameNumber, "Draw traversal time taken", draw ) )
         {
             drawSamples.push_back( draw * 1000.0 );
         }

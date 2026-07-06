@@ -9,6 +9,7 @@
 #include <osg/core/Notify.hpp>
 #include <osg/core/Timer.hpp>
 #include <osg/images/Image.hpp>
+#include <osg/maths/Math.hpp>
 #include <osg/rendering/ContextData.hpp>
 #include <osg/rendering/FrameBufferObject.hpp>
 #include <osg/rendering/GLExtensions.hpp>
@@ -19,6 +20,14 @@
 
 // Apple-specific GL constants removed (not in GL 4.6 Core Profile)
 
+#ifndef GL_TEXTURE_MAX_ANISOTROPY
+    #define GL_TEXTURE_MAX_ANISOTROPY 0X84'FE
+#endif
+
+#ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY
+    #define GL_MAX_TEXTURE_MAX_ANISOTROPY 0X84'FF
+#endif
+
 #if 0
     #define CHECK_CONSISTENCY checkConsistency();
 #else
@@ -27,6 +36,43 @@
 
 namespace osg
 {
+    namespace
+    {
+
+        bool
+        requiresMipmapLevels( Texture::FilterMode filter )
+        {
+            return filter != Texture::LINEAR && filter != Texture::NEAREST;
+        }
+
+        GLsizei
+        computeMipmapLevels( GLsizei width,
+                             GLsizei height )
+        {
+            return static_cast<GLsizei>( Image::computeNumberOfMipmapLevels( width,
+                                                                             height ) );
+        }
+
+        void
+        generateTextureMipmap( State&                  state,
+                               Texture::TextureObject& textureObject )
+        {
+            osg::GLExtensions* ext = state.get<GLExtensions>();
+            if( ext->glGenerateTextureMipmap )
+            {
+                ext->glGenerateTextureMipmap( textureObject.id() );
+            }
+            else if( ext->glGenerateMipmap )
+            {
+                textureObject.bind( state );
+                ext->glGenerateMipmap( textureObject.target() );
+
+                state.haveAppliedTextureAttribute( state.getActiveTextureUnit(),
+                                                   textureObject.getTexture() );
+            }
+        }
+
+    }
 
     ApplicationUsageProxy Texture_e0( ApplicationUsage::ENVIRONMENTAL_VARIABLE,
                                       "OSG_MAX_TEXTURE_SIZE",
@@ -1767,6 +1813,11 @@ namespace osg
         switch( which )
         {
             case MIN_FILTER :
+                if( requiresMipmapLevels( _min_filter ) !=
+                    requiresMipmapLevels( filter ) )
+                {
+                    dirtyTextureObject();
+                }
                 _min_filter = filter;
                 dirtyTextureParameters();
                 break;
@@ -2695,13 +2746,19 @@ namespace osg
 
         // Art: I think anisotropic filtering is not supported by the integer textures
         if( extensions->isTextureFilterAnisotropicSupported &&
+            _maxAnisotropy >
+            1.0F &&
             _internalFormatType !=
             SIGNED_INTEGER &&
             _internalFormatType != UNSIGNED_INTEGER )
         {
-            // note, GL_TEXTURE_MAX_ANISOTROPY_EXT will either be defined
-            // by gl.h (or via glext.h) or by include/osg/Texture.
-            glTextureParameterf( texId, GL_TEXTURE_MAX_ANISOTROPY_EXT, _maxAnisotropy );
+            GLfloat maxSupportedAnisotropy = 1.0F;
+            glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxSupportedAnisotropy );
+            glTextureParameterf(
+                texId,
+                GL_TEXTURE_MAX_ANISOTROPY,
+                clampTo( _maxAnisotropy, 1.0F, maxSupportedAnisotropy )
+            );
         }
 
         if( extensions->isTextureSwizzleSupported )
@@ -2902,7 +2959,7 @@ namespace osg
         inwidth  = width;
         inheight = height;
 
-        if( _min_filter == LINEAR || _min_filter == NEAREST )
+        if( !requiresMipmapLevels( _min_filter ) )
         {
             numMipmapLevels = 1;
         }
@@ -2912,10 +2969,7 @@ namespace osg
         }
         else
         {
-            numMipmapLevels = 1;
-            for( int s = 1; s < width || s < height; s <<= 1, ++numMipmapLevels )
-            {
-            }
+            numMipmapLevels = computeMipmapLevels( width, height );
         }
 
         // OSG_NOTICE<<"Texture::computeRequiredTextureDimensions() image.s()
@@ -3150,7 +3204,7 @@ namespace osg
             rowLength = 0;
         }
 
-        bool mipmappingRequired = _min_filter != LINEAR && _min_filter != NEAREST;
+        bool mipmappingRequired = requiresMipmapLevels( _min_filter );
         bool useHardwareMipMapGeneration =
             mipmappingRequired &&
             ( !image->isMipmap() && isHardwareMipmapGenerationEnabled( state ) );
@@ -3187,21 +3241,53 @@ namespace osg
 
             if( !compressed_image )
             {
-                numMipmapLevels = 1;
+                numMipmapLevels = useHardwareMipMapGeneration
+                                    ? computeMipmapLevels( inwidth, inheight )
+                                    : 1;
 
-                glTexImage2D( target,
-                              0,
-                              _internalFormat,
-                              inwidth,
-                              inheight,
-                              _borderWidth,
-                              ( GLenum )image->getPixelFormat(),
-                              ( GLenum )image->getDataType(),
-                              dataPtr );
+                GLenum texStorageSizedInternalFormat =
+                    useHardwareMipMapGeneration &&
+                            getTextureTarget() ==
+                            GL_TEXTURE_2D &&
+                            extensions->isTextureStorageEnabled &&
+                            ( _borderWidth == 0 )
+                        ? selectSizedInternalFormat( image )
+                        : 0;
+                if( texStorageSizedInternalFormat != 0 )
+                {
+                    extensions->glTexStorage2D( target,
+                                                numMipmapLevels,
+                                                texStorageSizedInternalFormat,
+                                                inwidth,
+                                                inheight );
+                    glTexSubImage2D( target,
+                                     0,
+                                     0,
+                                     0,
+                                     inwidth,
+                                     inheight,
+                                     ( GLenum )image->getPixelFormat(),
+                                     ( GLenum )image->getDataType(),
+                                     dataPtr );
+                }
+                else
+                {
+                    glTexImage2D( target,
+                                  0,
+                                  _internalFormat,
+                                  inwidth,
+                                  inheight,
+                                  _borderWidth,
+                                  ( GLenum )image->getPixelFormat(),
+                                  ( GLenum )image->getDataType(),
+                                  dataPtr );
+                }
             }
             else if( extensions->isCompressedTexImage2DSupported() )
             {
-                numMipmapLevels = 1;
+                numMipmapLevels = useHardwareMipMapGeneration
+                                    ? computeMipmapLevels( inwidth, inheight )
+                                    : 1;
 
                 GLint blockSize, size;
                 getCompressedSize( static_cast<GLenum>( _internalFormat ),
@@ -3211,16 +3297,46 @@ namespace osg
                                    blockSize,
                                    size );
 
-                extensions->glCompressedTexImage2D(
-                    target,
-                    0,
-                    static_cast<GLenum>( _internalFormat ),
-                    inwidth,
-                    inheight,
-                    0,
-                    size,
-                    dataPtr
-                );
+                GLenum texStorageSizedInternalFormat =
+                    useHardwareMipMapGeneration &&
+                            getTextureTarget() ==
+                            GL_TEXTURE_2D &&
+                            extensions->isTextureStorageEnabled &&
+                            ( _borderWidth == 0 )
+                        ? selectSizedInternalFormat( image )
+                        : 0;
+                if( texStorageSizedInternalFormat != 0 )
+                {
+                    extensions->glTexStorage2D( target,
+                                                numMipmapLevels,
+                                                texStorageSizedInternalFormat,
+                                                inwidth,
+                                                inheight );
+                    extensions->glCompressedTexSubImage2D(
+                        target,
+                        0,
+                        0,
+                        0,
+                        inwidth,
+                        inheight,
+                        ( GLenum )image->getPixelFormat(),
+                        size,
+                        dataPtr
+                    );
+                }
+                else
+                {
+                    extensions->glCompressedTexImage2D(
+                        target,
+                        0,
+                        static_cast<GLenum>( _internalFormat ),
+                        inwidth,
+                        inheight,
+                        0,
+                        size,
+                        dataPtr
+                    );
+                }
             }
 
             mipmapAfterTexImage( state, mipmapResult );
@@ -3620,7 +3736,7 @@ namespace osg
             rowLength = 0;
         }
 
-        bool mipmappingRequired = _min_filter != LINEAR && _min_filter != NEAREST;
+        bool mipmappingRequired = requiresMipmapLevels( _min_filter );
         bool useHardwareMipMapGeneration =
             mipmappingRequired &&
             ( !image->isMipmap() && isHardwareMipmapGenerationEnabled( state ) );
@@ -3847,8 +3963,7 @@ namespace osg
                     TextureObject* textureObject = getTextureObject( contextID );
                     if( textureObject )
                     {
-                        osg::GLExtensions* ext = state.get<GLExtensions>();
-                        ext->glGenerateMipmap( textureObject->target() );
+                        generateTextureMipmap( state, *textureObject );
                     }
                     break;
                 }
@@ -3885,13 +4000,9 @@ namespace osg
 
         osg::GLExtensions* ext = state.get<GLExtensions>();
 
-        if( ext->glGenerateMipmap )
+        if( ext->glGenerateTextureMipmap || ext->glGenerateMipmap )
         {
-            textureObject->bind( state );
-            ext->glGenerateMipmap( textureObject->target() );
-
-            // inform state that this texture is the current one bound.
-            state.haveAppliedTextureAttribute( state.getActiveTextureUnit(), this );
+            generateTextureMipmap( state, *textureObject );
         }
         else
         {

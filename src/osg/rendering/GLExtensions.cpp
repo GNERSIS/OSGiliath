@@ -1184,7 +1184,9 @@ GLExtensions::GLExtensions( unsigned int in_contextID ) :
 
     isTextureFilterAnisotropicSupported =
         validContext &&
-        isGLExtensionSupported( contextID, "GL_EXT_texture_filter_anisotropic" );
+        ( ( glVersion >= 4.6F ) ||
+          isGLExtensionSupported( contextID, "GL_ARB_texture_filter_anisotropic" ) ||
+          isGLExtensionSupported( contextID, "GL_EXT_texture_filter_anisotropic" ) );
     isTextureSwizzleSupported =
         validContext && isGLExtensionSupported( contextID, "GL_ARB_texture_swizzle" );
     isTextureCompressionARBSupported = validContext;
@@ -1752,6 +1754,9 @@ GLExtensions::GLExtensions( unsigned int in_contextID ) :
                            "glGenerateMipmap",
                            "glGenerateMipmapEXT",
                            "glGenerateMipmapOES",
+                           validContext );
+    setGLExtensionFuncPtr( glGenerateTextureMipmap,
+                           "glGenerateTextureMipmap",
                            validContext );
     setGLExtensionFuncPtr( glBlitFramebuffer,
                            "glBlitFramebuffer",

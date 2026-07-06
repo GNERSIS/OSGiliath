@@ -1,2 +1,13 @@
-set(TARGET_SRC osgsponza.cpp)
+set(TARGET_SRC
+    osgsponza.cpp
+    SponzaOptions.cpp
+    SponzaCameras.cpp
+    SponzaTargets.cpp
+    ShadowPass.cpp
+    FullscreenQuad.cpp
+    MainPass.cpp
+    SsaoPass.cpp
+    TonemapPass.cpp
+    SponzaLighting.cpp
+    SponzaVisibilityBake.cpp)
 setup_example(osgsponza)

@@ -130,6 +130,7 @@
 #undef glFramebufferTextureLayer
 #undef glGenBuffers
 #undef glGenerateMipmap
+#undef glGenerateTextureMipmap
 #undef glGenFramebuffers
 #undef glGenOcclusionQueries
 #undef glGenQueries
@@ -1836,6 +1837,7 @@ namespace osg
                                                             GLuint );
 
             void( GL_APIENTRY* glGenerateMipmap )( GLenum );
+            void( GL_APIENTRY* glGenerateTextureMipmap )( GLuint );
             void( GL_APIENTRY* glBlitFramebuffer )( GLint,
                                                     GLint,
                                                     GLint,
