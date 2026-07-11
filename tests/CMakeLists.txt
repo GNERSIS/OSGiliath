@@ -69,6 +69,16 @@ target_include_directories(all_headers_test PRIVATE
 )
 add_test(NAME all_headers_test COMMAND all_headers_test)
 
+# ── serialization ──
+add_executable(serialization_test serialization_test.cpp)
+target_link_libraries(serialization_test PRIVATE osgDB osg gtest_main)
+target_include_directories(serialization_test PRIVATE ${OSG_TEST_INCLUDE_DIRS})
+target_include_directories(serialization_test SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/thirdparty/flatbuffers/include
+)
+target_compile_definitions(serialization_test PRIVATE FLATBUFFERS_LOCALE_INDEPENDENT=0)
+add_test(NAME serialization_test COMMAND serialization_test)
+
 # ── Performance suite (benchmarks + frame stress) ──
 # Not registered with ctest: run manually from a release/profile build.
 option(BUILD_PERF_TESTS "Build the performance benchmark suite" ON)

@@ -964,9 +964,13 @@ Image::computeBlockFootprint( GLenum pixelFormat )
     switch( pixelFormat )
     {
         case( GL_COMPRESSED_RGB_S3TC_DXT1_EXT ) :
+        case( GL_COMPRESSED_SRGB_S3TC_DXT1_EXT ) :
         case( GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ) :
+        case( GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT ) :
         case( GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ) :
+        case( GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT ) :
         case( GL_COMPRESSED_RGBA_S3TC_DXT5_EXT ) :
+        case( GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT ) :
             return osg::ivec3( 4,
                                4,
                                4 );    // opengl 3d dxt: r value means (max)4 consecutive

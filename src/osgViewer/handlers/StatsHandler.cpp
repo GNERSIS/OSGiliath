@@ -3,6 +3,7 @@
  * setWindowSize, _stats, drawImplementation.
  */
 #include <iomanip>
+#include <osg/GL>
 #include <osg/core/io_utils.hpp>
 #include <osg/geometry/Geometry.hpp>
 #include <osg/maths/compat.hpp>
@@ -615,6 +616,42 @@ namespace osgViewer
             int                      _frameDelta;
             double                   _multiplier;
             mutable osg::Timer_t     _tickLastUpdated;
+    };
+
+    // Fills the stats overlay with the active GL driver strings (GL_VENDOR /
+    // GL_RENDERER). Queried lazily on the draw thread, where a GL context is
+    // current, and cached after the first successful draw.
+    struct GLRendererTextDrawCallback : public virtual osg::Drawable::DrawCallback
+    {
+            /** do customized draw code.*/
+            virtual void
+            drawImplementation( osg::RenderInfo&     renderInfo,
+                                const osg::Drawable* drawable ) const
+            {
+                osgText::Text* text = ( osgText::Text* )drawable;
+
+                if( !_queried )
+                {
+                    const char* vendor   = ( const char* )glGetString( GL_VENDOR );
+                    const char* renderer = ( const char* )glGetString( GL_RENDERER );
+
+                    std::string label( "GL driver: " );
+                    label += renderer ? renderer : "unknown";
+                    if( vendor )
+                    {
+                        label += " (";
+                        label += vendor;
+                        label += ")";
+                    }
+
+                    text->setText( label );
+                    _queried = true;
+                }
+
+                text->drawImplementation( renderInfo );
+            }
+
+            mutable bool _queried = false;
     };
 
     struct CameraSceneStatsTextDrawCallback : public virtual osg::Drawable::DrawCallback
@@ -1593,6 +1630,22 @@ namespace osgViewer
                 _threadingModelText->setPosition( pos );
 
                 updateThreadingModelText();
+
+                pos.y -= _characterSize * _lineHeight;
+            }
+
+            {
+                pos.x           = _leftPos;
+
+                _glRendererText = new osgText::Text;
+                _statsGeode->addDrawable( _glRendererText.get() );
+
+                _glRendererText->setColor( colorFR );
+                _glRendererText->setFont( _font );
+                _glRendererText->setCharacterSize( _characterSize );
+                _glRendererText->setPosition( pos );
+                _glRendererText->setText( "GL driver: (querying...)" );
+                _glRendererText->setDrawCallback( new GLRendererTextDrawCallback() );
 
                 pos.y -= _characterSize * _lineHeight;
             }

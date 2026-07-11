@@ -1,0 +1,71 @@
+Scene Serialization Framework
+=============================
+
+The serialization framework lives under osgDB::serialization and describes each
+osg object type once. A serializer is a bidirectional free function:
+
+    void serialize(osgDB::serialization::Archive& ar, MyType& value);
+
+The same function is used for read and write. The Archive reports its direction
+with writing() and reading(), and concrete backends encode the scalar value() and
+blob() calls. BinaryArchive is the reference backend; later backends must consume
+the same serialize() descriptions.
+
+Cross-cutting rules
+-------------------
+
+All new framework APIs are in osgDB::serialization. Do not add a bare
+osgDB::Archive; osgDB already has registry/Archive.hpp.
+
+The registry header is osgDB/serialization/ObjectSerializer.hpp. Do not create a
+new osgDB/serialization/Serializer.hpp because that name belongs to the legacy
+BaseSerializer framework.
+
+Public classes and functions exported from libosgDB must include osgDB/Export.hpp
+and use OSGDB_EXPORT.
+
+Polymorphic dispatch is keyed by Object::getCompoundClassName(), not type_info().
+This supports both Inherit<> classes and legacy payload classes such as StateSet,
+Array, and Image.
+
+Serializers chain to their parent serializer first:
+
+    serialize(ar, static_cast<Parent&>(value));
+
+This captures inherited state before the derived serializer writes its own
+fields.
+
+Use the osg cast/as chain, not dynamic_cast. For nodes that means
+Object::asNode(), then Node::asGroup() or Node::asTransform(), then
+Transform::asMatrixTransform(), with a null check between hops.
+
+Use std::size_t for matrix and array indices where the real API expects it.
+
+Adding a serializer
+-------------------
+
+1. Add the free serialize(Archive&, T&) function in an appropriate
+   src/osgDB/serialization/serializers/*.cpp translation unit.
+2. Chain to the parent serializer first if the parent has serializable state.
+3. Write scalar fields through Archive::value() and bulk byte regions through
+   Archive::blob().
+4. Register concrete constructible types with:
+
+       OSG_REGISTER_SERIALIZER(osg, ClassName);
+
+5. Add or update a round-trip test in tests/serialization_test.cpp.
+6. Add new public headers and sources explicitly to src/osgDB/CMakeLists.txt.
+
+For each class's property list, mine:
+
+    workspace/reference/software/OpenSceneGraph/src/osgWrappers/serializers/osg/*.cpp
+
+Those wrapper files are the checklist of state OpenSceneGraph considered
+serializable.
+
+Header coverage
+---------------
+
+tests/serialization_test.cpp includes the framework headers and provides their
+compile coverage. The framework headers are intentionally not added to
+all_headers_test, which globs include/osg/*.hpp only.

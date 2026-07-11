@@ -73,11 +73,16 @@
             "binaryDir": "${sourceDir}/build-release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+                "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG",
                 "ENABLE_SANITIZERS": "OFF",
                 "ENABLE_COVERAGE": "OFF",
                 "ENABLE_TIDY": "OFF",
-                "BUILD_OSG_EXAMPLES": "OFF",
-                "BUILD_TESTING": "ON"
+                "ENABLE_PERF": "OFF",
+                "ENABLE_VALGRIND": "OFF",
+                "ENABLE_HEAPTRACK": "OFF",
+                "BUILD_OSG_EXAMPLES": "ON",
+                "BUILD_TESTING": "OFF"
             }
         },
         {

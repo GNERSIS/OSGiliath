@@ -24,6 +24,7 @@
 #include <osg/maths/box.hpp>
 #include <osg/maths/compat.hpp>
 #include <osg/maths/transform.hpp>
+#include <osg/maths/vec2.hpp>
 #include <osg/nodes/Node.hpp>
 #include <osg/nodes/Transform.hpp>
 #include <osg/state/StateSet.hpp>
@@ -41,12 +42,14 @@ namespace
 
     constexpr unsigned int          visibilityAttribLocation = 7U;
     constexpr unsigned int          radianceAttribLocation   = 1U;
+    constexpr unsigned int          tangentAttribLocation    = 6U;
     constexpr std::array<char, 8U>  cacheMagic{ 'O', 'S', 'G', 'V', 'I', 'S', 'B', 'K' };
     // v6 radiance hit gathering includes sky-lit bounce via interpolated visibility.
     constexpr std::uint32_t         cacheVersion         = 6U;
     constexpr std::size_t           bvhLeafSize          = 8U;
     constexpr float                 rayOriginOffset      = 0.02F;
     constexpr float                 adaptiveOffsetScale  = 0.005F;
+    constexpr float                 bakeMaxEdgeLength    = 0.5F;
     constexpr float                 facePlaneNudge       = 0.03F;
     constexpr float                 rayHitEpsilon        = 1.0E-4F;
     constexpr float                 minNormalLength2     = 1.0E-10F;
@@ -54,6 +57,7 @@ namespace
     constexpr double                twoPi                = 6.28318530717958647692;
     constexpr double                sunDiscLuminance     = 500.0;
     constexpr int                   albedoTargetSamples  = 4'096;
+    constexpr unsigned int          bakeMaxSubdivisions  = 6U;
     constexpr std::size_t           maxExtraSamplePoints = 6U;
     constexpr float                 minMultibounceDenom  = 0.35F;
     constexpr std::array<float, 2U> faceSampleFractions{ 0.35F, 0.70F };
@@ -748,6 +752,660 @@ namespace
             default :
                 break;
         }
+    }
+
+    struct DensifyStats
+    {
+            std::size_t visitedGeometryCount = 0U;
+            std::size_t changedGeometryCount = 0U;
+            std::size_t skippedGeometryCount = 0U;
+            std::size_t inputTriangles       = 0U;
+            std::size_t outputTriangles      = 0U;
+    };
+
+    struct DensifyPlan
+    {
+            bool        changed         = false;
+            std::size_t inputTriangles  = 0U;
+            std::size_t outputTriangles = 0U;
+            std::size_t outputVertices  = 0U;
+    };
+
+    struct DensifySourceArrays
+    {
+            const osg::Vec3Array* vertices  = nullptr;
+            const osg::Vec3Array* normals   = nullptr;
+            const osg::Vec4Array* tangents  = nullptr;
+            const osg::Vec2Array* texCoord0 = nullptr;
+            const osg::Vec2Array* texCoord1 = nullptr;
+            const osg::Vec3Array* colors3   = nullptr;
+            const osg::Vec4Array* colors4   = nullptr;
+    };
+
+    struct DensifyOutputArrays
+    {
+            osg::ref_ptr<osg::Vec3Array>        vertices;
+            osg::ref_ptr<osg::Vec3Array>        normals;
+            osg::ref_ptr<osg::Vec4Array>        tangents;
+            osg::ref_ptr<osg::Vec2Array>        texCoord0;
+            osg::ref_ptr<osg::Vec2Array>        texCoord1;
+            osg::ref_ptr<osg::Vec3Array>        colors3;
+            osg::ref_ptr<osg::Vec4Array>        colors4;
+            osg::ref_ptr<osg::DrawElementsUInt> indices;
+    };
+
+    struct BarycentricWeights
+    {
+            float w0 = 1.0F;
+            float w1 = 0.0F;
+            float w2 = 0.0F;
+    };
+
+    bool
+    hasVertexElements( const osg::Array* array,
+                       std::size_t       vertexCount )
+    {
+        return array !=
+               nullptr &&
+               static_cast<std::size_t>( array->getNumElements() ) >= vertexCount;
+    }
+
+    bool
+    readDensifySourceArrays( const osg::Geometry& geometry,
+                             DensifySourceArrays& source,
+                             std::size_t&         vertexCount )
+    {
+        const osg::Array* vertexArray = geometry.getVertexArray();
+        source.vertices = dynamic_cast<const osg::Vec3Array*>( vertexArray );
+        if( source.vertices == nullptr )
+        {
+            return false;
+        }
+
+        vertexCount = static_cast<std::size_t>( source.vertices->getNumElements() );
+        if( vertexCount == 0U )
+        {
+            return false;
+        }
+
+        source.normals =
+            dynamic_cast<const osg::Vec3Array*>( geometry.getNormalArray() );
+        source.tangents = dynamic_cast<const osg::Vec4Array*>(
+            geometry.getVertexAttribArray( tangentAttribLocation )
+        );
+        source.texCoord0 =
+            dynamic_cast<const osg::Vec2Array*>( geometry.getTexCoordArray( 0U ) );
+        if( !hasVertexElements( source.normals, vertexCount ) ||
+            !hasVertexElements( source.tangents, vertexCount ) ||
+            !hasVertexElements( source.texCoord0, vertexCount ) )
+        {
+            return false;
+        }
+
+        const osg::Array* texCoord1Array = geometry.getTexCoordArray( 1U );
+        if( texCoord1Array != nullptr )
+        {
+            source.texCoord1 = dynamic_cast<const osg::Vec2Array*>( texCoord1Array );
+            if( !hasVertexElements( source.texCoord1, vertexCount ) )
+            {
+                return false;
+            }
+        }
+
+        const osg::Array* colorArray = geometry.getColorArray();
+        if( colorArray !=
+            nullptr &&
+            colorArray->getBinding() == osg::Array::BIND_PER_VERTEX )
+        {
+            source.colors4 = dynamic_cast<const osg::Vec4Array*>( colorArray );
+            source.colors3 = source.colors4 == nullptr
+                               ? dynamic_cast<const osg::Vec3Array*>( colorArray )
+                               : nullptr;
+            if( !hasVertexElements(
+                    source.colors4 != nullptr
+                        ? static_cast<const osg::Array*>( source.colors4 )
+                        : static_cast<const osg::Array*>( source.colors3 ),
+                    vertexCount
+                ) )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool
+    allPrimitiveSetsAreTriangles( const osg::Geometry& geometry )
+    {
+        if( geometry.getNumPrimitiveSets() == 0U )
+        {
+            return false;
+        }
+
+        for( unsigned int primitiveIndex = 0U;
+             primitiveIndex < geometry.getNumPrimitiveSets();
+             ++primitiveIndex )
+        {
+            const osg::PrimitiveSet* primitiveSet =
+                geometry.getPrimitiveSet( primitiveIndex );
+            if( primitiveSet ==
+                nullptr ||
+                primitiveSet->getMode() !=
+                GL_TRIANGLES ||
+                ( primitiveSet->getNumIndices() % 3U ) != 0U )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool
+    validTriangleIndices( const osg::Vec3Array& vertices,
+                          unsigned int          i0,
+                          unsigned int          i1,
+                          unsigned int          i2 )
+    {
+        const unsigned int vertexCount = vertices.getNumElements();
+        return i0 < vertexCount && i1 < vertexCount && i2 < vertexCount;
+    }
+
+    unsigned int
+    triangleSubdivisions( const osg::Vec3Array& vertices,
+                          const osg::dmat4&     localToWorld,
+                          unsigned int          i0,
+                          unsigned int          i1,
+                          unsigned int          i2,
+                          float                 maxEdgeLength,
+                          unsigned int          maxSubdivisions )
+    {
+        if( !validTriangleIndices( vertices, i0, i1, i2 ) )
+        {
+            return 1U;
+        }
+
+        const osg::vec3 v0          = transformPoint( localToWorld, vertices[i0] );
+        const osg::vec3 v1          = transformPoint( localToWorld, vertices[i1] );
+        const osg::vec3 v2          = transformPoint( localToWorld, vertices[i2] );
+        const float     longestEdge = triangleLongestEdge( v0, v1, v2 );
+        if( longestEdge <= maxEdgeLength )
+        {
+            return 1U;
+        }
+
+        const float rawSubdivisions = std::ceil( longestEdge / maxEdgeLength );
+        const auto  unclamped =
+            static_cast<unsigned int>( std::max( rawSubdivisions, 1.0F ) );
+        return std::clamp( unclamped, 1U, maxSubdivisions );
+    }
+
+    DensifyPlan
+    planDensifyGeometry( const osg::Geometry&  geometry,
+                         const osg::Vec3Array& vertices,
+                         const osg::dmat4&     localToWorld,
+                         float                 maxEdgeLength,
+                         unsigned int          maxSubdivisions )
+    {
+        DensifyPlan plan;
+        for( unsigned int primitiveIndex = 0U;
+             primitiveIndex < geometry.getNumPrimitiveSets();
+             ++primitiveIndex )
+        {
+            const osg::PrimitiveSet* primitiveSet =
+                geometry.getPrimitiveSet( primitiveIndex );
+            if( primitiveSet == nullptr )
+            {
+                continue;
+            }
+
+            const unsigned int indexCount = primitiveSet->getNumIndices();
+            for( unsigned int index = 0U; index + 2U < indexCount; index += 3U )
+            {
+                const unsigned int i0 = primitiveSet->index( index );
+                const unsigned int i1 = primitiveSet->index( index + 1U );
+                const unsigned int i2 = primitiveSet->index( index + 2U );
+                if( !validTriangleIndices( vertices, i0, i1, i2 ) )
+                {
+                    continue;
+                }
+
+                const unsigned int subdivisions =
+                    triangleSubdivisions( vertices,
+                                          localToWorld,
+                                          i0,
+                                          i1,
+                                          i2,
+                                          maxEdgeLength,
+                                          maxSubdivisions );
+                ++plan.inputTriangles;
+                plan.outputTriangles += static_cast<std::size_t>( subdivisions ) *
+                                        static_cast<std::size_t>( subdivisions );
+                if( subdivisions > 1U )
+                {
+                    const std::size_t gridSize =
+                        static_cast<std::size_t>( subdivisions + 1U ) *
+                        static_cast<std::size_t>( subdivisions + 2U ) /
+                        2U;
+                    plan.outputVertices += gridSize;
+                    plan.changed         = true;
+                }
+            }
+        }
+        return plan;
+    }
+
+    template<typename T>
+    T
+    interpolateVertexValue( const T&                  v0,
+                            const T&                  v1,
+                            const T&                  v2,
+                            const BarycentricWeights& weights )
+    {
+        return v0 * weights.w0 + v1 * weights.w1 + v2 * weights.w2;
+    }
+
+    BarycentricWeights
+    gridWeights( unsigned int gridI,
+                 unsigned int gridJ,
+                 unsigned int subdivisions )
+    {
+        const float        invSubdivisions = 1.0F / static_cast<float>( subdivisions );
+        BarycentricWeights weights;
+        weights.w1 = static_cast<float>( gridI ) * invSubdivisions;
+        weights.w2 = static_cast<float>( gridJ ) * invSubdivisions;
+        weights.w0 = 1.0F - weights.w1 - weights.w2;
+        return weights;
+    }
+
+    unsigned int
+    appendDensifiedVertex( const DensifySourceArrays& source,
+                           DensifyOutputArrays&       output,
+                           unsigned int               i0,
+                           unsigned int               i1,
+                           unsigned int               i2,
+                           const BarycentricWeights&  weights )
+    {
+        const auto newIndex = static_cast<unsigned int>( output.vertices->size() );
+        output.vertices->push_back( interpolateVertexValue( ( *source.vertices )[i0],
+                                                            ( *source.vertices )[i1],
+                                                            ( *source.vertices )[i2],
+                                                            weights ) );
+
+        const osg::vec3 normal =
+            safeNormalize( interpolateVertexValue( ( *source.normals )[i0],
+                                                   ( *source.normals )[i1],
+                                                   ( *source.normals )[i2],
+                                                   weights ),
+                           ( *source.normals )[i0] );
+        output.normals->push_back( normal );
+
+        const osg::vec4 tangent4 = interpolateVertexValue( ( *source.tangents )[i0],
+                                                           ( *source.tangents )[i1],
+                                                           ( *source.tangents )[i2],
+                                                           weights );
+        const osg::vec3 tangent =
+            safeNormalize( osg::vec3( tangent4.x, tangent4.y, tangent4.z ),
+                           osg::vec3( ( *source.tangents )[i0].x,
+                                      ( *source.tangents )[i0].y,
+                                      ( *source.tangents )[i0].z ) );
+        output.tangents->push_back( osg::vec4( tangent.x,
+                                               tangent.y,
+                                               tangent.z,
+                                               tangent4.w < 0.0F ? -1.0F : 1.0F ) );
+
+        output.texCoord0->push_back( interpolateVertexValue( ( *source.texCoord0 )[i0],
+                                                             ( *source.texCoord0 )[i1],
+                                                             ( *source.texCoord0 )[i2],
+                                                             weights ) );
+        if( output.texCoord1.valid() && source.texCoord1 != nullptr )
+        {
+            output.texCoord1->push_back(
+                interpolateVertexValue( ( *source.texCoord1 )[i0],
+                                        ( *source.texCoord1 )[i1],
+                                        ( *source.texCoord1 )[i2],
+                                        weights )
+            );
+        }
+        if( output.colors4.valid() && source.colors4 != nullptr )
+        {
+            output.colors4->push_back( interpolateVertexValue( ( *source.colors4 )[i0],
+                                                               ( *source.colors4 )[i1],
+                                                               ( *source.colors4 )[i2],
+                                                               weights ) );
+        }
+        if( output.colors3.valid() && source.colors3 != nullptr )
+        {
+            output.colors3->push_back( interpolateVertexValue( ( *source.colors3 )[i0],
+                                                               ( *source.colors3 )[i1],
+                                                               ( *source.colors3 )[i2],
+                                                               weights ) );
+        }
+        return newIndex;
+    }
+
+    void
+    appendOutputTriangle( DensifyOutputArrays& output,
+                          unsigned int         i0,
+                          unsigned int         i1,
+                          unsigned int         i2 )
+    {
+        output.indices->addElement( i0 );
+        output.indices->addElement( i1 );
+        output.indices->addElement( i2 );
+    }
+
+    std::size_t
+    densifyGridIndex( unsigned int gridI,
+                      unsigned int gridJ,
+                      unsigned int subdivisions )
+    {
+        return static_cast<std::size_t>( gridI ) *
+               static_cast<std::size_t>( subdivisions + 1U ) -
+               ( static_cast<std::size_t>( gridI ) *
+                 static_cast<std::size_t>( gridI - ( gridI > 0U ? 1U : 0U ) ) ) /
+               2U +
+               static_cast<std::size_t>( gridJ );
+    }
+
+    void
+    appendDensifiedTriangle( const DensifySourceArrays& source,
+                             DensifyOutputArrays&       output,
+                             unsigned int               i0,
+                             unsigned int               i1,
+                             unsigned int               i2,
+                             unsigned int               subdivisions )
+    {
+        if( subdivisions <= 1U )
+        {
+            appendOutputTriangle( output, i0, i1, i2 );
+            return;
+        }
+
+        std::vector<unsigned int> gridIndices;
+        gridIndices.reserve( static_cast<std::size_t>( subdivisions + 1U ) *
+                             static_cast<std::size_t>( subdivisions + 2U ) /
+                             2U );
+        for( unsigned int gridI = 0U; gridI <= subdivisions; ++gridI )
+        {
+            for( unsigned int gridJ = 0U; gridI + gridJ <= subdivisions; ++gridJ )
+            {
+                gridIndices.push_back(
+                    appendDensifiedVertex( source,
+                                           output,
+                                           i0,
+                                           i1,
+                                           i2,
+                                           gridWeights( gridI, gridJ, subdivisions ) )
+                );
+            }
+        }
+
+        for( unsigned int gridI = 0U; gridI < subdivisions; ++gridI )
+        {
+            for( unsigned int gridJ = 0U; gridI + gridJ < subdivisions; ++gridJ )
+            {
+                appendOutputTriangle(
+                    output,
+                    gridIndices[densifyGridIndex( gridI, gridJ, subdivisions )],
+                    gridIndices[densifyGridIndex( gridI + 1U, gridJ, subdivisions )],
+                    gridIndices[densifyGridIndex( gridI, gridJ + 1U, subdivisions )]
+                );
+                if( gridI + gridJ + 1U < subdivisions )
+                {
+                    appendOutputTriangle(
+                        output,
+                        gridIndices[densifyGridIndex( gridI + 1U, gridJ, subdivisions )],
+                        gridIndices[densifyGridIndex( gridI + 1U,
+                                                      gridJ + 1U,
+                                                      subdivisions )],
+                        gridIndices[densifyGridIndex( gridI, gridJ + 1U, subdivisions )]
+                    );
+                }
+            }
+        }
+    }
+
+    DensifyOutputArrays
+    makeDensifyOutputArrays( const DensifySourceArrays& source,
+                             std::size_t                expectedVertexCount,
+                             std::size_t                expectedIndexCount )
+    {
+        DensifyOutputArrays output;
+        output.vertices  = new osg::Vec3Array( *source.vertices );
+        output.normals   = new osg::Vec3Array( *source.normals );
+        output.tangents  = new osg::Vec4Array( *source.tangents );
+        output.texCoord0 = new osg::Vec2Array( *source.texCoord0 );
+        output.indices   = new osg::DrawElementsUInt( GL_TRIANGLES );
+        if( source.texCoord1 != nullptr )
+        {
+            output.texCoord1 = new osg::Vec2Array( *source.texCoord1 );
+        }
+        if( source.colors4 != nullptr )
+        {
+            output.colors4 = new osg::Vec4Array( *source.colors4 );
+        }
+        if( source.colors3 != nullptr )
+        {
+            output.colors3 = new osg::Vec3Array( *source.colors3 );
+        }
+
+        output.vertices->reserve( expectedVertexCount );
+        output.normals->reserve( expectedVertexCount );
+        output.tangents->reserve( expectedVertexCount );
+        output.texCoord0->reserve( expectedVertexCount );
+        if( output.texCoord1.valid() )
+        {
+            output.texCoord1->reserve( expectedVertexCount );
+        }
+        if( output.colors4.valid() )
+        {
+            output.colors4->reserve( expectedVertexCount );
+        }
+        if( output.colors3.valid() )
+        {
+            output.colors3->reserve( expectedVertexCount );
+        }
+        output.indices->reserveElements(
+            static_cast<unsigned int>( expectedIndexCount )
+        );
+
+        output.normals->setNormalize( source.normals->getNormalize() );
+        output.tangents->setNormalize( source.tangents->getNormalize() );
+        output.texCoord0->setNormalize( source.texCoord0->getNormalize() );
+        if( output.texCoord1.valid() && source.texCoord1 != nullptr )
+        {
+            output.texCoord1->setNormalize( source.texCoord1->getNormalize() );
+        }
+        if( output.colors4.valid() && source.colors4 != nullptr )
+        {
+            output.colors4->setNormalize( source.colors4->getNormalize() );
+        }
+        if( output.colors3.valid() && source.colors3 != nullptr )
+        {
+            output.colors3->setNormalize( source.colors3->getNormalize() );
+        }
+        return output;
+    }
+
+    void
+    replaceGeometryWithDensifiedArrays( osg::Geometry&             geometry,
+                                        const DensifyOutputArrays& output )
+    {
+        geometry.setVertexArray( output.vertices.get() );
+        geometry.setNormalArray( output.normals.get(), osg::Array::BIND_PER_VERTEX );
+        geometry.setColorArray( nullptr );
+        if( output.colors4.valid() )
+        {
+            geometry.setColorArray( output.colors4.get(), osg::Array::BIND_PER_VERTEX );
+        }
+        else if( output.colors3.valid() )
+        {
+            geometry.setColorArray( output.colors3.get(), osg::Array::BIND_PER_VERTEX );
+        }
+
+        osg::Geometry::ArrayList emptyArrays;
+        geometry.setTexCoordArrayList( emptyArrays );
+        geometry.setTexCoordArray( 0U,
+                                   output.texCoord0.get(),
+                                   osg::Array::BIND_PER_VERTEX );
+        if( output.texCoord1.valid() )
+        {
+            geometry.setTexCoordArray( 1U,
+                                       output.texCoord1.get(),
+                                       osg::Array::BIND_PER_VERTEX );
+        }
+
+        geometry.setVertexAttribArrayList( emptyArrays );
+        geometry.setVertexAttribArray( tangentAttribLocation,
+                                       output.tangents.get(),
+                                       osg::Array::BIND_PER_VERTEX );
+
+        osg::Geometry::PrimitiveSetList primitiveSets;
+        primitiveSets.push_back( output.indices.get() );
+        geometry.setPrimitiveSetList( primitiveSets );
+    }
+
+    bool
+    densifyGeometryForBake( osg::Geometry&    geometry,
+                            const osg::dmat4& localToWorld,
+                            float             maxEdgeLength,
+                            unsigned int      maxSubdivisions,
+                            DensifyStats&     stats )
+    {
+        ++stats.visitedGeometryCount;
+
+        DensifySourceArrays source;
+        std::size_t         vertexCount = 0U;
+        if( !readDensifySourceArrays( geometry, source, vertexCount ) ||
+            !allPrimitiveSetsAreTriangles( geometry ) )
+        {
+            ++stats.skippedGeometryCount;
+            return false;
+        }
+
+        const DensifyPlan plan  = planDensifyGeometry( geometry,
+                                                       *source.vertices,
+                                                       localToWorld,
+                                                       maxEdgeLength,
+                                                       maxSubdivisions );
+        stats.inputTriangles   += plan.inputTriangles;
+        stats.outputTriangles  += plan.outputTriangles;
+        if( !plan.changed || plan.inputTriangles == 0U )
+        {
+            return false;
+        }
+
+        const std::size_t expectedVertexCount = vertexCount + plan.outputVertices;
+        const std::size_t expectedIndexCount  = plan.outputTriangles * 3U;
+        const std::size_t maxDrawCount =
+            static_cast<std::size_t>( std::numeric_limits<GLsizei>::max() );
+        const std::size_t maxIndex =
+            static_cast<std::size_t>( std::numeric_limits<unsigned int>::max() );
+        if( expectedVertexCount > maxIndex || expectedIndexCount > maxDrawCount )
+        {
+            ++stats.skippedGeometryCount;
+            return false;
+        }
+
+        DensifyOutputArrays output =
+            makeDensifyOutputArrays( source, expectedVertexCount, expectedIndexCount );
+        for( unsigned int primitiveIndex = 0U;
+             primitiveIndex < geometry.getNumPrimitiveSets();
+             ++primitiveIndex )
+        {
+            const osg::PrimitiveSet* primitiveSet =
+                geometry.getPrimitiveSet( primitiveIndex );
+            if( primitiveSet == nullptr )
+            {
+                continue;
+            }
+
+            const unsigned int indexCount = primitiveSet->getNumIndices();
+            for( unsigned int index = 0U; index + 2U < indexCount; index += 3U )
+            {
+                const unsigned int i0 = primitiveSet->index( index );
+                const unsigned int i1 = primitiveSet->index( index + 1U );
+                const unsigned int i2 = primitiveSet->index( index + 2U );
+                if( !validTriangleIndices( *source.vertices, i0, i1, i2 ) )
+                {
+                    continue;
+                }
+
+                const unsigned int subdivisions =
+                    triangleSubdivisions( *source.vertices,
+                                          localToWorld,
+                                          i0,
+                                          i1,
+                                          i2,
+                                          maxEdgeLength,
+                                          maxSubdivisions );
+                appendDensifiedTriangle( source, output, i0, i1, i2, subdivisions );
+            }
+        }
+
+        replaceGeometryWithDensifiedArrays( geometry, output );
+        ++stats.changedGeometryCount;
+        return true;
+    }
+
+    class BakeDensifyVisitor : public osg::NodeVisitor
+    {
+        public:
+
+            BakeDensifyVisitor( float        maxEdgeLength,
+                                unsigned int maxSubdivisions ) :
+                osg::NodeVisitor( osg::NodeVisitor::TRAVERSE_ALL_CHILDREN ),
+                _maxEdgeLength( maxEdgeLength ),
+                _maxSubdivisions( maxSubdivisions )
+            {
+                _worldStack.push_back( osg::dmat4() );
+            }
+
+            void
+            apply( osg::Transform& transform ) override
+            {
+                osg::dmat4 world = _worldStack.back();
+                transform.computeLocalToWorldMatrix( world, this );
+                _worldStack.push_back( world );
+                traverse( transform );
+                _worldStack.pop_back();
+            }
+
+            void
+            apply( osg::Drawable& drawable ) override
+            {
+                osg::Geometry* geometry = drawable.asGeometry();
+                if( geometry == nullptr )
+                {
+                    return;
+                }
+
+                densifyGeometryForBake( *geometry,
+                                        _worldStack.back(),
+                                        _maxEdgeLength,
+                                        _maxSubdivisions,
+                                        stats );
+            }
+
+            DensifyStats stats;
+
+        private:
+
+            std::vector<osg::dmat4> _worldStack;
+            float                   _maxEdgeLength   = bakeMaxEdgeLength;
+            unsigned int            _maxSubdivisions = bakeMaxSubdivisions;
+    };
+
+    DensifyStats
+    densifyBakeGeometry( osg::Node&   model,
+                         float        maxEdgeLength,
+                         unsigned int maxSubdivisions )
+    {
+        BakeDensifyVisitor visitor( maxEdgeLength, maxSubdivisions );
+        model.accept( visitor );
+        return visitor.stats;
     }
 
     class GeometryRecordVisitor : public osg::NodeVisitor
@@ -2302,10 +2960,27 @@ namespace
     }
 
     std::filesystem::path
-    cachePathForModel( const std::filesystem::path& modelPath )
+    densifyCacheSuffix( const sponza::SponzaOptions& options )
+    {
+        const auto edgeMillimeters = static_cast<long>(
+            std::lround( static_cast<double>( options.bakeDensifyMaxEdge ) * 1000.0 )
+        );
+        return std::string( ".dense-" ) +
+               std::to_string( edgeMillimeters ) +
+               "mm-" +
+               std::to_string( options.bakeDensifyMaxSubdiv );
+    }
+
+    std::filesystem::path
+    cachePathForModel( const std::filesystem::path& modelPath,
+                       const sponza::SponzaOptions& options )
     {
         std::filesystem::path cachePath  = modelPath;
         cachePath                       += ".visbake";
+        if( options.bakeDensifyEnabled )
+        {
+            cachePath += densifyCacheSuffix( options );
+        }
         return cachePath;
     }
 
@@ -2686,7 +3361,26 @@ namespace sponza
             return result;
         }
 
-        const osg::Timer_t                startTick = osg::Timer::instance()->tick();
+        const osg::Timer_t startTick = osg::Timer::instance()->tick();
+        if( options.bakeDensifyEnabled )
+        {
+            const DensifyStats densifyStats = densifyBakeGeometry(
+                *model,
+                options.bakeDensifyMaxEdge,
+                static_cast<unsigned int>( options.bakeDensifyMaxSubdiv )
+            );
+            if( densifyStats.changedGeometryCount > 0U )
+            {
+                OSG_NOTICE << "Sponza bake densified "
+                           << densifyStats.changedGeometryCount << "/"
+                           << densifyStats.visitedGeometryCount
+                           << " geometries, triangles " << densifyStats.inputTriangles
+                           << " -> " << densifyStats.outputTriangles << ", skipped "
+                           << densifyStats.skippedGeometryCount << ", max edge "
+                           << options.bakeDensifyMaxEdge << ", max subdivisions "
+                           << options.bakeDensifyMaxSubdiv << std::endl;
+            }
+        }
         MaterialTable                     materialTable;
         const std::vector<GeometryRecord> records =
             collectGeometryRecords( *model, materialTable );
@@ -2708,7 +3402,7 @@ namespace sponza
                                 std::max( 1, options.visBakeRays / 2 ) );
 
         const std::filesystem::path modelPath = resolveModelPath( options.modelPath );
-        const std::filesystem::path cachePath = cachePathForModel( modelPath );
+        const std::filesystem::path cachePath = cachePathForModel( modelPath, options );
         result.cachePath                      = cachePath.string();
 
         ModelStamp  stamp;

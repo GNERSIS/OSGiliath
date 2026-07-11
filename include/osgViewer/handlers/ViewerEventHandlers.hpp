@@ -303,6 +303,7 @@ namespace osgViewer
 
             ViewerBase::ThreadingModel  _threadingModel;
             osg::ref_ptr<osgText::Text> _threadingModelText;
+            osg::ref_ptr<osgText::Text> _glRendererText;
 
             unsigned int                _frameRateChildNum;
             unsigned int                _viewerChildNum;

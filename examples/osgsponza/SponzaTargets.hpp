@@ -8,6 +8,7 @@ namespace sponza
 {
 
     struct SponzaOptions;
+    enum class IndirectTargetFormat;
 
     struct SponzaTargets
     {
@@ -22,8 +23,9 @@ namespace sponza
                            int height );
 
     osg::ref_ptr<osg::Texture2D>
-    createIndirectColorTexture( int width,
-                                int height );
+    createIndirectColorTexture( int                  width,
+                                int                  height,
+                                IndirectTargetFormat format );
 
     osg::ref_ptr<osg::Texture2D>
     createSceneDepthTexture( int width,

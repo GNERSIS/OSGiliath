@@ -27,6 +27,9 @@ uniform float uPower;
 uniform float uBias;
 uniform float uRoomRadius;
 uniform float uRoomStrength;
+uniform int uSampleCount;
+uniform int uRoomSampleCount;
+uniform bool uRoomEnabled;
 
 in vec2 vUV;
 out vec4 o;
@@ -82,8 +85,9 @@ float computeRoomAo(vec3 P, mat3 TBN)
 {
     float occlusion = 0.0;
     float roomBias = max(uBias, uRoomRadius * 0.035);
+    int sampleCount = clamp(uRoomSampleCount, 1, roomKernelSize);
 
-    for(int i = 0; i < roomKernelSize; ++i)
+    for(int i = 0; i < sampleCount; ++i)
     {
         vec3 s = P + TBN * roomKernel[i] * uRoomRadius;
         vec4 clip = uProj * vec4(s, 1.0);
@@ -113,7 +117,7 @@ float computeRoomAo(vec3 P, mat3 TBN)
         occlusion += (sampleP.z >= s.z + roomBias ? 1.0 : 0.0) * rangeCheck;
     }
 
-    return clamp(1.0 - (occlusion / float(roomKernelSize)), 0.0, 1.0);
+    return clamp(1.0 - (occlusion / float(sampleCount)), 0.0, 1.0);
 }
 
 void main()
@@ -137,7 +141,8 @@ void main()
     mat3 TBN = mat3(T, B, N);
 
     float occlusion = 0.0;
-    for(int i = 0; i < kernelSize; ++i)
+    int sampleCount = clamp(uSampleCount, 1, kernelSize);
+    for(int i = 0; i < sampleCount; ++i)
     {
         vec3 s = P + TBN * kernel[i] * uRadius;
         vec4 clip = uProj * vec4(s, 1.0);
@@ -166,9 +171,9 @@ void main()
         occlusion += (sampleP.z >= s.z + uBias ? 1.0 : 0.0) * rangeCheck;
     }
 
-    float ao = 1.0 - (occlusion / float(kernelSize));
+    float ao = 1.0 - (occlusion / float(sampleCount));
     ao = pow(clamp(ao, 0.0, 1.0), uPower);
-    if(uRoomStrength > 0.0 && uRoomRadius > 0.0)
+    if(uRoomEnabled && uRoomStrength > 0.0 && uRoomRadius > 0.0)
     {
         float roomAO = computeRoomAo(P, TBN);
         ao = clamp(ao * mix(1.0, roomAO, uRoomStrength), 0.0, 1.0);
@@ -199,8 +204,8 @@ namespace sponza
                                                 osg::mat4( frame.invProj ) ) );
         stateSet->addUniform( new osg::Uniform(
             "uResolution",
-            osg::vec2( static_cast<float>( renderTargetWidth( options ) ),
-                       static_cast<float>( renderTargetHeight( options ) ) )
+            osg::vec2( static_cast<float>( ssaoTargetWidth( options ) ),
+                       static_cast<float>( ssaoTargetHeight( options ) ) )
         ) );
         stateSet->addUniform( new osg::Uniform( "uRadius", options.aoRadius ) );
         stateSet->addUniform( new osg::Uniform( "uPower", options.aoPower ) );
@@ -208,6 +213,11 @@ namespace sponza
         stateSet->addUniform( new osg::Uniform( "uRoomRadius", options.aoRoomRadius ) );
         stateSet->addUniform( new osg::Uniform( "uRoomStrength",
                                                 options.aoRoomStrength ) );
+        stateSet->addUniform( new osg::Uniform( "uSampleCount", options.ssaoSamples ) );
+        stateSet->addUniform( new osg::Uniform( "uRoomSampleCount",
+                                                options.ssaoRoomSamples ) );
+        stateSet->addUniform( new osg::Uniform( "uRoomEnabled",
+                                                options.ssaoRoomEnabled ) );
 
         return geode;
     }
@@ -222,8 +232,8 @@ namespace sponza
         ssao->attach( osg::Camera::COLOR_BUFFER0, targets.aoTexture.get() );
         ssao->setViewport( 0,
                            0,
-                           renderTargetWidth( options ),
-                           renderTargetHeight( options ) );
+                           ssaoTargetWidth( options ),
+                           ssaoTargetHeight( options ) );
         ssao->setRenderOrder( osg::Camera::PRE_RENDER, ssaoPassOrder );
         ssao->setReferenceFrame( osg::Transform::ABSOLUTE_RF );
         ssao->setProjectionMatrix( osg::mat4() );

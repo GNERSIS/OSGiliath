@@ -788,6 +788,21 @@ GLTFLoader::loadMaterials()
         ss->addUniform( new osg::Uniform( "uVisStrength", 0.0F ) );
         ss->addUniform( new osg::Uniform( "uVisPower", 1.0F ) );
         ss->addUniform( new osg::Uniform( "uVisBentStrength", 0.0F ) );
+        ss->addUniform( new osg::Uniform( "uUseRtSunShadow", false ) );
+        ss->addUniform( new osg::Uniform( "uRtShadowNormalOffset", 0.02F ) );
+        ss->addUniform( new osg::Uniform( "uRtShadowMaxDistance", 0.0F ) );
+        ss->addUniform( new osg::Uniform( "uRtShadowSamples", 1 ) );
+        ss->addUniform( new osg::Uniform( "uRtSunAngularRadius", 0.00465F ) );
+        ss->addUniform( new osg::Uniform( "uRtBvhNodeCount", 0 ) );
+        ss->addUniform( new osg::Uniform( "uRtTriangleCount", 0 ) );
+        ss->addUniform( new osg::Uniform( "uRtTriangleIndexCount", 0 ) );
+        ss->addUniform( new osg::Uniform( "uRtViewOriginWorld",
+                                          osg::vec3( 0.0F, 0.0F, 0.0F ) ) );
+        ss->addUniform( new osg::Uniform( "uRtSunDirectionWorld",
+                                          osg::vec3( 0.0F, 1.0F, 0.0F ) ) );
+        ss->addUniform( new osg::Uniform( "uRtShadowDebug", false ) );
+        ss->addUniform( new osg::Uniform( "uRtRasterGateMin", 0.49F ) );
+        ss->addUniform( new osg::Uniform( "uRtRasterGateMax", 0.51F ) );
 
         ss->setAttributeAndModes( getPbrProgram(), osg::StateAttribute::ON );
 

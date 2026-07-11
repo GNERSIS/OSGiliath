@@ -19,6 +19,7 @@
 #include <EGL/eglext.h>
 #include <iostream>
 #include <osg/core/ref_ptr.hpp>
+#include <osg/core/Timer.hpp>
 #include <osg/images/Image.hpp>
 #include <osg/nodes/Camera.hpp>
 #include <osg/rendering/GraphicsContext.hpp>
@@ -338,17 +339,19 @@ namespace osg
     inline bool
     headlessCapture( osg::Node*         scene,
                      const std::string& outputPath,
-                     int                width  = 640,
-                     int                height = 480,
-                     osg::dvec3         eye    = osg::dvec3( 0,
-                                                             0,
-                                                             0 ),
-                     osg::dvec3         center = osg::dvec3( 0,
-                                                             0,
-                                                             0 ),
-                     osg::dvec3         up     = osg::dvec3( 0,
-                                                             0,
-                                                             0 ) )
+                     int                width                 = 640,
+                     int                height                = 480,
+                     osg::dvec3         eye                   = osg::dvec3( 0,
+                                                                            0,
+                                                                            0 ),
+                     osg::dvec3         center                = osg::dvec3( 0,
+                                                                            0,
+                                                                            0 ),
+                     osg::dvec3         up                    = osg::dvec3( 0,
+                                                                            0,
+                                                                            0 ),
+                     int                benchmarkFrames       = 0,
+                     int                benchmarkWarmupFrames = 60 )
     {
         if( !scene )
         {
@@ -395,9 +398,6 @@ namespace osg
         viewer.getCamera()->setViewport( new osg::Viewport( 0, 0, width, height ) );
         viewer.getCamera()->setDrawBuffer( GL_BACK );
         viewer.getCamera()->setReadBuffer( GL_BACK );
-        viewer.getCamera()->setFinalDrawCallback(
-            new detail::CaptureCallback( image.get(), width, height )
-        );
 
         viewer.setSceneData( scene );
         auto* manip = new osgGA::TrackballManipulator;
@@ -423,12 +423,37 @@ namespace osg
         }
 
         viewer.realize();
+        viewer.setReleaseContextAtEndOfFrameHint( false );
         manip->home( 0 );    // apply home position
 
-        for( int i = 0; i < 3; ++i )
+        const int warmupFrames = benchmarkFrames > 0 ? benchmarkWarmupFrames : 2;
+        for( int i = 0; i < warmupFrames; ++i )
         {
             viewer.frame();
         }
+
+        if( benchmarkFrames > 0 )
+        {
+            const osg::Timer_t startTick = osg::Timer::instance()->tick();
+            for( int i = 0; i < benchmarkFrames; ++i )
+            {
+                viewer.frame();
+            }
+            const osg::Timer_t endTick = osg::Timer::instance()->tick();
+            const double seconds = osg::Timer::instance()->delta_s( startTick, endTick );
+            const double frameCount = static_cast<double>( benchmarkFrames );
+            const double averageMs =
+                seconds > 0.0 ? ( seconds * 1000.0 ) / frameCount : 0.0;
+            const double fps = seconds > 0.0 ? frameCount / seconds : 0.0;
+            std::cout << "headless benchmark: " << benchmarkFrames << " frames in "
+                      << seconds << " s, " << averageMs << " ms/frame, " << fps << " FPS"
+                      << std::endl;
+        }
+
+        viewer.getCamera()->setFinalDrawCallback(
+            new detail::CaptureCallback( image.get(), width, height )
+        );
+        viewer.frame();
 
         if( !osgDB::writeImageFile( *image, outputPath ) )
         {

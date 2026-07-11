@@ -22,6 +22,7 @@ namespace sponza
 {
 
     struct SponzaOptions;
+    struct GpuRayScene;
 
     constexpr std::size_t irradianceShCount = 9U;
 
@@ -75,5 +76,10 @@ namespace sponza
                               const osg::mat4&     shadowMatrix,
                               float                lightSpaceExtent,
                               bool                 hasShadow );
+
+    void
+    applyRayShadowReceiverState( osg::StateSet*       stateSet,
+                                 const SponzaOptions& options,
+                                 const GpuRayScene*   rayScene );
 
 }

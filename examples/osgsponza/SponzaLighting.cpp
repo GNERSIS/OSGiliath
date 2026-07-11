@@ -1,4 +1,5 @@
 /* OSGiliath — OpenSceneGraph fork. See LICENSE.txt */
+#include "SponzaGpuRayScene.hpp"
 #include "SponzaLighting.hpp"
 #include "SponzaOptions.hpp"
 
@@ -6,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <osg/core/Notify.hpp>
 #include <osg/GL>
 #include <osg/images/Image.hpp>
@@ -18,6 +20,7 @@
 #include <osg/state/Uniform.hpp>
 #include <osg/textures/Texture2D.hpp>
 #include <osgDB/io/ReadFile.hpp>
+#include <string>
 
 namespace sponza
 {
@@ -25,9 +28,55 @@ namespace sponza
     namespace
     {
 
-        constexpr unsigned int shadowTextureUnit = 6U;
-        constexpr double       pi                = 3.14159265358979323846;
-        constexpr double       sunDiscLuminance  = 500.0;
+        constexpr unsigned int shadowTextureUnit  = 6U;
+        constexpr double       pi                 = 3.14159265358979323846;
+        constexpr double       sunDiscLuminance   = 500.0;
+        constexpr const char*  pbrNormalMapDefine = "OSG_GLTF_PBR_ENABLE_NORMAL_MAP";
+        constexpr const char*  pbrRadianceBakeDefine =
+            "OSG_GLTF_PBR_ENABLE_RADIANCE_BAKE";
+        constexpr const char* pbrVisibilityBakeDefine =
+            "OSG_GLTF_PBR_ENABLE_VISIBILITY_BAKE";
+        constexpr const char* pbrShadowMapDefine   = "OSG_GLTF_PBR_ENABLE_SHADOW_MAP";
+        constexpr const char* pbrRtShadowDefine    = "OSG_GLTF_PBR_ENABLE_RT_SHADOWS";
+        constexpr const char* pbrIblSpecularDefine = "OSG_GLTF_PBR_ENABLE_IBL_SPECULAR";
+        constexpr const char* pbrDirectSpecularDefine =
+            "OSG_GLTF_PBR_ENABLE_DIRECT_SPECULAR";
+        constexpr const char* pbrMergeIndirectDefine      = "OSGSPONZA_MERGE_INDIRECT";
+        constexpr const char* shadowTapsDefine            = "OSGSPONZA_SHADOW_TAPS";
+        constexpr const char* shadowFilterDefine          = "OSGSPONZA_SHADOW_FILTER";
+        constexpr const char* shadowFilterHardDefineValue = "0";
+        constexpr const char* shadowFilterPcfDefineValue  = "1";
+
+        const char*
+        defineValue( bool enabled )
+        {
+            return enabled ? "1" : "0";
+        }
+
+        void
+        setPbrFeatureDefine( osg::StateSet* stateSet,
+                             const char*    name,
+                             bool           enabled )
+        {
+            if( stateSet == nullptr )
+            {
+                return;
+            }
+
+            stateSet->setDefine( name,
+                                 defineValue( enabled ),
+                                 osg::StateAttribute::ON |
+                                     osg::StateAttribute::OVERRIDE );
+        }
+
+        int
+        uniformCount( std::size_t count )
+        {
+            constexpr std::size_t maxUniformCount =
+                static_cast<std::size_t>( std::numeric_limits<int>::max() );
+            return count > maxUniformCount ? std::numeric_limits<int>::max()
+                                           : static_cast<int>( count );
+        }
 
         std::array<double,
                    irradianceShCount>
@@ -197,6 +246,13 @@ namespace sponza
             return uniform;
         }
 
+        const char*
+        shadowFilterDefineValue( ShadowFilter filter )
+        {
+            return filter == ShadowFilter::Hard ? shadowFilterHardDefineValue
+                                                : shadowFilterPcfDefineValue;
+        }
+
     }
 
     IrradianceShResult
@@ -326,6 +382,24 @@ namespace sponza
         osg::StateSet* modelStateSet = model->getOrCreateStateSet();
         modelStateSet->setAttributeAndModes( sun.get(), osg::StateAttribute::ON );
         modelStateSet->setMode( GL_LIGHTING, osg::StateAttribute::ON );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrNormalMapDefine,
+                             options.normalMapEnabled );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrRadianceBakeDefine,
+                             options.radianceBakeEnabled );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrVisibilityBakeDefine,
+                             options.visBakeEnabled );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrIblSpecularDefine,
+                             options.iblSpecular > 0.0F );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrDirectSpecularDefine,
+                             options.directSpecularEnabled );
+        setPbrFeatureDefine( modelStateSet,
+                             pbrMergeIndirectDefine,
+                             options.indirectTargetFormat == IndirectTargetFormat::Off );
 
         const osg::vec3 ambientRadiance =
             scaledColor( options.ambientColor, options.ambientLevel );
@@ -444,6 +518,99 @@ namespace sponza
         stateSet->addUniform( new osg::Uniform( "uShadowBias", options.shadowBias ) );
         stateSet->addUniform( new osg::Uniform( "uShadowNormalOffset",
                                                 options.shadowNormalOffset ) );
+        setPbrFeatureDefine( stateSet,
+                             pbrShadowMapDefine,
+                             options.shadowEnabled && hasShadow );
+        stateSet->setDefine( shadowTapsDefine,
+                             std::to_string( options.shadowTaps ),
+                             osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE );
+        stateSet->setDefine( shadowFilterDefine,
+                             shadowFilterDefineValue( options.shadowFilter ),
+                             osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE );
+    }
+
+    void
+    applyRayShadowReceiverState( osg::StateSet*       stateSet,
+                                 const SponzaOptions& options,
+                                 const GpuRayScene*   rayScene )
+    {
+        if( stateSet == nullptr )
+        {
+            return;
+        }
+
+        const bool hasRayScene =
+            rayScene != nullptr && !rayScene->empty() && options.rtShadowsEnabled;
+        if( hasRayScene )
+        {
+            applyGpuRaySceneBindings( *stateSet, *rayScene );
+        }
+
+        const osg::dvec3 sunDirectionD = computeSunDirectionWorld( options );
+        const osg::vec3  sunDirection( static_cast<float>( sunDirectionD.x ),
+                                       static_cast<float>( sunDirectionD.y ),
+                                       static_cast<float>( sunDirectionD.z ) );
+        const osg::vec3  eyeWorld( static_cast<float>( options.camera.eye.x ),
+                                   static_cast<float>( options.camera.eye.y ),
+                                   static_cast<float>( options.camera.eye.z ) );
+
+        std::size_t      nodeCount          = 0U;
+        std::size_t      triangleCount      = 0U;
+        std::size_t      triangleIndexCount = 0U;
+        float            maxDistance        = options.rtShadowMaxDistance;
+        if( rayScene != nullptr )
+        {
+            nodeCount          = rayScene->nodeCount;
+            triangleCount      = rayScene->triangleCount;
+            triangleIndexCount = rayScene->triangleIndexCount;
+            if( maxDistance <= 0.0F )
+            {
+                maxDistance = rayScene->sceneDiagonal;
+            }
+        }
+
+        stateSet->addUniform( new osg::Uniform( "uUseRtSunShadow", hasRayScene ),
+                              osg::StateAttribute::OVERRIDE );
+        setPbrFeatureDefine( stateSet, pbrRtShadowDefine, hasRayScene );
+        stateSet->addUniform( new osg::Uniform( "uRtShadowNormalOffset",
+                                                options.rtShadowNormalOffset ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtShadowMaxDistance", maxDistance ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtShadowSamples",
+                                                hasRayScene ? options.rtShadowSamples
+                                                            : 1 ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtSunAngularRadius",
+                                                options.rtSunAngularRadius ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtBvhNodeCount",
+                                                hasRayScene ? uniformCount( nodeCount )
+                                                            : 0 ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform(
+            new osg::Uniform( "uRtTriangleCount",
+                              hasRayScene ? uniformCount( triangleCount ) : 0 ),
+            osg::StateAttribute::OVERRIDE
+        );
+        stateSet->addUniform(
+            new osg::Uniform( "uRtTriangleIndexCount",
+                              hasRayScene ? uniformCount( triangleIndexCount ) : 0 ),
+            osg::StateAttribute::OVERRIDE
+        );
+        stateSet->addUniform( new osg::Uniform( "uRtViewOriginWorld", eyeWorld ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtSunDirectionWorld", sunDirection ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtShadowDebug",
+                                                hasRayScene && options.rtShadowDebug ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtRasterGateMin",
+                                                options.rtRasterGateMin ),
+                              osg::StateAttribute::OVERRIDE );
+        stateSet->addUniform( new osg::Uniform( "uRtRasterGateMax",
+                                                options.rtRasterGateMax ),
+                              osg::StateAttribute::OVERRIDE );
     }
 
 }

@@ -120,6 +120,11 @@ cmake-build-*/
 !/thirdparty/
 /thirdparty/*
 !/thirdparty/CMakeLists.txt
+# Vendored header-only FlatBuffers/FlexBuffers (scene serialization backend).
+# Tracked in-repo for offline + CI reproducibility (network fetch is unreliable).
+!/thirdparty/flatbuffers
+# Vendored single-header stb_dxt (S3TC/DXT texture encoder for the cook).
+!/thirdparty/stb
 
 # Reference OSG 3.6 build
 osg36/

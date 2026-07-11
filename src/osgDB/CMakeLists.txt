@@ -58,17 +58,23 @@ SET(TARGET_H
     ${HEADER_PATH}/registry/Version.hpp
 
     # serialization/
+    ${HEADER_PATH}/serialization/Archive.hpp
+    ${HEADER_PATH}/serialization/BinaryArchive.hpp
+    ${HEADER_PATH}/serialization/FlexBufferArchive.hpp
     ${HEADER_PATH}/serialization/ClassInterface.hpp
     ${HEADER_PATH}/serialization/DataTypes.hpp
     ${HEADER_PATH}/serialization/DotOsgWrapper.hpp
     ${HEADER_PATH}/serialization/Input.hpp
     ${HEADER_PATH}/serialization/InputStream.hpp
+    ${HEADER_PATH}/serialization/ObjectSerializer.hpp
     ${HEADER_PATH}/serialization/ObjectWrapper.hpp
     ${HEADER_PATH}/serialization/Output.hpp
     ${HEADER_PATH}/serialization/OutputStream.hpp
     ${HEADER_PATH}/serialization/ParameterOutput.hpp
+    ${HEADER_PATH}/serialization/SceneCook.hpp
     ${HEADER_PATH}/serialization/Serializer.hpp
     ${HEADER_PATH}/serialization/StreamOperator.hpp
+    ${HEADER_PATH}/serialization/TextureCompression.hpp
 
     # io/
     ${HEADER_PATH}/io/ConvertBase64.hpp
@@ -105,18 +111,27 @@ SET(TARGET_SRC
     registry/Version.cpp
 
     # serialization/
+    serialization/BinaryArchive.cpp
     serialization/ClassInterface.cpp
     serialization/Compressors.cpp
     serialization/DotOsgWrapper.cpp
     serialization/Field.cpp
     serialization/FieldReader.cpp
     serialization/FieldReaderIterator.cpp
+    serialization/FlexBufferArchive.cpp
     serialization/Input.cpp
     serialization/InputStream.cpp
+    serialization/ObjectSerializer.cpp
     serialization/ObjectWrapper.cpp
     serialization/Output.cpp
     serialization/OutputStream.cpp
+    serialization/SceneCook.cpp
     serialization/StreamOperator.cpp
+    serialization/TextureCompression.cpp
+    serialization/serializers/CoreSerializers.cpp
+    serialization/serializers/GeometrySerializers.cpp
+    serialization/serializers/StateSerializers.cpp
+    serialization/serializers/TextureSerializers.cpp
 
     # io/
     io/ConvertBase64.cpp
@@ -208,3 +223,8 @@ SET(COMPONENT_PKGCONFIG_DESCRIPTION "File format reading library for Openscenegr
 
 SETUP_LIBRARY(${LIB_NAME})
 
+target_include_directories(osgDB SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/thirdparty/flatbuffers/include
+    ${CMAKE_SOURCE_DIR}/thirdparty/stb
+)
+target_compile_definitions(osgDB PRIVATE FLATBUFFERS_LOCALE_INDEPENDENT=0)

@@ -7,6 +7,8 @@
 #include "SponzaTargets.hpp"
 
 #include <algorithm>
+#include <osg/core/Callback.hpp>
+#include <osg/core/FrameStamp.hpp>
 #include <osg/geometry/Geometry.hpp>
 #include <osg/GL>
 #include <osg/maths/box.hpp>
@@ -127,6 +129,69 @@ void main()
             }
     };
 
+    class ShadowUpdateRateCallback : public osg::NodeCallback
+    {
+        public:
+
+            explicit ShadowUpdateRateCallback( int updateRate ) :
+                _updateRate( std::max( updateRate,
+                                       1 ) )
+            {
+            }
+
+            void
+            operator()( osg::Node*        node,
+                        osg::NodeVisitor* nv ) override
+            {
+                if( nv !=
+                    nullptr &&
+                    nv->getVisitorType() == osg::NodeVisitor::UPDATE_VISITOR )
+                {
+                    updateRenderState( node, nv );
+                    traverse( node, nv );
+                    return;
+                }
+
+                if( nv !=
+                    nullptr &&
+                    nv->getVisitorType() == osg::NodeVisitor::CULL_VISITOR )
+                {
+                    if( _renderThisFrame )
+                    {
+                        traverse( node, nv );
+                    }
+                    return;
+                }
+
+                traverse( node, nv );
+            }
+
+        private:
+
+            void
+            updateRenderState( osg::Node*        node,
+                               osg::NodeVisitor* nv )
+            {
+                const osg::FrameStamp* frameStamp  = nv->getFrameStamp();
+                const unsigned int     frameNumber = frameStamp != nullptr
+                                                       ? frameStamp->getFrameNumber()
+                                                       : nv->getTraversalNumber();
+                _renderThisFrame    = _updateRate <=
+                                      1 ||
+                                      frameNumber %
+                                      static_cast<unsigned int>( _updateRate ) == 0U;
+
+                osg::Camera* camera = node != nullptr ? node->asCamera() : nullptr;
+                if( camera != nullptr )
+                {
+                    camera->setClearMask( _renderThisFrame ? GL_DEPTH_BUFFER_BIT : 0U );
+                }
+            }
+
+            int  _updateRate      = 1;
+            bool _renderThisFrame = true;
+    };
+
     osg::box
     computeWorldBounds( osg::Node* model )
     {
@@ -205,7 +270,8 @@ void main()
                         osg::Texture2D*   shadowTexture,
                         int               textureSize,
                         const osg::dmat4& lightView,
-                        const osg::dmat4& lightProjection )
+                        const osg::dmat4& lightProjection,
+                        int               updateRate )
     {
         osg::ref_ptr<osg::Camera> camera = new osg::Camera;
         camera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
@@ -233,6 +299,11 @@ void main()
                            osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE );
         stateSet->setMode( GL_DEPTH_CLAMP,
                            osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE );
+
+        osg::ref_ptr<ShadowUpdateRateCallback> updateRateCallback =
+            new ShadowUpdateRateCallback( updateRate );
+        camera->setUpdateCallback( updateRateCallback.get() );
+        camera->setCullCallback( updateRateCallback.get() );
 
         return camera;
     }
@@ -273,7 +344,8 @@ namespace sponza
                                 shadowTexture.get(),
                                 textureSize,
                                 lightFit.lightView,
-                                lightFit.lightProjection ),
+                                lightFit.lightProjection,
+                                options.shadowUpdateRate ),
             shadowTexture,
             lightFit.shadowMatrix,
             lightFit.lightSpaceExtent,
